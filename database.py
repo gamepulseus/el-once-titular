@@ -124,10 +124,18 @@ class DatabaseManager:
             logger.info("SQLite database initialized successfully.")
 
     # News Methods
-    def is_news_processed(self, news_id: str) -> bool:
+    def is_news_processed(self, news_id: str, headline: str = "") -> bool:
         with self._get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT 1 FROM processed_news WHERE news_id = ?", (str(news_id),))
+            clean_id = str(news_id).strip()
+            clean_hl = headline.strip().lower()
+            if clean_hl:
+                cursor.execute(
+                    "SELECT 1 FROM processed_news WHERE news_id = ? OR LOWER(TRIM(headline)) = ?",
+                    (clean_id, clean_hl)
+                )
+            else:
+                cursor.execute("SELECT 1 FROM processed_news WHERE news_id = ?", (clean_id,))
             return cursor.fetchone() is not None
 
     def mark_news_processed(self, news_id: str, headline: str, sport: str, league: str):

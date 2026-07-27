@@ -81,10 +81,10 @@ class GamePulseScheduler:
             
             for item in news_items:
                 news_id = str(item["id"])
-                if self.db.is_news_processed(news_id):
+                headline = item.get("headline", "")
+                if self.db.is_news_processed(news_id, headline):
                     continue
 
-                headline = item.get("headline", "")
                 self.db.mark_news_processed(news_id, headline, sport, l_code)
                 logger.info(f"[{l_code.upper()}] New article/alert found: {headline}")
 

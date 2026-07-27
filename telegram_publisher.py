@@ -135,9 +135,6 @@ class TelegramPublisher:
         if target_es:
             if image_url:
                 res_es = self.publish_photo(target_es, image_url, msg_es)
-                if not res_es:
-                    logger.warning(f"Photo publish failed for Spanish channel ({target_es}). Falling back to text.")
-                    res_es = self.publish_text(target_es, msg_es)
             else:
                 res_es = self.publish_text(target_es, msg_es)
         else:
@@ -149,13 +146,6 @@ class TelegramPublisher:
         if target_en:
             if image_url:
                 res_en = self.publish_photo(target_en, image_url, msg_en)
-                if not res_en:
-                    # Retry photo publication once after short delay before resorting to text
-                    time.sleep(1.5)
-                    res_en = self.publish_photo(target_en, image_url, msg_en)
-                if not res_en:
-                    logger.warning(f"Photo publish failed for English channel ({target_en}). Falling back to text.")
-                    res_en = self.publish_text(target_en, msg_en)
             else:
                 res_en = self.publish_text(target_en, msg_en)
         else:
