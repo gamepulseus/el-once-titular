@@ -173,41 +173,53 @@ class ESPNClient:
             })
         return articles
 
-    # Fetch 100% full-length article story paragraphs using ESPN Core API
+    # Fetch 100% full-length article story paragraphs using ESPN Core API, Summary API & Scraping
     def get_full_article_content(self, article: Dict[str, Any]) -> List[str]:
         art_id = str(article.get("id", ""))
-        if art_id and art_id.isdigit():
+        link = article.get("link", "")
+        sport = article.get("sport", "baseball")
+        league = article.get("league", "mlb")
+        story_html = ""
+
+        # 1. Game Recap Link (recap?gameId=XXXX) -> Fetch from ESPN summary API
+        game_match = re.search(r'gameId=(\d+)', link)
+        if game_match:
+            game_id = game_match.group(1)
+            url = f"{self.BASE_URL}/{sport}/{league}/summary?event={game_id}"
+            data = self._fetch_json(url)
+            if data and "article" in data and "story" in data["article"]:
+                story_html = data["article"]["story"]
+
+        # 2. Core News API (for regular news stories)
+        if not story_html and art_id and art_id.isdigit():
             url = f"{self.CORE_NEWS_URL}/{art_id}"
             data = self._fetch_json(url)
             if data and "headlines" in data and len(data["headlines"]) > 0:
                 story_html = data["headlines"][0].get("story", "")
-                if story_html:
-                    p_tags = re.findall(r'<p[^>]*>(.*?)</p>', story_html, re.DOTALL)
-                    clean_paragraphs = []
-                    for p in p_tags:
-                        text = re.sub(r'<[^>]+>', '', p).strip()
-                        if text and len(text) > 25 and not text.startswith("http") and "<alsosee>" not in p:
-                            clean_paragraphs.append(text)
-                    if clean_paragraphs:
-                        return clean_paragraphs
 
-        # Fallback to web scraping if core API fails
-        link = article.get("link", "")
-        if link:
+        # 3. Web Scraping Fallback
+        if not story_html and link:
             try:
                 req = urllib.request.Request(link, headers=self.headers)
                 with urllib.request.urlopen(req, timeout=5) as resp:
-                    html = resp.read().decode("utf-8", errors="ignore")
-                    p_tags = re.findall(r'<p[^>]*>(.*?)</p>', html, re.DOTALL)
-                    clean_p = []
-                    for p in p_tags:
-                        text = re.sub(r'<[^>]+>', '', p).strip()
-                        if len(text) > 40 and not text.startswith("play") and not text.startswith("http") and "Terms of Use" not in text:
-                            clean_p.append(text)
-                    if clean_p:
-                        return clean_p
+                    story_html = resp.read().decode("utf-8", errors="ignore")
             except Exception as e:
                 logger.warning(f"Error scraping article link: {e}")
+
+        if story_html:
+            blocks = re.split(r'</p>|<br\s*/?>\s*<br\s*/?>|\n\n|\r\n\r\n', story_html)
+            clean_paragraphs = []
+            for b in blocks:
+                text = re.sub(r'<[^>]+>', '', b).strip()
+                if " -- " in text:
+                    text = text.split(" -- ", 1)[-1].strip()
+                elif " - " in text and len(text.split(" - ", 1)[0]) < 20:
+                    text = text.split(" - ", 1)[-1].strip()
+
+                if len(text) > 30 and not text.startswith("http") and not text.startswith("play") and "Terms of Use" not in text and "Privacy Policy" not in text and "Facebook Messenger" not in text:
+                    clean_paragraphs.append(text)
+            if clean_paragraphs:
+                return clean_paragraphs
 
         desc = article.get("description", "")
         return [desc] if desc else ["Contenido completo de la noticia."]
