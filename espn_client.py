@@ -759,14 +759,24 @@ class ESPNClient:
             if entries:
                 teams_list = []
                 for entry in entries:
+                    if not isinstance(entry, dict):
+                        continue
                     t = entry.get('team', {})
-                    t_name = t.get('displayName', '')
-                    t_logo = t.get('logos', [{}])[0].get('href', '') if t.get('logos') else ''
+                    if not isinstance(t, dict):
+                        t = {}
+                    t_name = t.get('displayName', t.get('name', ''))
+                    t_logo = ''
+                    logos = t.get('logos', [])
+                    if isinstance(logos, list) and len(logos) > 0 and isinstance(logos[0], dict):
+                        t_logo = logos[0].get('href', '')
                     t_id = t.get('id', '')
                     
                     stats = {}
                     for s in entry.get('stats', []):
-                        stats[s.get('name', s.get('type', ''))] = s.get('displayValue', '0')
+                        if isinstance(s, dict):
+                            s_key = s.get('name', s.get('type', ''))
+                            if s_key:
+                                stats[s_key] = s.get('displayValue', '0')
                         
                     teams_list.append({
                         'id': t_id,
