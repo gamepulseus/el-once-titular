@@ -861,61 +861,69 @@ class ESPNClient:
         else:
             headshot = f"https://a.espncdn.com/i/headshots/{league}/players/full/{athlete_id}.png"
 
-        # Highlights & Season Table from stats_url
-        categories = stats_data.get("categories", []) if isinstance(stats_data, dict) else []
-        main_cat = categories[0] if isinstance(categories, list) and len(categories) > 0 else {}
-        stats_display_name = main_cat.get("displayName", "2026 Season Stats")
-        stats_labels = main_cat.get("labels", [])
+        # Highlights & Season Table from Overview (Primary for 100% Real-Time Sync with ESPN.com Overview tab)
+        st_obj = overview.get("statistics", {}) if isinstance(overview, dict) else {}
+        stats_display_name = st_obj.get("displayName", "2026 Season Stats")
+        stats_labels = st_obj.get("labels", [])
         
         season_rows = []
-        highlights = []
-        
-        if main_cat and isinstance(main_cat.get("statistics"), list):
-            for stat_row in main_cat["statistics"]:
-                if not isinstance(stat_row, dict): continue
-                season_obj = stat_row.get("season", {})
-                s_year = str(season_obj.get("year", season_obj.get("displayName", ""))) if isinstance(season_obj, dict) else ""
-                r_vals = stat_row.get("stats", [])
-                season_rows.append({"title": s_year, "stats": r_vals})
-                
-                # Build 2026 highlights
-                if s_year == "2026" and len(r_vals) >= len(stats_labels):
-                    val_map = dict(zip(stats_labels, r_vals))
-                    if "AVG" in stats_labels:
-                        highlights = [
-                            {"label": "AVG", "value": val_map.get("AVG", ".000")},
-                            {"label": "HR", "value": val_map.get("HR", "0")},
-                            {"label": "RBI", "value": val_map.get("RBI", "0")},
-                            {"label": "OPS", "value": val_map.get("OPS", ".000")}
-                        ]
-                    else:
-                        highlights = [
-                            {"label": "ERA", "value": val_map.get("ERA", "0.00")},
-                            {"label": "W", "value": val_map.get("W", "0")},
-                            {"label": "SO", "value": val_map.get("SO", "0")},
-                            {"label": "WHIP", "value": val_map.get("WHIP", "0.00")}
-                        ]
+        for split in st_obj.get("splits", []):
+            if isinstance(split, dict):
+                season_rows.append({"title": split.get("displayName", ""), "stats": split.get("stats", [])})
 
-        # Fallback to overview if stats_url didn't return rows
-        if not season_rows and overview and isinstance(overview.get("statistics"), dict):
-            st_obj = overview["statistics"]
-            stats_display_name = st_obj.get("displayName", "2026 Season Stats")
-            stats_labels = st_obj.get("labels", [])
-            for split in st_obj.get("splits", []):
-                if isinstance(split, dict):
-                    season_rows.append({"title": split.get("displayName", ""), "stats": split.get("stats", [])})
-                    
-                    if split.get("displayName") == "Regular Season" and len(split.get("stats", [])) >= len(stats_labels):
-                        val_map = dict(zip(stats_labels, split.get("stats", [])))
-                        h_count = float(val_map.get("H", 0)) if val_map.get("H") else 0
-                        ab_count = float(val_map.get("AB", 0)) if val_map.get("AB") else 0
-                        avg = f"{h_count / ab_count:.3f}".lstrip("0") if ab_count > 0 else val_map.get("AVG", ".000")
-                        highlights = [
-                            {"label": "AVG", "value": avg},
-                            {"label": "HR", "value": val_map.get("HR", "0")},
-                            {"label": "RBI", "value": val_map.get("RBI", "0")},
-                            {"label": "OPS", "value": val_map.get("OPS", ".000")}
-                        ]
+        # Fetch OPS / ERA from stats_data for banner
+        ops_val = ".000"
+        era_val = "0.00"
+        if isinstance(stats_data, dict):
+            for cat in stats_data.get("categories", []):
+                if not isinstance(cat, dict): continue
+                lbls = cat.get("labels", [])
+                for stat_row in cat.get("statistics", []):
+                    if not isinstance(stat_row, dict): continue
+                    season_obj = stat_row.get("season", {})
+                    if str(season_obj.get("year", "")) == "2026" if isinstance(season_obj, dict) else False:
+                        val_map = dict(zip(lbls, stat_row.get("stats", [])))
+                        if "OPS" in val_map and val_map["OPS"]:
+                            ops_val = val_map["OPS"]
+                        if "ERA" in val_map and val_map["ERA"]:
+                            era_val = val_map["ERA"]
+
+        # Calculate / Build Highlights Banner
+        reg_row = next((s for s in st_obj.get("splits", []) if isinstance(s, dict) and s.get("displayName") == "Regular Season"), None)
+        val_map = dict(zip(stats_labels, reg_row.get("stats", []))) if reg_row else {}
+
+        h_count = float(val_map.get("H", 0)) if val_map.get("H") else 0
+        ab_count = float(val_map.get("AB", 0)) if val_map.get("AB") else 0
+        avg_val = f"{h_count / ab_count:.3f}".lstrip("0") if ab_count > 0 else val_map.get("AVG", ".000")
+
+        if "AVG" in stats_labels or "AB" in stats_labels:
+            highlights = [
+                {"label": "AVG", "value": avg_val},
+                {"label": "HR", "value": val_map.get("HR", "0")},
+                {"label": "RBI", "value": val_map.get("RBI", "0")},
+                {"label": "OPS", "value": ops_val}
+            ]
+        else:
+            highlights = [
+                {"label": "ERA", "value": era_val},
+                {"label": "W", "value": val_map.get("W", "0")},
+                {"label": "SO", "value": val_map.get("SO", "0")},
+                {"label": "WHIP", "value": val_map.get("WHIP", "0.00")}
+            ]
+
+        # Fallback to stats_data if overview didn't return rows
+        if not season_rows and isinstance(stats_data, dict):
+            categories = stats_data.get("categories", [])
+            main_cat = categories[0] if isinstance(categories, list) and len(categories) > 0 else {}
+            stats_display_name = main_cat.get("displayName", "2026 Season Stats")
+            stats_labels = main_cat.get("labels", [])
+            if main_cat and isinstance(main_cat.get("statistics"), list):
+                for stat_row in main_cat["statistics"]:
+                    if not isinstance(stat_row, dict): continue
+                    season_obj = stat_row.get("season", {})
+                    s_year = str(season_obj.get("year", season_obj.get("displayName", ""))) if isinstance(season_obj, dict) else ""
+                    r_vals = stat_row.get("stats", [])
+                    season_rows.append({"title": s_year, "stats": r_vals})
 
         # Recent Games Log
         gl_labels = gamelog.get("labels", ["AB", "R", "H", "2B", "3B", "HR", "RBI", "BB", "SO"])
