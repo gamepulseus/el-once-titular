@@ -155,6 +155,9 @@
             <a href="/?lang={{ lang }}" class="nav-btn" style="background: var(--accent-blue); color: #FFF;">
                 <i class="fa-solid fa-fire-flame-curved"></i> {{ ui.nav_games }}
             </a>
+            <a href="/noticias?lang={{ lang }}" class="nav-btn">
+                <i class="fa-solid fa-newspaper"></i> {{ ui.nav_news }}
+            </a>
             <a href="/posiciones?lang={{ lang }}" class="nav-btn">
                 <i class="fa-solid fa-list-ol"></i> {{ ui.nav_standings }}
             </a>
@@ -308,30 +311,6 @@
             {% endif %}
         </div>
 
-        <!-- Flash News Section -->
-        <div class="section-header">
-            <h2 class="section-title">
-                <i class="fa-solid fa-newspaper" style="color: var(--accent-blue);"></i>
-                <span>{{ ui.section_news }}</span>
-            </h2>
-        </div>
-
-        <div class="news-grid">
-            {% if news %}
-                {% for item in news %}
-                    <a href="/noticia/{{ item.id }}?league={{ item.league }}&sport={{ item.sport }}&lang={{ lang }}" class="news-card">
-                        {% if item.images %}
-                            <img src="{{ item.images[0] }}" alt="{{ item.headline }}" class="news-card-image" onerror="this.style.display='none'">
-                        {% endif %}
-                        <div class="news-card-content">
-                            <div class="news-category">{{ item.league | upper }} • <i class="fa-solid fa-pen-nib"></i> {{ item.byline }}</div>
-                            <h3 class="news-title">{{ item.headline }}</h3>
-                            <p class="news-desc">{{ item.description }}</p>
-                            <div class="news-time"><i class="fa-regular fa-clock"></i> {{ item.published }}</div>
-                        </div>
-                    </a>
-                {% endfor %}
-            {% endif %}
         </div>
 
     </main>

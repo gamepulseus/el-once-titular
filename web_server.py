@@ -17,6 +17,7 @@ UI_LABELS = {
     "en": {
         "lang_code": "en",
         "nav_games": "Live Games",
+        "nav_news": "News",
         "nav_standings": "Standings",
         "nav_leaders": "Leaders",
         "nav_h2h": "H2H",
@@ -34,6 +35,7 @@ UI_LABELS = {
         "section_games": "Scores & Live Games",
         "badge_live": "LIVE NOW",
         "section_news": "Full Coverage & Articles",
+        "section_news_page": "Latest Breaking Sports News & Coverage",
         "footer_rights": "© 2026 GamePulse Sports Media. Real-time sports coverage.",
         "view_details": "View Details →",
         "final": "Final",
@@ -42,6 +44,7 @@ UI_LABELS = {
     "es": {
         "lang_code": "es",
         "nav_games": "Partidos",
+        "nav_news": "Noticias",
         "nav_standings": "Posiciones",
         "nav_leaders": "Líderes",
         "nav_h2h": "H2H",
@@ -59,6 +62,7 @@ UI_LABELS = {
         "section_games": "Marcadores & Partidos",
         "badge_live": "EN VIVO Y EN DIRECTO",
         "section_news": "Noticias Completas & Redacción",
+        "section_news_page": "Noticias Deportivas & Redacción en Vivo",
         "footer_rights": "© 2026 GamePulse Sports Media. Cobertura deportiva en tiempo real.",
         "view_details": "Ver Detalles →",
         "final": "Final",
@@ -125,9 +129,34 @@ def index():
 
     all_games.sort(key=game_priority_key)
 
+    resp = make_response(render_template(
+        "index.html",
+        ui=ui,
+        lang=lang,
+        games=all_games,
+        active_league=league_filter,
+        search_query=search_query,
+        selected_date=selected_date_str,
+        yesterday_date=yesterday_str,
+        today_date=today_str,
+        tomorrow_date=tomorrow_str
+    ))
+    resp.set_cookie("gamepulse_lang", lang, max_age=30*24*3600)
+    return resp
+
+@app.route("/noticias")
+def news_view():
+    lang = get_current_lang()
+    ui = UI_LABELS[lang]
+
+    league_filter = request.args.get("league", "").strip().lower()
+    search_query = request.args.get("q", "").strip().lower()
+
+    target_leagues = [l for l in ACTIVE_LEAGUES if l["league"] == league_filter] if league_filter else ACTIVE_LEAGUES
+
     all_news = []
     for league in target_leagues:
-        articles = espn.get_news(league["sport"], league["league"], limit=4)
+        articles = espn.get_news(league["sport"], league["league"], limit=6)
         for art in articles:
             if search_query:
                 h_text = art.get("headline", "").lower()
@@ -141,17 +170,12 @@ def index():
             all_news.append(art)
 
     resp = make_response(render_template(
-        "index.html",
+        "news.html",
         ui=ui,
         lang=lang,
-        games=all_games,
         news=all_news,
         active_league=league_filter,
-        search_query=search_query,
-        selected_date=selected_date_str,
-        yesterday_date=yesterday_str,
-        today_date=today_str,
-        tomorrow_date=tomorrow_str
+        search_query=search_query
     ))
     resp.set_cookie("gamepulse_lang", lang, max_age=30*24*3600)
     return resp

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GamePulse | {{ ui.nav_news }} - {{ ui.section_news_page }}</title>
+    <link rel="stylesheet" href="/static/css/apple_style.css">
+    <!-- FontAwesome 6 Vector Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .filter-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 24px;
+            gap: 8px;
+        }
+        .scroll-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: 50%;
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            font-size: 0.95rem;
+            flex-shrink: 0;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+        .scroll-btn:hover {
+            background: var(--accent-blue);
+            color: #FFF;
+            border-color: var(--accent-blue);
+        }
+        .filter-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            padding: 4px 0;
+            width: 100%;
+            scrollbar-width: none;
+        }
+        .filter-bar::-webkit-scrollbar {
+            display: none;
+        }
+        .filter-pill {
+            padding: 8px 18px;
+            border-radius: 20px;
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.88rem;
+            font-weight: 600;
+            white-space: nowrap;
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .filter-pill.active, .filter-pill:hover {
+            background: var(--accent-blue);
+            color: #FFFFFF;
+            border-color: var(--accent-blue);
+        }
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 8px 16px;
+            width: 100%;
+            max-width: 520px;
+            margin: 0 auto 24px auto;
+        }
+        .search-input {
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            width: 100%;
+            outline: none;
+        }
+        .news-grid-page {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+            margin-top: 16px;
+        }
+        .news-card-page {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.25 ease;
+            box-shadow: var(--shadow-sm);
+        }
+        .news-card-page:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent-blue);
+            box-shadow: 0 12px 30px rgba(0, 122, 255, 0.2);
+        }
+        .news-card-page-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: var(--bg-card-secondary);
+        }
+        .news-card-page-body {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+        .news-tag {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--accent-blue);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .news-card-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+            line-height: 1.35;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+        }
+        .news-card-desc {
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 16px;
+            flex-grow: 1;
+        }
+        .news-card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.80rem;
+            color: var(--text-secondary);
+            border-top: 1px solid var(--border-color);
+            padding-top: 12px;
+            margin-top: auto;
+        }
+    </style>
+    <script>
+        function scrollFilters(direction) {
+            const container = document.getElementById("filterBarContainer");
+            const scrollAmount = 260;
+            container.scrollBy({ left: direction * scrollAmount, behavior: "smooth" });
+        }
+    </script>
+</head>
+<body>
+
+    <!-- Translucent Glass Header Bar -->
+    <header class="navbar">
+        <a href="/?lang={{ lang }}" class="navbar-brand" style="display: flex; align-items: center; gap: 12px;">
+            <img src="/static/images/gamepulse_logo.png" alt="GamePulse Logo" style="height: 56px; width: auto; object-fit: contain;">
+            <span style="font-size: 1.35rem; font-weight: 800;">GamePulse News</span>
+        </a>
+        <div class="nav-links">
+            <a href="/?lang={{ lang }}" class="nav-btn">
+                <i class="fa-solid fa-fire-flame-curved"></i> {{ ui.nav_games }}
+            </a>
+            <a href="/noticias?lang={{ lang }}" class="nav-btn" style="background: var(--accent-blue); color: #FFF;">
+                <i class="fa-solid fa-newspaper"></i> {{ ui.nav_news }}
+            </a>
+            <a href="/posiciones?lang={{ lang }}" class="nav-btn">
+                <i class="fa-solid fa-list-ol"></i> {{ ui.nav_standings }}
+            </a>
+            <a href="/lideres?lang={{ lang }}" class="nav-btn">
+                <i class="fa-solid fa-trophy"></i> {{ ui.nav_leaders }}
+            </a>
+            <a href="/h2h?lang={{ lang }}" class="nav-btn">
+                <i class="fa-solid fa-square-poll-vertical"></i> {{ ui.nav_h2h }}
+            </a>
+            <a href="/videos?lang={{ lang }}" class="nav-btn">
+                <i class="fa-solid fa-circle-play"></i> {{ ui.nav_videos }}
+            </a>
+            <a href="https://t.me/GamePulseUS" target="_blank" class="nav-btn">
+                <i class="fa-brands fa-telegram"></i> {{ ui.nav_telegram }}
+            </a>
+            
+            <!-- Language Switcher Button -->
+            <a href="/noticias?lang={{ ui.switch_lang_target }}{% if active_league %}&league={{ active_league }}{% endif %}" class="nav-btn" style="border: 1px solid var(--accent-blue); color: var(--accent-blue); font-weight: 700;">
+                <i class="fa-solid fa-globe"></i> {{ ui.switch_lang_label }}
+            </a>
+        </div>
+    </header>
+
+    <main class="container">
+
+        <div style="text-align: center; margin-bottom: 28px;">
+            <h1 style="font-size: 2.3rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 8px;">
+                <i class="fa-solid fa-newspaper" style="color: var(--accent-blue);"></i>
+                {{ ui.section_news_page }}
+            </h1>
+            <p style="font-size: 0.95rem; color: var(--text-secondary); max-width: 620px; margin: 0 auto 20px auto;">
+                {% if lang == 'es' %}Todas las noticias deportivas, análisis detallados, traspasos y comunicados en tiempo real.{% else %}All breaking sports headlines, trade alerts, injury updates, and full articles.{% endif %}
+            </p>
+
+            <form action="/noticias" method="GET" class="search-box">
+                <input type="hidden" name="lang" value="{{ lang }}">
+                {% if active_league %}<input type="hidden" name="league" value="{{ active_league }}">{% endif %}
+                <i class="fa-solid fa-magnifying-glass" style="margin-right: 10px; color: var(--text-secondary);"></i>
+                <input type="text" name="q" value="{{ search_query }}" placeholder="{{ ui.search_placeholder }}" class="search-input">
+            </form>
+        </div>
+
+        <!-- Sport Filter Bar -->
+        <div class="filter-wrapper">
+            <button class="scroll-btn" onclick="scrollFilters(-1)" title="Scroll left">
+                <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            
+            <div class="filter-bar" id="filterBarContainer">
+                <a href="/noticias?lang={{ lang }}" class="filter-pill {% if not active_league %}active{% endif %}">
+                    <i class="fa-solid fa-fire"></i> {{ ui.all_sports }}
+                </a>
+                <a href="/noticias?league=mlb&lang={{ lang }}" class="filter-pill {% if active_league == 'mlb' %}active{% endif %}">
+                    <i class="fa-solid fa-baseball"></i> MLB Baseball
+                </a>
+                <a href="/noticias?league=nba&lang={{ lang }}" class="filter-pill {% if active_league == 'nba' %}active{% endif %}">
+                    <i class="fa-solid fa-basketball"></i> NBA Basketball
+                </a>
+                <a href="/noticias?league=nfl&lang={{ lang }}" class="filter-pill {% if active_league == 'nfl' %}active{% endif %}">
+                    <i class="fa-solid fa-football"></i> NFL Football
+                </a>
+                <a href="/noticias?league=nhl&lang={{ lang }}" class="filter-pill {% if active_league == 'nhl' %}active{% endif %}">
+                    <i class="fa-solid fa-hockey-puck"></i> NHL Hockey
+                </a>
+                <a href="/noticias?league=college-football&lang={{ lang }}" class="filter-pill {% if active_league == 'college-football' %}active{% endif %}">
+                    <i class="fa-solid fa-graduation-cap"></i> NCAA Football
+                </a>
+                <a href="/noticias?league=mens-college-basketball&lang={{ lang }}" class="filter-pill {% if active_league == 'mens-college-basketball' %}active{% endif %}">
+                    <i class="fa-solid fa-graduation-cap"></i> NCAA Basketball
+                </a>
+            </div>
+
+            <button class="scroll-btn" onclick="scrollFilters(1)" title="Scroll right">
+                <i class="fa-solid fa-chevron-right"></i>
+            </button>
+        </div>
+
+        <!-- News Grid -->
+        <div class="news-grid-page">
+            {% if news %}
+                {% for item in news %}
+                    <a href="/noticia/{{ item.id }}?league={{ item.league }}&sport={{ item.sport }}&lang={{ lang }}" class="news-card-page">
+                        {% if item.images and item.images[0] %}
+                            <img src="{{ item.images[0] }}" alt="{{ item.headline }}" class="news-card-page-image" onerror="this.style.display='none'">
+                        {% endif %}
+                        <div class="news-card-page-body">
+                            <div class="news-tag">
+                                <span>{{ item.league | upper }}</span>
+                                {% if item.byline %}<span><i class="fa-solid fa-pen-nib"></i> {{ item.byline }}</span>{% endif %}
+                            </div>
+                            <h2 class="news-card-title">{{ item.headline }}</h2>
+                            <p class="news-card-desc">{{ item.description }}</p>
+                            <div class="news-card-footer">
+                                <span><i class="fa-regular fa-clock"></i> {{ item.published }}</span>
+                                <span style="color: var(--accent-blue); font-weight: 700;">{{ ui.view_details }}</span>
+                            </div>
+                        </div>
+                    </a>
+                {% endfor %}
+            {% else %}
+                <div style="background: var(--bg-card); padding: 32px; border-radius: var(--radius-lg); color: var(--text-secondary); text-align: center; grid-column: 1 / -1;">
+                    {% if lang == 'es' %}No se encontraron noticias con los criterios seleccionados.{% else %}No news stories found for the selected criteria.{% endif %}
+                </div>
+            {% endif %}
+        </div>
+
+    </main>
+
+    <footer>
+        <p>{{ ui.footer_rights }}</p>
+        <p style="margin-top: 8px;">
+            <a href="https://t.me/GamePulseUS" target="_blank"><i class="fa-brands fa-telegram"></i> Telegram 🇺🇸</a> • 
+            <a href="https://t.me/GamePulseES" target="_blank"><i class="fa-brands fa-telegram"></i> Telegram 🇪🇸</a>
+        </p>
+    </footer>
+
+</body>
+</html>
