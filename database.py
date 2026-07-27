@@ -124,38 +124,80 @@ class DatabaseManager:
             conn.commit()
             logger.info("SQLite database initialized successfully.")
 
-            # Load existing processed news into in-memory sets for ultra-fast deduplication
+            conn.commit()
+            logger.info("SQLite database initialized successfully.")
+
+            # In-memory sets for ultra-fast 0ms deduplication across ALL 4 Pillars
             self._sent_news_ids = set()
             self._sent_headlines = set()
+            self._sent_lineups = set()
+            self._sent_previews = set()
+            self._sent_game_starts = set()
+            self._sent_scoring_plays = set()
+            self._sent_quarter_updates = set()
+            self._sent_summaries = set()
+            self._sent_standings = set()
+            self._sent_daily_schedules = set()
+
             try:
                 cursor.execute("SELECT news_id, headline FROM processed_news")
                 for row in cursor.fetchall():
-                    if row[0]:
-                        self._sent_news_ids.add(str(row[0]).strip())
+                    if row[0]: self._sent_news_ids.add(str(row[0]).strip())
                     if row[1]:
                         norm_h = re.sub(r'[^a-zA-Z0-9]', '', str(row[1]).lower())
-                        if norm_h:
-                            self._sent_headlines.add(norm_h)
+                        if norm_h: self._sent_headlines.add(norm_h)
+
+                cursor.execute("SELECT event_id FROM processed_lineups")
+                for row in cursor.fetchall():
+                    if row[0]: self._sent_lineups.add(str(row[0]).strip())
+
+                cursor.execute("SELECT event_id FROM processed_previews")
+                for row in cursor.fetchall():
+                    if row[0]: self._sent_previews.add(str(row[0]).strip())
+
+                cursor.execute("SELECT event_id FROM processed_game_starts")
+                for row in cursor.fetchall():
+                    if row[0]: self._sent_game_starts.add(str(row[0]).strip())
+
+                cursor.execute("SELECT play_key FROM processed_scoring_plays")
+                for row in cursor.fetchall():
+                    if row[0]: self._sent_scoring_plays.add(str(row[0]).strip())
+
+                cursor.execute("SELECT quarter_key FROM processed_quarter_updates")
+                for row in cursor.fetchall():
+                    if row[0]: self._sent_quarter_updates.add(str(row[0]).strip())
+
+                cursor.execute("SELECT event_id FROM processed_summaries")
+                for row in cursor.fetchall():
+                    if row[0]: self._sent_summaries.add(str(row[0]).strip())
+
+                cursor.execute("SELECT standing_key FROM processed_standings")
+                for row in cursor.fetchall():
+                    if row[0]: self._sent_standings.add(str(row[0]).strip())
+
+                cursor.execute("SELECT schedule_key FROM processed_daily_schedules")
+                for row in cursor.fetchall():
+                    if row[0]: self._sent_daily_schedules.add(str(row[0]).strip())
+
             except Exception as e:
-                logger.warning(f"Error loading processed news into memory cache: {e}")
+                logger.warning(f"Error loading deduplication memory cache: {e}")
 
     # News Methods
     def is_news_processed(self, news_id: str, headline: str = "") -> bool:
         clean_id = str(news_id).strip()
         norm_hl = re.sub(r'[^a-zA-Z0-9]', '', headline.lower()) if headline else ""
 
-        # Check in-memory cache first
         if clean_id and clean_id in self._sent_news_ids:
             return True
         if norm_hl and norm_hl in self._sent_headlines:
             return True
 
-        # Fallback to SQLite query
         with self._get_connection() as conn:
             cursor = conn.cursor()
             if norm_hl:
                 cursor.execute("SELECT 1 FROM processed_news WHERE news_id = ?", (clean_id,))
                 if cursor.fetchone():
+                    self._sent_news_ids.add(clean_id)
                     return True
                 cursor.execute("SELECT headline FROM processed_news")
                 for row in cursor.fetchall():
@@ -167,6 +209,7 @@ class DatabaseManager:
             else:
                 cursor.execute("SELECT 1 FROM processed_news WHERE news_id = ?", (clean_id,))
                 if cursor.fetchone():
+                    self._sent_news_ids.add(clean_id)
                     return True
 
         return False
@@ -175,10 +218,8 @@ class DatabaseManager:
         clean_id = str(news_id).strip()
         norm_hl = re.sub(r'[^a-zA-Z0-9]', '', headline.lower()) if headline else ""
 
-        if clean_id:
-            self._sent_news_ids.add(clean_id)
-        if norm_hl:
-            self._sent_headlines.add(norm_hl)
+        if clean_id: self._sent_news_ids.add(clean_id)
+        if norm_hl: self._sent_headlines.add(norm_hl)
 
         with self._get_connection() as conn:
             cursor = conn.cursor()
@@ -190,128 +231,184 @@ class DatabaseManager:
 
     # Lineups Methods
     def is_lineups_processed(self, event_id: str) -> bool:
+        clean_id = str(event_id).strip()
+        if clean_id in self._sent_lineups:
+            return True
         with self._get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT 1 FROM processed_lineups WHERE event_id = ?", (str(event_id),))
-            return cursor.fetchone() is not None
+            cursor.execute("SELECT 1 FROM processed_lineups WHERE event_id = ?", (clean_id,))
+            res = cursor.fetchone() is not None
+            if res: self._sent_lineups.add(clean_id)
+            return res
 
     def mark_lineups_processed(self, event_id: str, sport: str, league: str, event_name: str):
+        clean_id = str(event_id).strip()
+        self._sent_lineups.add(clean_id)
         with self._get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT OR IGNORE INTO processed_lineups (event_id, sport, league, event_name)
                 VALUES (?, ?, ?, ?)
-            """, (str(event_id), sport, league, event_name))
+            """, (clean_id, sport, league, event_name))
             conn.commit()
 
     # Previews Methods
     def is_preview_processed(self, event_id: str) -> bool:
+        clean_id = str(event_id).strip()
+        if clean_id in self._sent_previews:
+            return True
         with self._get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT 1 FROM processed_previews WHERE event_id = ?", (str(event_id),))
-            return cursor.fetchone() is not None
+            cursor.execute("SELECT 1 FROM processed_previews WHERE event_id = ?", (clean_id,))
+            res = cursor.fetchone() is not None
+            if res: self._sent_previews.add(clean_id)
+            return res
 
     def mark_preview_processed(self, event_id: str, sport: str, league: str, event_name: str):
+        clean_id = str(event_id).strip()
+        self._sent_previews.add(clean_id)
         with self._get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT OR IGNORE INTO processed_previews (event_id, sport, league, event_name)
                 VALUES (?, ?, ?, ?)
-            """, (str(event_id), sport, league, event_name))
+            """, (clean_id, sport, league, event_name))
             conn.commit()
 
     # Game Starts Methods
     def is_game_start_processed(self, event_id: str) -> bool:
+        clean_id = str(event_id).strip()
+        if clean_id in self._sent_game_starts:
+            return True
         with self._get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT 1 FROM processed_game_starts WHERE event_id = ?", (str(event_id),))
-            return cursor.fetchone() is not None
+            cursor.execute("SELECT 1 FROM processed_game_starts WHERE event_id = ?", (clean_id,))
+            res = cursor.fetchone() is not None
+            if res: self._sent_game_starts.add(clean_id)
+            return res
 
     def mark_game_start_processed(self, event_id: str, sport: str, league: str, event_name: str):
+        clean_id = str(event_id).strip()
+        self._sent_game_starts.add(clean_id)
         with self._get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT OR IGNORE INTO processed_game_starts (event_id, sport, league, event_name)
                 VALUES (?, ?, ?, ?)
-            """, (str(event_id), sport, league, event_name))
+            """, (clean_id, sport, league, event_name))
             conn.commit()
 
     # Live Scoring Plays Methods
     def is_scoring_play_processed(self, play_key: str) -> bool:
+        clean_key = str(play_key).strip()
+        if clean_key in self._sent_scoring_plays:
+            return True
         with self._get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT 1 FROM processed_scoring_plays WHERE play_key = ?", (str(play_key),))
-            return cursor.fetchone() is not None
+            cursor.execute("SELECT 1 FROM processed_scoring_plays WHERE play_key = ?", (clean_key,))
+            res = cursor.fetchone() is not None
+            if res: self._sent_scoring_plays.add(clean_key)
+            return res
 
     def mark_scoring_play_processed(self, play_key: str, event_id: str, play_text: str):
+        clean_key = str(play_key).strip()
+        self._sent_scoring_plays.add(clean_key)
         with self._get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT OR IGNORE INTO processed_scoring_plays (play_key, event_id, play_text)
                 VALUES (?, ?, ?)
-            """, (str(play_key), str(event_id), play_text))
+            """, (clean_key, str(event_id), play_text))
             conn.commit()
 
     # Quarter Update Methods
     def is_quarter_update_processed(self, quarter_key: str) -> bool:
+        clean_key = str(quarter_key).strip()
+        if clean_key in self._sent_quarter_updates:
+            return True
         with self._get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT 1 FROM processed_quarter_updates WHERE quarter_key = ?", (str(quarter_key),))
-            return cursor.fetchone() is not None
+            cursor.execute("SELECT 1 FROM processed_quarter_updates WHERE quarter_key = ?", (clean_key,))
+            res = cursor.fetchone() is not None
+            if res: self._sent_quarter_updates.add(clean_key)
+            return res
 
     def mark_quarter_update_processed(self, quarter_key: str, event_id: str, period: int):
+        clean_key = str(quarter_key).strip()
+        self._sent_quarter_updates.add(clean_key)
         with self._get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT OR IGNORE INTO processed_quarter_updates (quarter_key, event_id, period)
                 VALUES (?, ?, ?)
-            """, (str(quarter_key), str(event_id), period))
+            """, (clean_key, str(event_id), period))
             conn.commit()
 
     # Summaries Methods
     def is_summary_processed(self, event_id: str) -> bool:
+        clean_id = str(event_id).strip()
+        if clean_id in self._sent_summaries:
+            return True
         with self._get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT 1 FROM processed_summaries WHERE event_id = ?", (str(event_id),))
-            return cursor.fetchone() is not None
+            cursor.execute("SELECT 1 FROM processed_summaries WHERE event_id = ?", (clean_id,))
+            res = cursor.fetchone() is not None
+            if res: self._sent_summaries.add(clean_id)
+            return res
 
     def mark_summary_processed(self, event_id: str, sport: str, league: str, event_name: str):
+        clean_id = str(event_id).strip()
+        self._sent_summaries.add(clean_id)
         with self._get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT OR IGNORE INTO processed_summaries (event_id, sport, league, event_name)
                 VALUES (?, ?, ?, ?)
-            """, (str(event_id), sport, league, event_name))
+            """, (clean_id, sport, league, event_name))
             conn.commit()
 
     # Standings Methods
     def is_standing_processed(self, standing_key: str) -> bool:
+        clean_key = str(standing_key).strip()
+        if clean_key in self._sent_standings:
+            return True
         with self._get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT 1 FROM processed_standings WHERE standing_key = ?", (str(standing_key),))
-            return cursor.fetchone() is not None
+            cursor.execute("SELECT 1 FROM processed_standings WHERE standing_key = ?", (clean_key,))
+            res = cursor.fetchone() is not None
+            if res: self._sent_standings.add(clean_key)
+            return res
 
     def mark_standing_processed(self, standing_key: str):
+        clean_key = str(standing_key).strip()
+        self._sent_standings.add(clean_key)
         with self._get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT OR IGNORE INTO processed_standings (standing_key)
                 VALUES (?)
-            """, (str(standing_key),))
+            """, (clean_key,))
             conn.commit()
 
-    # Daily Schedule Methods
+    # Daily Schedule Slate Methods
     def is_daily_schedule_processed(self, schedule_key: str) -> bool:
+        clean_key = str(schedule_key).strip()
+        if clean_key in self._sent_daily_schedules:
+            return True
         with self._get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT 1 FROM processed_daily_schedules WHERE schedule_key = ?", (str(schedule_key),))
-            return cursor.fetchone() is not None
+            cursor.execute("SELECT 1 FROM processed_daily_schedules WHERE schedule_key = ?", (clean_key,))
+            res = cursor.fetchone() is not None
+            if res: self._sent_daily_schedules.add(clean_key)
+            return res
 
     def mark_daily_schedule_processed(self, schedule_key: str):
+        clean_key = str(schedule_key).strip()
+        self._sent_daily_schedules.add(clean_key)
         with self._get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT OR IGNORE INTO processed_daily_schedules (schedule_key)
                 VALUES (?)
-            """, (str(schedule_key),))
+            """, (clean_key,))
             conn.commit()
