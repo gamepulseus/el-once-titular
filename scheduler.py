@@ -242,26 +242,8 @@ class GamePulseScheduler:
                                     time.sleep(1)
                                     self.publisher.publish_bilingual_poll(q_es, q_en, opt_es, opt_en)
 
-                # Pillar 2A-Sub: Official Starting Lineups Alert (Strictly for active MLB/Soccer games with 8+ confirmed starters)
-                if not status_completed and status_state in ["pre", "in"] and l_code in ["mlb", "usa.1"]:
-                    if not self.db.is_lineups_processed(event_id):
-                        if summary_data is None:
-                            summary_data = self.espn.get_game_summary(sport, l_code, event_id)
-                        lineups = summary_data.get("lineups", {}) if summary_data else {}
-                        home_l = lineups.get("home", [])
-                        away_l = lineups.get("away", [])
-
-                        # Only publish lineups post if confirmed starters for both teams are released for THIS specific game
-                        if len(home_l) >= 8 and len(away_l) >= 8:
-                            self.db.mark_lineups_processed(event_id, sport, l_code, event_name)
-                            logger.info(f"[{l_code.upper()}] Official Lineups Released: {event_name}")
-                            msg_es, msg_en, image_url = PostFormatter.format_official_lineups(ev, league, summary_data)
-
-                            if self.dry_run:
-                                print(f"\n--- [DRY RUN - OFFICIAL LINEUPS - ES] ---\n{msg_es}")
-                                print(f"--- [DRY RUN - OFFICIAL LINEUPS - EN] ---\n{msg_en}")
-                            else:
-                                self.publisher.publish_bilingual(msg_es, msg_en, image_url)
+                # Lineups posts disabled per user directive: channels are 100% Stat of the Day & News focused
+                pass
 
                 # Pillar 2B: Game Started & Live In-Game Tracker (FAST LOOKUP ONLY FOR LIVE GAMES)
                 elif not status_completed and status_state == "in":
@@ -391,15 +373,7 @@ class GamePulseScheduler:
         while True:
             now = time.time()
 
-            # Morning Daily Schedule Slate (Every 6 Hours)
-            if now - last_schedule_check >= 21600:
-                try:
-                    self.process_daily_schedule()
-                except Exception as e:
-                    logger.error(f"Error in process_daily_schedule: {e}")
-                last_schedule_check = now
-
-            # Pillar 1: Breaking News & Injury Reports (Every 60 Seconds)
+            # Pillar 1 & 5: Stat of the Day & Breaking News (Every 60 Seconds)
             if now - last_news_check >= config.NEWS_CHECK_INTERVAL:
                 try:
                     self.process_news()
@@ -408,20 +382,12 @@ class GamePulseScheduler:
                     logger.error(f"Error in process_news or process_stat_of_the_day: {e}")
                 last_news_check = now
 
-            # Pillar 2 & 3: Scoreboard & Live In-Game Tracker (Every 10 Seconds)
+            # Pillar 2 & 3: Scoreboard & Live In-Game Milestone Tracker (Every 10 Seconds)
             if now - last_scoreboard_check >= config.SCOREBOARD_CHECK_INTERVAL:
                 try:
                     self.process_scoreboard()
                 except Exception as e:
                     logger.error(f"Error in process_scoreboard: {e}")
                 last_scoreboard_check = now
-
-            # Pillar 4: Daily Standings (Every 12 Hours)
-            if now - last_standings_check >= 43200:
-                try:
-                    self.process_standings()
-                except Exception as e:
-                    logger.error(f"Error in process_standings: {e}")
-                last_standings_check = now
 
             time.sleep(2)
