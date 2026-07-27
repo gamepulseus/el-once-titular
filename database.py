@@ -110,10 +110,10 @@ class DatabaseManager:
                 )
             """)
 
-            # Processed Stat of the Day / Datos Curiosos
+            # Processed Picks & Betting Insights
             cursor.execute("""
-                CREATE TABLE IF NOT EXISTS processed_stat_of_day (
-                    stat_key TEXT PRIMARY KEY,
+                CREATE TABLE IF NOT EXISTS processed_picks (
+                    pick_key TEXT PRIMARY KEY,
                     processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
@@ -134,6 +134,7 @@ class DatabaseManager:
             self._sent_daily_schedules = set()
             self._sent_polls = set()
             self._sent_stat_of_day = set()
+            self._sent_picks = set()
 
             try:
                 cursor.execute("SELECT news_id, headline FROM processed_news")
@@ -182,6 +183,10 @@ class DatabaseManager:
                 cursor.execute("SELECT stat_key FROM processed_stat_of_day")
                 for row in cursor.fetchall():
                     if row[0]: self._sent_stat_of_day.add(str(row[0]).strip())
+
+                cursor.execute("SELECT pick_key FROM processed_picks")
+                for row in cursor.fetchall():
+                    if row[0]: self._sent_picks.add(str(row[0]).strip())
 
             except Exception as e:
                 logger.warning(f"Error loading deduplication memory cache: {e}")
@@ -471,6 +476,29 @@ class DatabaseManager:
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT OR IGNORE INTO processed_stat_of_day (stat_key)
+                VALUES (?)
+            """, (clean_key,))
+            conn.commit()
+
+    # Picks & Betting Methods
+    def is_pick_processed(self, pick_key: str) -> bool:
+        clean_key = str(pick_key).strip()
+        if clean_key in self._sent_picks:
+            return True
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT 1 FROM processed_picks WHERE pick_key = ?", (clean_key,))
+            res = cursor.fetchone() is not None
+            if res: self._sent_picks.add(clean_key)
+            return res
+
+    def mark_pick_processed(self, pick_key: str):
+        clean_key = str(pick_key).strip()
+        self._sent_picks.add(clean_key)
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT OR IGNORE INTO processed_picks (pick_key)
                 VALUES (?)
             """, (clean_key,))
             conn.commit()

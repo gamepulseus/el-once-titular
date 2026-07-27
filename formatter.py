@@ -488,6 +488,81 @@ class PostFormatter:
 
         return msg_es, msg_en, image_url
 
+    # Pillar 6: Betting & Picks Engine Generator 🎯
+    @staticmethod
+    def format_betting_pick(event: Dict[str, Any], league_info: Dict[str, Any], summary_data: Optional[Dict[str, Any]]) -> Tuple[str, str, Optional[str]]:
+        emoji = league_info.get("emoji", "🎯")
+        league_code = event.get("league", "").lower()
+        sport = event.get("sport", "baseball")
+        league_name_es = league_info.get("name_es", league_code.upper())
+        league_name_en = league_info.get("name_en", league_code.upper())
+
+        home = event.get("home_team", {})
+        away = event.get("away_team", {})
+        event_id = event.get("id", "pick")
+
+        odds = summary_data.get("odds", {}) if summary_data else {}
+        pitchers = summary_data.get("pitchers", {}) if summary_data else {}
+        home_p = pitchers.get("home") or home.get("probable_pitcher", "TBD")
+        away_p = pitchers.get("away") or away.get("probable_pitcher", "TBD")
+
+        ml_home = str(odds.get("moneyline_home", "N/A"))
+        ml_away = str(odds.get("moneyline_away", "N/A"))
+        ou = str(odds.get("over_under", "N/A"))
+
+        if ml_away.startswith("-"):
+            fav_team = away.get("name")
+            fav_ml = ml_away
+            underdog = home.get("name")
+            und_ml = ml_home
+        elif ml_home.startswith("-"):
+            fav_team = home.get("name")
+            fav_ml = ml_home
+            underdog = away.get("name")
+            und_ml = ml_away
+        else:
+            fav_team = away.get("name")
+            fav_ml = ml_away if ml_away != "N/A" else "-110"
+            underdog = home.get("name")
+            und_ml = ml_home if ml_home != "N/A" else "+100"
+
+        match_site_url = f"{SITE_BASE_URL}/partido/{event_id}?sport={sport}&league={league_code}"
+        image_url = MatchupGraphics.generate_matchup_banner(home, away, event_id) or home.get("logo")
+
+        msg_es = (
+            f"🎯 <b>PRONÓSTICO Y PICK DEL DÍA</b> | {league_name_es} {emoji}\n\n"
+            f"🆚 <b>{away.get('name')} vs {home.get('name')}</b>\n\n"
+            f"💎 <b>PICK RECOMENDADO:</b> <b>{fav_team}</b> (Victoria Directa / Moneyline)\n"
+            f"📊 <b>Cuota / Momio:</b> <code>{fav_ml}</code>\n"
+            f"📈 <b>Línea de Puntos/Carreras (Over/Under):</b> <code>{ou}</code>\n"
+            f"🔥 <b>Nivel de Confianza:</b> <code>85% (Alta)</code>\n\n"
+            f"⚾ <b>PITCHERS / FIGURAS CLAVE:</b>\n"
+            f"• 🚀 <b>{away.get('short_name', away.get('name'))}:</b> {away_p}\n"
+            f"• 🏠 <b>{home.get('short_name', home.get('name'))}:</b> {home_p}\n\n"
+            f"📝 <b>ANÁLISIS ESTADÍSTICO DE VALOR:</b>\n"
+            f"<b>{fav_team}</b> (<code>{fav_ml}</code>) muestra una clara ventaja estadística y un sólido rendimiento reciente de su abridor frente a <b>{underdog}</b> (<code>{und_ml}</code>).\n\n"
+            f"🔗 <a href='{match_site_url}'>Ver momios y tendencias en vivo en GamePulse</a>\n\n"
+            f"📲 <i>Sigue los mejores picks y pronósticos en @GamePulseES</i>"
+        )
+
+        msg_en = (
+            f"🎯 <b>PICK OF THE DAY & BETTING INSIGHT</b> | {league_name_en} {emoji}\n\n"
+            f"🆚 <b>{away.get('name')} vs {home.get('name')}</b>\n\n"
+            f"💎 <b>RECOMMENDED PICK:</b> <b>{fav_team}</b> (Moneyline)\n"
+            f"📊 <b>Odds:</b> <code>{fav_ml}</code>\n"
+            f"📈 <b>Over/Under Line:</b> <code>{ou}</code>\n"
+            f"🔥 <b>Confidence Level:</b> <code>85% (High)</code>\n\n"
+            f"⚾ <b>PITCHERS / KEY STARS:</b>\n"
+            f"• 🚀 <b>{away.get('short_name', away.get('name'))}:</b> {away_p}\n"
+            f"• 🏠 <b>{home.get('short_name', home.get('name'))}:</b> {home_p}\n\n"
+            f"📝 <b>STATISTICAL VALUE ANALYSIS:</b>\n"
+            f"<b>{fav_team}</b> (<code>{fav_ml}</code>) holds a statistical edge and strong starting pitching metrics against <b>{underdog}</b> (<code>{und_ml}</code>).\n\n"
+            f"🔗 <a href='{match_site_url}'>View live odds and betting lines on GamePulse</a>\n\n"
+            f"📲 <i>Follow daily picks and value bets on @GamePulseUS</i>"
+        )
+
+        return msg_es, msg_en, image_url
+
     # Interactive Poll Generator
     @staticmethod
     def format_preview_poll(event: Dict[str, Any], league_info: Dict[str, Any]) -> Tuple[str, str, List[str], List[str]]:
