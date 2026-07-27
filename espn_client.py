@@ -800,39 +800,150 @@ class ESPNClient:
             "league": league
         }
 
-    # Athlete detail endpoint
+    # Full Athlete Profile Endpoint (Bio, Season Stats, Highlights Banner, Recent Games Log)
     def get_athlete_detail(self, sport: str, league: str, athlete_id: str) -> Optional[Dict[str, Any]]:
-        url = f"{self.ATHLETE_URL}/{sport}/{league}/athletes/{athlete_id}"
-        data = self._fetch_json(url)
-        if not data or "athlete" not in data:
+        core_url = f"https://sports.core.api.espn.com/v2/sports/{sport}/leagues/{league}/athletes/{athlete_id}"
+        overview_url = f"https://site.web.api.espn.com/apis/common/v3/sports/{sport}/{league}/athletes/{athlete_id}/overview"
+        gamelog_url = f"https://site.web.api.espn.com/apis/common/v3/sports/{sport}/{league}/athletes/{athlete_id}/gamelog"
+
+        core = self._fetch_json(core_url) or {}
+        overview = self._fetch_json(overview_url) or {}
+        gamelog = self._fetch_json(gamelog_url) or {}
+
+        if not core and not overview and not gamelog:
             return None
 
-        ath = data.get("athlete", {})
-        headshot_obj = ath.get("headshot", {})
+        # Basic Info & Bio
+        name = core.get("displayName", core.get("fullName", "Atleta"))
+        jersey = core.get("jersey", "")
+        pos = core.get("position", {}).get("displayName", "")
+        ht = core.get("displayHeight", "")
+        wt = core.get("displayWeight", "")
+        dob = core.get("dateOfBirth", "").split("T")[0] if core.get("dateOfBirth") else ""
+        age = str(core.get("age", ""))
+        
+        bats_val = core.get("bats", {})
+        bats = bats_val.get("displayValue", "") if isinstance(bats_val, dict) else str(bats_val or "")
+        
+        throws_val = core.get("throws", {})
+        throws = throws_val.get("displayValue", "") if isinstance(throws_val, dict) else str(throws_val or "")
+        
+        bplace_obj = core.get("birthPlace", {})
+        city = bplace_obj.get("city", "") if isinstance(bplace_obj, dict) else ""
+        country = bplace_obj.get("country", "") if isinstance(bplace_obj, dict) else ""
+        birthplace = f"{city}, {country}".strip(", ")
+
+        team_ref = core.get("team", {}).get("$ref", "") if isinstance(core.get("team"), dict) else ""
+        team_name = ""
+        team_logo = ""
+        if team_ref:
+            team_data = self._fetch_json(team_ref)
+            if team_data and isinstance(team_data, dict):
+                team_name = team_data.get("displayName", "")
+                logos = team_data.get("logos", [])
+                if isinstance(logos, list) and len(logos) > 0 and isinstance(logos[0], dict):
+                    team_logo = logos[0].get("href", "")
+
+        # Headshot
+        headshot_obj = core.get("headshot", {})
         if isinstance(headshot_obj, dict):
             headshot = headshot_obj.get("href", f"https://a.espncdn.com/i/headshots/{league}/players/full/{athlete_id}.png")
         elif isinstance(headshot_obj, str) and headshot_obj.startswith("http"):
             headshot = headshot_obj
         else:
             headshot = f"https://a.espncdn.com/i/headshots/{league}/players/full/{athlete_id}.png"
+
+        # Highlights & Season Table
+        stats_obj = overview.get("statistics", {}) if isinstance(overview, dict) else {}
+        stats_display_name = stats_obj.get("displayName", "2026 Season Stats")
+        stats_labels = stats_obj.get("labels", [])
         
-        position = ath.get("position", {}).get("displayName", "")
-        team_name = ath.get("team", {}).get("displayName", "")
-        jersey = ath.get("jersey", "")
-        height = ath.get("displayHeight", "")
-        weight = ath.get("displayWeight", "")
-        experience = ath.get("experience", {}).get("years", 0)
+        season_rows = []
+        highlights = []
+        for split in stats_obj.get("splits", []):
+            if not isinstance(split, dict): continue
+            row_title = split.get("displayName", "Regular Season")
+            row_values = split.get("stats", [])
+            season_rows.append({"title": row_title, "stats": row_values})
+            
+            if row_title == "Regular Season" and len(row_values) >= len(stats_labels):
+                val_map = dict(zip(stats_labels, row_values))
+                h_count = float(val_map.get("H", 0)) if val_map.get("H") else 0
+                ab_count = float(val_map.get("AB", 0)) if val_map.get("AB") else 0
+                avg = f"{h_count / ab_count:.3f}".lstrip("0") if ab_count > 0 else val_map.get("AVG", ".000")
+                
+                # Check if hitter or pitcher stats
+                if "AVG" in stats_labels or "AB" in stats_labels:
+                    highlights = [
+                        {"label": "AVG", "value": avg},
+                        {"label": "HR", "value": val_map.get("HR", "0")},
+                        {"label": "RBI", "value": val_map.get("RBI", "0")},
+                        {"label": "OPS", "value": val_map.get("OPS", ".000")}
+                    ]
+                else:
+                    highlights = [
+                        {"label": "ERA", "value": val_map.get("ERA", "0.00")},
+                        {"label": "W", "value": val_map.get("W", "0")},
+                        {"label": "SO", "value": val_map.get("SO", "0")},
+                        {"label": "WHIP", "value": val_map.get("WHIP", "0.00")}
+                    ]
+
+        # Recent Games Log
+        gl_labels = gamelog.get("labels", ["AB", "R", "H", "2B", "3B", "HR", "RBI", "BB", "SO"])
+        gl_events_dict = gamelog.get("events", {}) if isinstance(gamelog.get("events"), dict) else {}
+        recent_games = []
+
+        for st in gamelog.get("seasonTypes", []):
+            if not isinstance(st, dict): continue
+            for cat in st.get("categories", []):
+                if not isinstance(cat, dict): continue
+                for item in cat.get("events", []):
+                    if not isinstance(item, dict): continue
+                    ev_id = str(item.get("eventId", ""))
+                    ev_info = gl_events_dict.get(ev_id, {})
+                    
+                    dt_raw = ev_info.get("eventDate", "")
+                    dt_fmt = ""
+                    if dt_raw:
+                        try:
+                            dt_obj = datetime.fromisoformat(dt_raw.replace("Z", "+00:00"))
+                            dt_fmt = dt_obj.strftime("%a %m/%d")
+                        except Exception:
+                            dt_fmt = dt_raw[:10]
+
+                    opp = ev_info.get("opponent", {}).get("abbreviation", "") if isinstance(ev_info.get("opponent"), dict) else ""
+                    at_vs = ev_info.get("atVs", "vs")
+                    res_str = ev_info.get("gameResult", "")
+                    row_stats = item.get("stats", [])
+
+                    recent_games.append({
+                        "date": dt_fmt,
+                        "opponent": f"{at_vs} {opp}",
+                        "result": res_str,
+                        "stats": row_stats
+                    })
 
         return {
             "id": athlete_id,
-            "name": ath.get("displayName", "Atleta"),
+            "name": name,
             "headshot": headshot,
-            "position": position,
-            "team_name": team_name,
             "jersey": jersey,
-            "height": height,
-            "weight": weight,
-            "experience": experience,
+            "position": pos,
+            "height": ht,
+            "weight": wt,
+            "dob": dob,
+            "age": age,
+            "bats": bats,
+            "throws": throws,
+            "birthplace": birthplace,
+            "team_name": team_name,
+            "team_logo": team_logo,
+            "highlights": highlights,
+            "stats_display_name": stats_display_name,
+            "stats_labels": stats_labels,
+            "season_rows": season_rows,
+            "gamelog_labels": gl_labels,
+            "recent_games": recent_games[:10],
             "sport": sport,
             "league": league
         }

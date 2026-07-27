@@ -3,43 +3,281 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ athlete.name }} | GamePulse Athlete Profile</title>
+    <title>{{ athlete.name }} | GamePulse Player Profile</title>
     <link rel="stylesheet" href="/static/css/apple_style.css">
+    <!-- FontAwesome 6 Vector Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .profile-header-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 28px;
+            margin-bottom: 28px;
+            box-shadow: var(--shadow-sm);
+        }
+        .profile-top-grid {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 24px;
+            align-items: center;
+        }
+        @media (max-width: 768px) {
+            .profile-top-grid {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+        }
+        .profile-photo {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--accent-blue);
+            background: var(--bg-card-secondary);
+        }
+        .bio-meta-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+            background: var(--bg-card-secondary);
+            padding: 16px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-subtle);
+        }
+        .bio-item {
+            font-size: 0.88rem;
+        }
+        .bio-label {
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .bio-val {
+            color: var(--text-primary);
+            font-weight: 700;
+            margin-top: 2px;
+        }
+        .highlights-box {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+        .stat-banner-item {
+            background: var(--bg-card-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 12px 20px;
+            text-align: center;
+            min-width: 90px;
+        }
+        .stat-banner-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+        }
+        .stat-banner-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--accent-blue);
+            margin-top: 2px;
+        }
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            margin-bottom: 28px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .profile-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+            text-align: center;
+        }
+        .profile-table th {
+            background: var(--bg-card-secondary);
+            color: var(--text-secondary);
+            padding: 12px;
+            font-weight: 700;
+            border-bottom: 1px solid var(--border-color);
+            white-space: nowrap;
+        }
+        .profile-table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+            white-space: nowrap;
+        }
+        .profile-table tr:hover td {
+            background: rgba(0, 122, 255, 0.05);
+        }
+    </style>
 </head>
 <body>
 
     <!-- Translucent Glass Header Bar -->
     <header class="navbar">
         <a href="/?lang={{ lang }}" class="navbar-brand" style="display: flex; align-items: center; gap: 12px;">
-            <img src="/static/images/gamepulse_logo.png" alt="GamePulse Logo" style="height: 48px; width: auto; object-fit: contain;">
-            <span style="font-size: 1.25rem; font-weight: 800;">GamePulse Player Profile</span>
+            <img src="/static/images/gamepulse_logo.png" alt="GamePulse Logo" style="height: 56px; width: auto; object-fit: contain;">
+            <span style="font-size: 1.35rem; font-weight: 800;">GamePulse Player Profile</span>
         </a>
         <div class="nav-links">
-            <a href="/?lang={{ lang }}" class="nav-btn"><i class="fa-solid fa-arrow-left"></i> {% if lang == 'es' %}Volver al Inicio{% else %}Back Home{% endif %}</a>
-            <a href="https://t.me/GamePulseUS" target="_blank" class="nav-btn"><i class="fa-brands fa-telegram"></i> Telegram</a>
+            <a href="/?lang={{ lang }}" class="nav-btn"><i class="fa-solid fa-fire-flame-curved"></i> {{ ui.nav_games }}</a>
+            <a href="/noticias?lang={{ lang }}" class="nav-btn"><i class="fa-solid fa-newspaper"></i> {{ ui.nav_news }}</a>
+            <a href="/posiciones?lang={{ lang }}" class="nav-btn"><i class="fa-solid fa-list-ol"></i> {{ ui.nav_standings }}</a>
+            <a href="/lideres?lang={{ lang }}" class="nav-btn"><i class="fa-solid fa-trophy"></i> {{ ui.nav_leaders }}</a>
+            <a href="https://t.me/GamePulseUS" target="_blank" class="nav-btn"><i class="fa-brands fa-telegram"></i> {{ ui.nav_telegram }}</a>
+            
             <a href="/jugador/{{ athlete.id }}?league={{ athlete.league }}&sport={{ athlete.sport }}&lang={{ ui.switch_lang_target }}" class="nav-btn" style="border: 1px solid var(--accent-blue); color: var(--accent-blue); font-weight: 700;">
                 <i class="fa-solid fa-globe"></i> {{ ui.switch_lang_label }}
             </a>
         </div>
     </header>
 
-    <main class="detail-container">
+    <main class="container">
 
-        <div class="info-card" style="display: flex; align-items: center; gap: 24px; flex-wrap: wrap;">
-            <img src="{{ athlete.headshot }}" alt="{{ athlete.name }}" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-color);" onerror="this.src='https://a.espncdn.com/i/headshots/mlb/players/full/default.png'">
-            <div>
-                <h1 style="font-size: 2.2rem; font-weight: 800; margin-bottom: 4px;">{{ athlete.name }}</h1>
-                <div style="font-size: 1.1rem; color: var(--accent-blue); font-weight: 700; margin-bottom: 8px;">
-                    {{ athlete.team_name }} • #{{ athlete.jersey }} • {{ athlete.position }}
+        <!-- Top Profile & Bio Header Card -->
+        <div class="profile-header-card">
+            <div class="profile-top-grid">
+                <!-- Headshot Photo -->
+                <img src="{{ athlete.headshot }}" alt="{{ athlete.name }}" class="profile-photo" onerror="this.src='https://a.espncdn.com/i/headshots/mlb/players/full/default.png'">
+                
+                <!-- Player Name, Team, Position -->
+                <div>
+                    <h1 style="font-size: 2.3rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 4px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                        <span>{{ athlete.name }}</span>
+                        {% if athlete.team_logo %}
+                            <img src="{{ athlete.team_logo }}" alt="{{ athlete.team_name }}" style="height: 36px; width: auto; object-fit: contain;">
+                        {% endif %}
+                    </h1>
+                    <div style="font-size: 1.1rem; color: var(--accent-blue); font-weight: 700; margin-bottom: 12px;">
+                        {{ athlete.team_name }} {% if athlete.jersey %}• #{{ athlete.jersey }}{% endif %} • {{ athlete.position }}
+                    </div>
                 </div>
-                <div style="font-size: 0.9rem; color: var(--text-secondary); display: flex; gap: 16px;">
-                    <span><i class="fa-solid fa-ruler-vertical"></i> Height: {{ athlete.height }}</span>
-                    <span><i class="fa-solid fa-weight-hanging"></i> Weight: {{ athlete.weight }}</span>
-                    <span><i class="fa-solid fa-award"></i> Exp: {{ athlete.experience }} yrs</span>
-                </div>
+
+                <!-- Stats Highlights Banner -->
+                {% if athlete.highlights %}
+                    <div class="highlights-box">
+                        {% for h in athlete.highlights %}
+                            <div class="stat-banner-item">
+                                <div class="stat-banner-label">{{ h.label }}</div>
+                                <div class="stat-banner-value">{{ h.value }}</div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Bio Details Grid -->
+            <div class="bio-meta-grid">
+                {% if athlete.height %}
+                    <div class="bio-item">
+                        <div class="bio-label">{% if lang == 'es' %}Estatura{% else %}Height{% endif %}</div>
+                        <div class="bio-val">{{ athlete.height }}</div>
+                    </div>
+                {% endif %}
+
+                {% if athlete.weight %}
+                    <div class="bio-item">
+                        <div class="bio-label">{% if lang == 'es' %}Peso{% else %}Weight{% endif %}</div>
+                        <div class="bio-val">{{ athlete.weight }}</div>
+                    </div>
+                {% endif %}
+
+                {% if athlete.age %}
+                    <div class="bio-item">
+                        <div class="bio-label">{% if lang == 'es' %}Edad / Nacimiento{% else %}Age / Birthdate{% endif %}</div>
+                        <div class="bio-val">{{ athlete.age }} {% if athlete.dob %}({{ athlete.dob }}){% endif %}</div>
+                    </div>
+                {% endif %}
+
+                {% if athlete.bats or athlete.throws %}
+                    <div class="bio-item">
+                        <div class="bio-label">{% if lang == 'es' %}Batea / Lanza{% else %}Bat / Throw{% endif %}</div>
+                        <div class="bio-val">{{ athlete.bats or '-' }} / {{ athlete.throws or '-' }}</div>
+                    </div>
+                {% endif %}
+
+                {% if athlete.birthplace %}
+                    <div class="bio-item">
+                        <div class="bio-label">{% if lang == 'es' %}Lugar de Nacimiento{% else %}Birthplace{% endif %}</div>
+                        <div class="bio-val">{{ athlete.birthplace }}</div>
+                    </div>
+                {% endif %}
             </div>
         </div>
+
+        <!-- 2026 Season & Career Statistics Table -->
+        {% if athlete.season_rows %}
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fa-solid fa-chart-column" style="color: var(--accent-blue);"></i>
+                    <span>{{ athlete.stats_display_name }}</span>
+                </h2>
+            </div>
+
+            <div class="table-responsive">
+                <table class="profile-table">
+                    <thead>
+                        <tr>
+                            <th style="text-align: left;">{% if lang == 'es' %}Etapa{% else %}Split{% endif %}</th>
+                            {% for label in athlete.stats_labels %}
+                                <th>{{ label }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in athlete.season_rows %}
+                            <tr {% if row.title == 'Regular Season' %}style="font-weight: 700; background: rgba(0, 122, 255, 0.08);"{% endif %}>
+                                <td style="text-align: left; font-weight: 700; color: var(--text-primary);">{{ row.title }}</td>
+                                {% for val in row.stats %}
+                                    <td>{{ val }}</td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+
+        <!-- Recent Games Log Table -->
+        {% if athlete.recent_games %}
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fa-solid fa-calendar-check" style="color: var(--accent-blue);"></i>
+                    <span>{% if lang == 'es' %}Partidos Recientes (Game Log){% else %}Recent Games Log{% endif %}</span>
+                </h2>
+            </div>
+
+            <div class="table-responsive">
+                <table class="profile-table">
+                    <thead>
+                        <tr>
+                            <th style="text-align: left;">{% if lang == 'es' %}Fecha{% else %}Date{% endif %}</th>
+                            <th>{% if lang == 'es' %}Rival{% else %}Opponent{% endif %}</th>
+                            <th>{% if lang == 'es' %}Resultado{% else %}Result{% endif %}</th>
+                            {% for label in athlete.gamelog_labels %}
+                                <th>{{ label }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for game in athlete.recent_games %}
+                            <tr>
+                                <td style="text-align: left; color: var(--text-secondary); font-weight: 600;">{{ game.date }}</td>
+                                <td style="font-weight: 700;">{{ game.opponent }}</td>
+                                <td style="font-weight: 700; {% if 'W' in game.result %}color: var(--accent-green);{% elif 'L' in game.result %}color: var(--accent-red);{% endif %}">{{ game.result }}</td>
+                                {% for st in game.stats %}
+                                    <td>{{ st }}</td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
 
     </main>
 
