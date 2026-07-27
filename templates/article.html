@@ -116,14 +116,8 @@
             </div>
 
             {% if article.images %}
-                <div style="position: relative; margin-bottom: 28px;">
+                <div style="margin-bottom: 28px;">
                     <img src="{{ article.images[0] }}" alt="{{ article.headline }}" style="width: 100%; max-height: 480px; object-fit: cover; border-radius: var(--radius-md); box-shadow: var(--shadow-sm);" onerror="this.style.display='none'">
-                    {% if article.link and '/video/clip/' in article.link %}
-                        <a href="{{ article.link }}" target="_blank" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); border: 2px solid var(--accent-blue); color: #FFF; padding: 14px 24px; border-radius: 30px; text-decoration: none; font-weight: 800; display: flex; align-items: center; gap: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.5);">
-                            <i class="fa-solid fa-circle-play" style="font-size: 1.5rem; color: var(--accent-blue);"></i>
-                            <span>{% if lang == 'es' %}Ver Video Clip Original en ESPN →{% else %}Watch Video Clip on ESPN →{% endif %}</span>
-                        </a>
-                    {% endif %}
                 </div>
             {% endif %}
 
@@ -133,24 +127,6 @@
                     <p>{{ paragraph }}</p>
                 {% endfor %}
             </div>
-
-            <!-- ESPN Source Link Banner -->
-            {% if article.link %}
-                <div class="source-banner">
-                    <div>
-                        <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 4px;">
-                            <i class="fa-solid fa-newspaper" style="color: var(--accent-blue);"></i>
-                            {% if lang == 'es' %}Fuente Oficial de la Noticia{% else %}Official News Source{% endif %}
-                        </div>
-                        <div style="font-size: 0.85rem; color: var(--text-secondary);">
-                            {% if lang == 'es' %}Consulta el reporte o video original publicado por ESPN.{% else %}Read the full coverage directly from ESPN's official reporting.{% endif %}
-                        </div>
-                    </div>
-                    <a href="{{ article.link }}" target="_blank" class="nav-btn" style="background: var(--accent-blue); color: #FFF; border: none; font-weight: 700; padding: 10px 18px; border-radius: 8px;">
-                        {% if lang == 'es' %}Abrir en ESPN.com →{% else %}Open on ESPN.com →{% endif %}
-                    </a>
-                </div>
-            {% endif %}
 
         </article>
 
