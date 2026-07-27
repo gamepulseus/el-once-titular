@@ -488,7 +488,7 @@ class PostFormatter:
 
         return msg_es, msg_en, image_url
 
-    # Pillar 6: Player Props Analytics & Value Line Engine 📊 (No Generic Picks)
+    # Pillar 6: Combined Game Analytics & Deep Player Props Engine 📊
     @staticmethod
     def format_betting_pick(event: Dict[str, Any], league_info: Dict[str, Any], summary_data: Optional[Dict[str, Any]]) -> Tuple[str, str, Optional[str]]:
         emoji = league_info.get("emoji", "📊")
@@ -506,11 +506,31 @@ class PostFormatter:
         home_p = pitchers.get("home") or home.get("probable_pitcher", "TBD")
         away_p = pitchers.get("away") or away.get("probable_pitcher", "TBD")
 
+        ml_home = str(odds.get("moneyline_home", "N/A"))
+        ml_away = str(odds.get("moneyline_away", "N/A"))
         ou = str(odds.get("over_under", "N/A"))
+        details = odds.get("details", "N/A")
+
+        record_home = home.get("record", "N/A")
+        record_away = away.get("record", "N/A")
+
         match_site_url = f"{SITE_BASE_URL}/partido/{event_id}?sport={sport}&league={league_code}"
         image_url = MatchupGraphics.generate_matchup_banner(home, away, event_id) or home.get("logo")
 
         if "mlb" in league_code or "baseball" in league_code:
+            game_block_es = (
+                f"🏟️ <b>ANÁLISIS DEL PARTIDO Y LÍNEAS:</b>\n"
+                f"• 📈 <b>Línea de Carreras (Over/Under):</b> <code>{ou} Carreras</code>\n"
+                f"• 💰 <b>Cuotas de Victoria (Moneyline):</b> <code>{away.get('short_name')} ({ml_away})</code> vs <code>{home.get('short_name')} ({ml_home})</code>\n"
+                f"• 📊 <b>Récord de Temporada:</b> {away.get('short_name')} (<code>{record_away}</code>) | {home.get('short_name')} (<code>{record_home}</code>)\n"
+            )
+            game_block_en = (
+                f"🏟️ <b>GAME ANALYTICS & BETTING LINES:</b>\n"
+                f"• 📈 <b>Total Run Line (Over/Under):</b> <code>{ou} Runs</code>\n"
+                f"• 💰 <b>Moneyline Odds:</b> <code>{away.get('short_name')} ({ml_away})</code> vs <code>{home.get('short_name')} ({ml_home})</code>\n"
+                f"• 📊 <b>Season Record:</b> {away.get('short_name')} (<code>{record_away}</code>) | {home.get('short_name')} (<code>{record_home}</code>)\n"
+            )
+
             props_block_es = (
                 f"🔥 <b>ANÁLISIS DE JUGADORES Y PROPS (TOP 3):</b>\n\n"
                 f"1️⃣ 🚀 <b>{away_p}</b> ({away.get('short_name')} - Pitcher Abridor):\n"
@@ -546,6 +566,19 @@ class PostFormatter:
                 f"The <b>Over 6.5 Ks (+105)</b> line for <b>{away_p}</b> shows a 78% value rating based on opponent strikeout rate in night games."
             )
         elif "basketball" in sport or "nba" in league_code:
+            game_block_es = (
+                f"🏟️ <b>ANÁLISIS DEL PARTIDO Y LÍNEAS:</b>\n"
+                f"• 📈 <b>Puntos Totales del Partido (Over/Under):</b> <code>{ou} Puntos</code>\n"
+                f"• 💰 <b>Cuotas de Victoria (Moneyline):</b> <code>{away.get('short_name')} ({ml_away})</code> vs <code>{home.get('short_name')} ({ml_home})</code>\n"
+                f"• 📊 <b>Récord de Temporada:</b> {away.get('short_name')} (<code>{record_away}</code>) | {home.get('short_name')} (<code>{record_home}</code>)\n"
+            )
+            game_block_en = (
+                f"🏟️ <b>GAME ANALYTICS & BETTING LINES:</b>\n"
+                f"• 📈 <b>Total Game Points Line (Over/Under):</b> <code>{ou} Points</code>\n"
+                f"• 💰 <b>Moneyline Odds:</b> <code>{away.get('short_name')} ({ml_away})</code> vs <code>{home.get('short_name')} ({ml_home})</code>\n"
+                f"• 📊 <b>Season Record:</b> {away.get('short_name')} (<code>{record_away}</code>) | {home.get('short_name')} (<code>{record_home}</code>)\n"
+            )
+
             props_block_es = (
                 f"🔥 <b>ANÁLISIS DE JUGADORES Y PROPS (TOP 3 STARS):</b>\n\n"
                 f"1️⃣ 🌟 <b>Estrella Principal ({away.get('short_name')}):</b>\n"
@@ -557,8 +590,6 @@ class PostFormatter:
                 f"   • 🏀 <b>Puntos Totales:</b> Línea Over/Under 28.5 Puntos (-115)\n"
                 f"   • 🎯 <b>Puntos por Cestas de 2:</b> 18+ Puntos en la pintura\n"
                 f"   • 🔄 <b>Rebotes Totales:</b> Línea Over 9.5 Rebotes (-105)\n\n"
-                f"3️⃣ 📊 <b>LÍNEAS DEL PARTIDO:</b>\n"
-                f"   • 📈 <b>Puntos Totales del Partido:</b> Línea Over/Under <code>{ou}</code>\n\n"
                 f"💡 <b>EVALUACIÓN DE CUOTAS Y VALOR DE MERCADO:</b>\n"
                 f"La cuota para <b>Doble-Doble (+140)</b> ofrece un retorno superior al promedio dada la racha reciente de rebotes."
             )
@@ -573,12 +604,23 @@ class PostFormatter:
                 f"   • 🏀 <b>Points Prop:</b> Over/Under 28.5 Points (-115)\n"
                 f"   • 🎯 <b>2-Point FGs:</b> 18+ Paint Points\n"
                 f"   • 🔄 <b>Total Rebounds:</b> Over 9.5 REB (-105)\n\n"
-                f"3️⃣ 📊 <b>GAME TOTALS:</b>\n"
-                f"   • 📈 <b>Total Points Line:</b> Over/Under <code>{ou}</code>\n\n"
                 f"💡 <b>MARKET VALUE EVALUATION:</b>\n"
                 f"The <b>Double-Double (+140)</b> prop holds strong statistical edge based on recent glass dominance."
             )
         else:
+            game_block_es = (
+                f"🏟️ <b>ANÁLISIS DEL PARTIDO Y LÍNEAS:</b>\n"
+                f"• 📈 <b>Línea Total (Over/Under):</b> <code>{ou}</code>\n"
+                f"• 💰 <b>Cuotas de Victoria (Moneyline):</b> <code>{away.get('short_name')} ({ml_away})</code> vs <code>{home.get('short_name')} ({ml_home})</code>\n"
+                f"• 📊 <b>Récord de Temporada:</b> {away.get('short_name')} (<code>{record_away}</code>) | {home.get('short_name')} (<code>{record_home}</code>)\n"
+            )
+            game_block_en = (
+                f"🏟️ <b>GAME ANALYTICS & BETTING LINES:</b>\n"
+                f"• 📈 <b>Total Game Line (Over/Under):</b> <code>{ou}</code>\n"
+                f"• 💰 <b>Moneyline Odds:</b> <code>{away.get('short_name')} ({ml_away})</code> vs <code>{home.get('short_name')} ({ml_home})</code>\n"
+                f"• 📊 <b>Season Record:</b> {away.get('short_name')} (<code>{record_away}</code>) | {home.get('short_name')} (<code>{record_home}</code>)\n"
+            )
+
             props_block_es = (
                 f"🔥 <b>ANÁLISIS DE JUGADORES Y PROPS CLAVE:</b>\n\n"
                 f"1️⃣ 🏈 <b>Quarterback / Jugador Clave ({away.get('short_name')}):</b>\n"
@@ -607,19 +649,21 @@ class PostFormatter:
             )
 
         msg_es = (
-            f"📊 <b>ANÁLISIS DE JUGADORES Y CUOTAS (PLAYER PROPS)</b> | {league_name_es} {emoji}\n\n"
+            f"📊 <b>ANÁLISIS DEL PARTIDO Y PROPS DE JUGADORES</b> | {league_name_es} {emoji}\n\n"
             f"🆚 <b>{away.get('name')} vs {home.get('name')}</b>\n\n"
+            f"{game_block_es}\n"
             f"{props_block_es}\n\n"
             f"🔗 <a href='{match_site_url}'>Ver todas las cuotas de jugadores en vivo en GamePulse</a>\n\n"
-            f"📲 <i>Sigue los mejores análisis de props en @GamePulseES</i>"
+            f"📲 <i>Sigue los mejores análisis en @GamePulseES</i>"
         )
 
         msg_en = (
-            f"📊 <b>DEEP PLAYER PROPS & VALUE ANALYTICS</b> | {league_name_en} {emoji}\n\n"
+            f"📊 <b>GAME & DEEP PLAYER PROPS ANALYTICS</b> | {league_name_en} {emoji}\n\n"
             f"🆚 <b>{away.get('name')} vs {home.get('name')}</b>\n\n"
+            f"{game_block_en}\n"
             f"{props_block_en}\n\n"
-            f"🔗 <a href='{match_site_url}'>View all player props & odds live on GamePulse</a>\n\n"
-            f"📲 <i>Follow deep player props analytics on @GamePulseUS</i>"
+            f"🔗 <a href='{match_site_url}'>View all game & player props odds live on GamePulse</a>\n\n"
+            f"📲 <i>Follow deep game & player props analytics on @GamePulseUS</i>"
         )
 
         return msg_es, msg_en, image_url
