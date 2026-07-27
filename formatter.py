@@ -384,6 +384,72 @@ class PostFormatter:
 
         return msg_es, msg_en, image_url
 
+    # Feature: Stat of the Day / Dato Curioso del Día Generator 📊
+    @staticmethod
+    def format_stat_of_day(event: Dict[str, Any], league_info: Dict[str, Any], summary_data: Optional[Dict[str, Any]]) -> Tuple[str, str, Optional[str]]:
+        emoji = league_info.get("emoji", "📊")
+        league_code = event.get("league", "").lower()
+        sport = event.get("sport", "baseball")
+        league_name_es = league_info.get("name_es", league_code.upper())
+        league_name_en = league_info.get("name_en", league_code.upper())
+
+        home = event.get("home_team", {})
+        away = event.get("away_team", {})
+        event_id = event.get("id", "stat")
+
+        pitchers = summary_data.get("pitchers", {}) if summary_data else {}
+        home_p = pitchers.get("home") or home.get("probable_pitcher", "Por Anunciar / TBD")
+        away_p = pitchers.get("away") or away.get("probable_pitcher", "Por Anunciar / TBD")
+
+        record_home = home.get("record", "N/A")
+        record_away = away.get("record", "N/A")
+
+        match_site_url = f"{SITE_BASE_URL}/partido/{event_id}?sport={sport}&league={league_code}"
+        image_url = MatchupGraphics.generate_matchup_banner(home, away, event_id) or home.get("logo")
+
+        if "mlb" in league_code or "baseball" in league_code:
+            stat_text_es = (
+                f"🔥 <b>Lanzador Destacado:</b> <b>{away_p}</b> (Visitante) vs <b>{home_p}</b> (Local).\n"
+                f"📈 <b>Rendimiento Reciente:</b> <code>{away.get('short_name')} ({record_away})</code> busca mantener su racha ofensiva ante <code>{home.get('short_name')} ({record_home})</code>."
+            )
+            stat_text_en = (
+                f"🔥 <b>Featured Pitchers:</b> <b>{away_p}</b> (Away) vs <b>{home_p}</b> (Home).\n"
+                f"📈 <b>Recent Form:</b> <code>{away.get('short_name')} ({record_away})</code> looks to carry momentum against <code>{home.get('short_name')} ({record_home})</code>."
+            )
+        else:
+            stat_text_es = (
+                f"🔥 <b>Enfrentamiento Clave:</b> <b>{home.get('name')}</b> (<code>{record_home}</code>) recibe a <b>{away.get('name')}</b> (<code>{record_away}</code>).\n"
+                f"📈 <b>Racha Destacada:</b> Ambos equipos llegan buscando consolidar su posición en la tabla."
+            )
+            stat_text_en = (
+                f"🔥 <b>Key Matchup:</b> <b>{home.get('name')}</b> (<code>{record_home}</code>) hosts <b>{away.get('name')}</b> (<code>{record_away}</code>).\n"
+                f"📈 <b>Streak Highlight:</b> Both squads look to secure a crucial win today."
+            )
+
+        msg_es = (
+            f"📊 <b>DATO CURIOSO DEL DÍA</b> | {league_name_es} {emoji}\n\n"
+            f"🆚 <b>{away.get('name')} vs {home.get('name')}</b>\n\n"
+            f"{stat_text_es}\n\n"
+            f"⚾ <b>PITCHERS / FIGURAS:</b>\n"
+            f"• 🚀 <b>{away.get('short_name', away.get('name'))}:</b> {away_p}\n"
+            f"• 🏠 <b>{home.get('short_name', home.get('name'))}:</b> {home_p}\n\n"
+            f"🔗 <a href='{match_site_url}'>Ver detalles y estadísticas en vivo en GamePulse</a>\n\n"
+            f"📲 <i>Sigue a @GamePulseES para las mejores alertas en vivo.</i>"
+        )
+
+        msg_en = (
+            f"📊 <b>STAT OF THE DAY</b> | {league_name_en} {emoji}\n\n"
+            f"🆚 <b>{away.get('name')} vs {home.get('name')}</b>\n\n"
+            f"{stat_text_en}\n\n"
+            f"⚾ <b>PITCHERS / STARS:</b>\n"
+            f"• 🚀 <b>{away.get('short_name', away.get('name'))}:</b> {away_p}\n"
+            f"• 🏠 <b>{home.get('short_name', home.get('name'))}:</b> {home_p}\n\n"
+            f"🔗 <a href='{match_site_url}'>View live match details on GamePulse</a>\n\n"
+            f"📲 <i>Follow @GamePulseUS for instant live updates.</i>"
+        )
+
+        return msg_es, msg_en, image_url
+
     # Interactive Poll Generator
     @staticmethod
     def format_preview_poll(event: Dict[str, Any], league_info: Dict[str, Any]) -> Tuple[str, str, List[str], List[str]]:

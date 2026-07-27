@@ -110,21 +110,10 @@ class DatabaseManager:
                 )
             """)
 
-            # Processed Pre-Game Polls
+            # Processed Stat of the Day / Datos Curiosos
             cursor.execute("""
-                CREATE TABLE IF NOT EXISTS processed_polls (
-                    poll_key TEXT PRIMARY KEY,
-                    processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            """)
-
-            # Processed Official Lineups
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS processed_lineups (
-                    event_id TEXT PRIMARY KEY,
-                    sport TEXT,
-                    league TEXT,
-                    event_name TEXT,
+                CREATE TABLE IF NOT EXISTS processed_stat_of_day (
+                    stat_key TEXT PRIMARY KEY,
                     processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
@@ -144,6 +133,7 @@ class DatabaseManager:
             self._sent_standings = set()
             self._sent_daily_schedules = set()
             self._sent_polls = set()
+            self._sent_stat_of_day = set()
 
             try:
                 cursor.execute("SELECT news_id, headline FROM processed_news")
@@ -188,6 +178,10 @@ class DatabaseManager:
                 cursor.execute("SELECT poll_key FROM processed_polls")
                 for row in cursor.fetchall():
                     if row[0]: self._sent_polls.add(str(row[0]).strip())
+
+                cursor.execute("SELECT stat_key FROM processed_stat_of_day")
+                for row in cursor.fetchall():
+                    if row[0]: self._sent_stat_of_day.add(str(row[0]).strip())
 
             except Exception as e:
                 logger.warning(f"Error loading deduplication memory cache: {e}")
@@ -454,6 +448,29 @@ class DatabaseManager:
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT OR IGNORE INTO processed_polls (poll_key)
+                VALUES (?)
+            """, (clean_key,))
+            conn.commit()
+
+    # Stat of the Day Methods
+    def is_stat_of_day_processed(self, stat_key: str) -> bool:
+        clean_key = str(stat_key).strip()
+        if clean_key in self._sent_stat_of_day:
+            return True
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT 1 FROM processed_stat_of_day WHERE stat_key = ?", (clean_key,))
+            res = cursor.fetchone() is not None
+            if res: self._sent_stat_of_day.add(clean_key)
+            return res
+
+    def mark_stat_of_day_processed(self, stat_key: str):
+        clean_key = str(stat_key).strip()
+        self._sent_stat_of_day.add(clean_key)
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT OR IGNORE INTO processed_stat_of_day (stat_key)
                 VALUES (?)
             """, (clean_key,))
             conn.commit()

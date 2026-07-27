@@ -144,6 +144,41 @@ class GamePulseScheduler:
                 self.publisher.publish_bilingual(msg_es, msg_en)
             logger.info(f"Daily match schedule slate for TODAY ({today_et_str}) published successfully.")
 
+    def process_stat_of_the_day(self):
+        logger.info("=== Running Pillar 5: Stat of the Day & Curious Trends (EVERY VALID MATCHUP) ===")
+        today_str = datetime.now(ET_ZONE).strftime("%Y-%m-%d")
+
+        for league in config.ACTIVE_LEAGUES:
+            sport = league["sport"]
+            l_code = league["league"]
+            events = self.espn.get_scoreboard(sport, l_code)
+
+            for ev in events:
+                event_id = str(ev["id"])
+                event_name = ev["name"]
+                status_state = ev.get("status_state", "pre")
+                status_completed = ev.get("status_completed", False)
+
+                if not status_completed and status_state == "pre":
+                    home_name = ev.get("home_team", {}).get("name", "")
+                    away_name = ev.get("away_team", {}).get("name", "")
+                    h_clean = re.sub(r'[^a-zA-Z0-9]', '', home_name.lower())
+                    a_clean = re.sub(r'[^a-zA-Z0-9]', '', away_name.lower())
+                    teams_sorted = "_".join(sorted([h_clean, a_clean]))
+                    stat_key = f"stat_{l_code}_{teams_sorted}_{today_str}"
+
+                    if not self.db.is_stat_of_day_processed(stat_key):
+                        summary_data = self.espn.get_game_summary(sport, l_code, event_id)
+                        self.db.mark_stat_of_day_processed(stat_key)
+                        logger.info(f"[{l_code.upper()}] Publishing Stat of the Day: {event_name}")
+                        msg_es, msg_en, image_url = PostFormatter.format_stat_of_day(ev, league, summary_data)
+
+                        if self.dry_run:
+                            print(f"\n--- [DRY RUN - STAT OF THE DAY - ES] ---\n{msg_es}")
+                        else:
+                            self.publisher.publish_bilingual(msg_es, msg_en, image_url)
+                            time.sleep(1)
+
     def process_scoreboard(self):
         logger.info("=== Running Ultra-Fast Live In-Game Tracker ===")
         for league in config.ACTIVE_LEAGUES:
@@ -368,8 +403,9 @@ class GamePulseScheduler:
             if now - last_news_check >= config.NEWS_CHECK_INTERVAL:
                 try:
                     self.process_news()
+                    self.process_stat_of_the_day()
                 except Exception as e:
-                    logger.error(f"Error in process_news: {e}")
+                    logger.error(f"Error in process_news or process_stat_of_the_day: {e}")
                 last_news_check = now
 
             # Pillar 2 & 3: Scoreboard & Live In-Game Tracker (Every 10 Seconds)
