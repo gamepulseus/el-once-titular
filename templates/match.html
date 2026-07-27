@@ -189,7 +189,7 @@
                                         <tr>
                                             <td>
                                                 <a href="/jugador/{{ ath.id }}?sport={{ event.sport }}&league={{ event.league }}&lang={{ lang }}" style="color: var(--text-primary); text-decoration: none; font-weight: 600;">
-                                                    {{ ath.name }}
+                                                    {{ ath.name }} {% if ath.position %}<span style="color: var(--accent-blue); font-size: 0.82rem; font-weight: 700; margin-left: 4px;">{{ ath.position }}</span>{% endif %}
                                                 </a>
                                             </td>
                                             {% for val in ath.stats %}

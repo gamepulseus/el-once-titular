@@ -295,6 +295,8 @@ class ESPNClient:
                     for ath in cat.get("athletes", []):
                         ath_name = ath.get("athlete", {}).get("displayName", "")
                         ath_id = ath.get("athlete", {}).get("id", "")
+                        pos_obj = ath.get("position", {}) or ath.get("athlete", {}).get("position", {})
+                        position = pos_obj.get("abbreviation", "") if isinstance(pos_obj, dict) else ""
                         notes = ath.get("notes", [])
                         stats_vals = ath.get("stats", [])
                         
@@ -313,6 +315,7 @@ class ESPNClient:
                             athletes_list.append({
                                 "id": ath_id,
                                 "name": ath_name,
+                                "position": position,
                                 "stats": stats_vals
                             })
 
