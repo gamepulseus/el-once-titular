@@ -7,7 +7,10 @@ __pycache__/
 env/
 venv/
 *.db
+*.db-shm
+*.db-wal
 *.sqlite
 *.log
+cache/
 .vscode/
 .idea/
