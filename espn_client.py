@@ -804,10 +804,12 @@ class ESPNClient:
     def get_athlete_detail(self, sport: str, league: str, athlete_id: str) -> Optional[Dict[str, Any]]:
         core_url = f"https://sports.core.api.espn.com/v2/sports/{sport}/leagues/{league}/athletes/{athlete_id}"
         overview_url = f"https://site.web.api.espn.com/apis/common/v3/sports/{sport}/{league}/athletes/{athlete_id}/overview"
+        stats_url = f"https://site.web.api.espn.com/apis/common/v3/sports/{sport}/{league}/athletes/{athlete_id}/stats"
         gamelog_url = f"https://site.web.api.espn.com/apis/common/v3/sports/{sport}/{league}/athletes/{athlete_id}/gamelog"
 
         core = self._fetch_json(core_url) or {}
         overview = self._fetch_json(overview_url) or {}
+        stats_data = self._fetch_json(stats_url) or {}
         gamelog = self._fetch_json(gamelog_url) or {}
 
         if not core and not overview and not gamelog:
@@ -828,16 +830,22 @@ class ESPNClient:
         throws_val = core.get("throws", {})
         throws = throws_val.get("displayValue", "") if isinstance(throws_val, dict) else str(throws_val or "")
         
-        bplace_obj = core.get("birthPlace", {})
-        city = bplace_obj.get("city", "") if isinstance(bplace_obj, dict) else ""
-        country = bplace_obj.get("country", "") if isinstance(bplace_obj, dict) else ""
-        birthplace = f"{city}, {country}".strip(", ")
+        bplace_obj = core.get("birthPlace", {}) if isinstance(core.get("birthPlace"), dict) else {}
+        city = bplace_obj.get("city", "")
+        state = bplace_obj.get("state", "")
+        country = bplace_obj.get("country", "")
+        if city and state:
+            birthplace = f"{city}, {state}"
+        elif city and country:
+            birthplace = f"{city}, {country}"
+        else:
+            birthplace = city or state or country or ""
 
         team_ref = core.get("team", {}).get("$ref", "") if isinstance(core.get("team"), dict) else ""
         team_name = ""
         team_logo = ""
         if team_ref:
-            team_data = self._fetch_json(team_ref)
+            team_data = self._fetch_json(team_ref.replace("http://", "https://"))
             if team_data and isinstance(team_data, dict):
                 team_name = team_data.get("displayName", "")
                 logos = team_data.get("logos", [])
@@ -853,40 +861,61 @@ class ESPNClient:
         else:
             headshot = f"https://a.espncdn.com/i/headshots/{league}/players/full/{athlete_id}.png"
 
-        # Highlights & Season Table
-        stats_obj = overview.get("statistics", {}) if isinstance(overview, dict) else {}
-        stats_display_name = stats_obj.get("displayName", "2026 Season Stats")
-        stats_labels = stats_obj.get("labels", [])
+        # Highlights & Season Table from stats_url
+        categories = stats_data.get("categories", []) if isinstance(stats_data, dict) else []
+        main_cat = categories[0] if isinstance(categories, list) and len(categories) > 0 else {}
+        stats_display_name = main_cat.get("displayName", "2026 Season Stats")
+        stats_labels = main_cat.get("labels", [])
         
         season_rows = []
         highlights = []
-        for split in stats_obj.get("splits", []):
-            if not isinstance(split, dict): continue
-            row_title = split.get("displayName", "Regular Season")
-            row_values = split.get("stats", [])
-            season_rows.append({"title": row_title, "stats": row_values})
-            
-            if row_title == "Regular Season" and len(row_values) >= len(stats_labels):
-                val_map = dict(zip(stats_labels, row_values))
-                h_count = float(val_map.get("H", 0)) if val_map.get("H") else 0
-                ab_count = float(val_map.get("AB", 0)) if val_map.get("AB") else 0
-                avg = f"{h_count / ab_count:.3f}".lstrip("0") if ab_count > 0 else val_map.get("AVG", ".000")
+        
+        if main_cat and isinstance(main_cat.get("statistics"), list):
+            for stat_row in main_cat["statistics"]:
+                if not isinstance(stat_row, dict): continue
+                season_obj = stat_row.get("season", {})
+                s_year = str(season_obj.get("year", season_obj.get("displayName", ""))) if isinstance(season_obj, dict) else ""
+                r_vals = stat_row.get("stats", [])
+                season_rows.append({"title": s_year, "stats": r_vals})
                 
-                # Check if hitter or pitcher stats
-                if "AVG" in stats_labels or "AB" in stats_labels:
-                    highlights = [
-                        {"label": "AVG", "value": avg},
-                        {"label": "HR", "value": val_map.get("HR", "0")},
-                        {"label": "RBI", "value": val_map.get("RBI", "0")},
-                        {"label": "OPS", "value": val_map.get("OPS", ".000")}
-                    ]
-                else:
-                    highlights = [
-                        {"label": "ERA", "value": val_map.get("ERA", "0.00")},
-                        {"label": "W", "value": val_map.get("W", "0")},
-                        {"label": "SO", "value": val_map.get("SO", "0")},
-                        {"label": "WHIP", "value": val_map.get("WHIP", "0.00")}
-                    ]
+                # Build 2026 highlights
+                if s_year == "2026" and len(r_vals) >= len(stats_labels):
+                    val_map = dict(zip(stats_labels, r_vals))
+                    if "AVG" in stats_labels:
+                        highlights = [
+                            {"label": "AVG", "value": val_map.get("AVG", ".000")},
+                            {"label": "HR", "value": val_map.get("HR", "0")},
+                            {"label": "RBI", "value": val_map.get("RBI", "0")},
+                            {"label": "OPS", "value": val_map.get("OPS", ".000")}
+                        ]
+                    else:
+                        highlights = [
+                            {"label": "ERA", "value": val_map.get("ERA", "0.00")},
+                            {"label": "W", "value": val_map.get("W", "0")},
+                            {"label": "SO", "value": val_map.get("SO", "0")},
+                            {"label": "WHIP", "value": val_map.get("WHIP", "0.00")}
+                        ]
+
+        # Fallback to overview if stats_url didn't return rows
+        if not season_rows and overview and isinstance(overview.get("statistics"), dict):
+            st_obj = overview["statistics"]
+            stats_display_name = st_obj.get("displayName", "2026 Season Stats")
+            stats_labels = st_obj.get("labels", [])
+            for split in st_obj.get("splits", []):
+                if isinstance(split, dict):
+                    season_rows.append({"title": split.get("displayName", ""), "stats": split.get("stats", [])})
+                    
+                    if split.get("displayName") == "Regular Season" and len(split.get("stats", [])) >= len(stats_labels):
+                        val_map = dict(zip(stats_labels, split.get("stats", [])))
+                        h_count = float(val_map.get("H", 0)) if val_map.get("H") else 0
+                        ab_count = float(val_map.get("AB", 0)) if val_map.get("AB") else 0
+                        avg = f"{h_count / ab_count:.3f}".lstrip("0") if ab_count > 0 else val_map.get("AVG", ".000")
+                        highlights = [
+                            {"label": "AVG", "value": avg},
+                            {"label": "HR", "value": val_map.get("HR", "0")},
+                            {"label": "RBI", "value": val_map.get("RBI", "0")},
+                            {"label": "OPS", "value": val_map.get("OPS", ".000")}
+                        ]
 
         # Recent Games Log
         gl_labels = gamelog.get("labels", ["AB", "R", "H", "2B", "3B", "HR", "RBI", "BB", "SO"])
