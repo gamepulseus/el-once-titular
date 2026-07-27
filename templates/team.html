@@ -248,6 +248,7 @@
                         <table class="schedule-table">
                             <thead>
                                 <tr>
+                                    <th>{% if lang == 'es' %}Fecha{% else %}Date{% endif %}</th>
                                     <th>{% if lang == 'es' %}Rival / Opponent{% else %}Opponent{% endif %}</th>
                                     <th>{% if lang == 'es' %}Resultado / Estado{% else %}Result / Status{% endif %}</th>
                                     <th>{% if lang == 'es' %}Marcador{% else %}Score{% endif %}</th>
@@ -255,8 +256,11 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for g in team.schedule[:25] %}
+                                {% for g in team.schedule[:35] %}
                                     <tr>
+                                        <td style="color: var(--text-secondary); font-weight: 700; white-space: nowrap;">
+                                            {{ g.date_display or '-' }}
+                                        </td>
                                         <td>
                                             <div style="display: flex; align-items: center; gap: 10px;">
                                                 <span style="color: var(--text-secondary); font-weight: 700;">{{ g.prefix }}</span>
@@ -269,9 +273,9 @@
                                         <td>
                                             {% if g.is_completed %}
                                                 {% if g.win %}
-                                                    <span class="result-badge result-w">W (Victoria)</span>
+                                                    <span class="result-badge result-w">W ({% if lang == 'es' %}Victoria{% else %}Win{% endif %})</span>
                                                 {% else %}
-                                                    <span class="result-badge result-l">L (Derrota)</span>
+                                                    <span class="result-badge result-l">L ({% if lang == 'es' %}Derrota{% else %}Loss{% endif %})</span>
                                                 {% endif %}
                                             {% else %}
                                                 <span style="color: var(--accent-blue); font-weight: 600;">{{ g.status_detail }}</span>

@@ -944,7 +944,11 @@ class ESPNClient:
                     })
 
         # Fetch Team Schedule & Results
-        schedule = []
+        upcoming_games = []
+        completed_games = []
+        now_et = datetime.now(ET_ZONE)
+        today_str = now_et.strftime("%Y-%m-%d")
+
         sched_url = f"{self.BASE_URL}/{sport}/{league}/teams/{team_id}/schedule"
         sched_data = self._fetch_json(sched_url)
         if sched_data and "events" in sched_data:
@@ -952,6 +956,19 @@ class ESPNClient:
                 ev_id = str(ev.get("id"))
                 comps = ev.get("competitions", [{}])[0]
                 date_utc = ev.get("date", "")
+
+                dt_et = None
+                date_display = ""
+                date_et_str = ""
+                if date_utc:
+                    try:
+                        clean_dt = date_utc.replace("Z", "+00:00")
+                        dt_utc = datetime.fromisoformat(clean_dt)
+                        dt_et = dt_utc.astimezone(ET_ZONE)
+                        date_display = dt_et.strftime("%b %d") # e.g. Jul 27
+                        date_et_str = dt_et.strftime("%Y-%m-%d")
+                    except Exception:
+                        pass
                 
                 home_c = None
                 away_c = None
@@ -977,10 +994,16 @@ class ESPNClient:
                     o_val = int(opp_c.get("score", {}).get("value", 0))
                     win = team_c.get("winner", False) or (t_val > o_val)
                     score_str = f"{t_val}-{o_val}"
-                    
-                schedule.append({
+
+                # Filter out past postponed games
+                if status_type == "STATUS_POSTPONED" and date_et_str < today_str:
+                    continue
+
+                item = {
                     "id": ev_id,
                     "date": date_utc,
+                    "date_display": date_display,
+                    "date_et_str": date_et_str,
                     "is_home": is_home,
                     "prefix": "vs" if is_home else "@",
                     "opp_name": opp_name,
@@ -989,13 +1012,18 @@ class ESPNClient:
                     "win": win,
                     "score_str": score_str,
                     "status_detail": status_detail
-                })
+                }
 
-        # Sort schedule: upcoming games first, then most recent completed games (matching ESPN)
-        upcoming_games = [g for g in schedule if not g["is_completed"]]
-        completed_games = [g for g in schedule if g["is_completed"]]
-        completed_games.reverse()
-        sorted_schedule = upcoming_games[:5] + completed_games
+                if is_completed or (date_et_str and date_et_str < today_str):
+                    completed_games.append(item)
+                else:
+                    upcoming_games.append(item)
+
+        # Upcoming games in ascending date order (today, tomorrow, next week)
+        upcoming_games.sort(key=lambda x: x.get("date_et_str", ""))
+        # Completed games in descending date order (yesterday, day before, etc.)
+        completed_games.sort(key=lambda x: x.get("date_et_str", ""), reverse=True)
+        sorted_schedule = upcoming_games[:10] + completed_games[:35]
 
         # Fetch League Division Standings Table for Team
         division_standings = []
