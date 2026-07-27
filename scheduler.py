@@ -263,17 +263,20 @@ class GamePulseScheduler:
             if self.db.is_standing_processed(standing_key):
                 continue
 
-            logger.info(f"[{l_code.upper()}] Fetching daily standings...")
-            conferences = self.espn.get_standings(sport, l_code)
-            if conferences:
-                msg_es, msg_en = PostFormatter.format_standings(conferences, league)
+            try:
+                logger.info(f"[{l_code.upper()}] Fetching daily standings...")
+                conferences = self.espn.get_standings(sport, l_code)
+                if conferences:
+                    msg_es, msg_en = PostFormatter.format_standings(conferences, league)
 
-                if self.dry_run:
-                    print(f"\n--- [DRY RUN - STANDINGS - ES] ---\n{msg_es}")
-                else:
-                    self.publisher.publish_bilingual(msg_es, msg_en)
+                    if self.dry_run:
+                        print(f"\n--- [DRY RUN - STANDINGS - ES] ---\n{msg_es}")
+                    else:
+                        self.publisher.publish_bilingual(msg_es, msg_en)
 
-                self.db.mark_standing_processed(standing_key)
+                    self.db.mark_standing_processed(standing_key)
+            except Exception as e:
+                logger.error(f"[{l_code.upper()}] Error processing standings: {e}")
 
     def run_once(self):
         logger.info("Starting single execution cycle...")
