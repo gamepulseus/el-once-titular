@@ -384,14 +384,80 @@ class ESPNClient:
 
         return parsed_leaders[:4], decisions, boxscore_tables
 
-    # Overall General League Leaders (Top 10 Overall in League for HR, RBI, AVG, Hits, Pitching, Points, etc.)
+    # Overall General League Leaders (Top 10 Qualified Regular Season Leaders from ESPN Core API)
     def get_general_league_leaders(self, sport: str, league: str) -> List[Dict[str, Any]]:
-        url = f"{self.BASE_URL}/{sport}/{league}/statistics"
+        url = f"https://sports.core.api.espn.com/v2/sports/{sport}/leagues/{league}/seasons/2026/types/2/leaders"
         data = self._fetch_json(url)
         general_categories = []
 
-        if data and "stats" in data:
-            stats_obj = data["stats"]
+        if data and "categories" in data:
+            ath_cache = {}
+            team_cache = {}
+
+            for cat in data.get("categories", []):
+                cat_name = cat.get("displayName", cat.get("name", "Estadísticas"))
+                cat_name_lower = cat_name.lower()
+
+                # Filter main qualified leader categories
+                if not any(k in cat_name_lower for k in ["batting average", "home run", "runs batted in", "earned run", "win", "strikeout", "save", "stolen base", "hit"]):
+                    continue
+
+                leaders = []
+                for item in cat.get("leaders", [])[:10]:
+                    ath_ref = item.get("athlete", {}).get("$ref", "")
+                    team_ref = item.get("team", {}).get("$ref", "")
+                    val_raw = item.get("value", "")
+                    disp_val = item.get("displayValue", "")
+
+                    ath_id = ath_ref.split("/")[-1].split("?")[0] if ath_ref else ""
+                    ath_name = "Atleta"
+                    headshot = f"https://a.espncdn.com/i/headshots/{league}/players/full/{ath_id}.png"
+
+                    if ath_ref:
+                        if ath_id in ath_cache:
+                            ath_name = ath_cache[ath_id]
+                        else:
+                            a_data = self._fetch_json(ath_ref)
+                            if a_data and isinstance(a_data, dict):
+                                ath_name = a_data.get("displayName", a_data.get("fullName", "Atleta"))
+                                ath_cache[ath_id] = ath_name
+
+                    team_abbrev = league.upper()
+                    if team_ref:
+                        team_id = team_ref.split("/")[-1].split("?")[0]
+                        if team_id in team_cache:
+                            team_abbrev = team_cache[team_id]
+                        else:
+                            t_data = self._fetch_json(team_ref)
+                            if t_data and isinstance(t_data, dict):
+                                team_abbrev = t_data.get("abbreviation", league.upper())
+                                team_cache[team_id] = team_abbrev
+
+                    cleaned_val = clean_stat_value(cat_name, disp_val, val_raw)
+
+                    if ath_id and ath_name:
+                        leaders.append({
+                            "id": ath_id,
+                            "name": ath_name,
+                            "team_name": team_abbrev,
+                            "headshot": headshot,
+                            "display_value": cleaned_val
+                        })
+
+                if leaders:
+                    general_categories.append({
+                        "category": cat_name,
+                        "leaders": leaders
+                    })
+
+        if general_categories:
+            return general_categories
+
+        # Fallback to site API if core API is unavailable
+        fallback_url = f"{self.BASE_URL}/{sport}/{league}/statistics?seasontype=2"
+        fb_data = self._fetch_json(fallback_url)
+        if fb_data and "stats" in fb_data:
+            stats_obj = fb_data["stats"]
             categories = stats_obj.get("categories", [])
             for cat in categories:
                 cat_name = cat.get("displayName", cat.get("name", "Estadísticas"))
