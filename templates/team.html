@@ -3,15 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ team.name }} | GamePulse Team Profile</title>
+    <title>{{ team.name }} | GamePulse Team Center</title>
     <link rel="stylesheet" href="/static/css/apple_style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
+        .team-hero-card {
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-card-secondary) 100%);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 28px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-md);
+        }
+        .stats-pills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .stat-pill-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 12px;
+            text-align: center;
+        }
+        .stat-pill-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+            font-weight: 700;
+        }
+        .stat-pill-value {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+        .tab-buttons {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px;
+            overflow-x: auto;
+        }
+        .tab-btn {
+            background: var(--bg-card-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 10px 18px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+        .tab-btn.active {
+            background: var(--accent-blue);
+            color: #FFF;
+            border-color: var(--accent-blue);
+            box-shadow: 0 4px 12px rgba(10, 132, 255, 0.3);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
         .roster-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
             gap: 16px;
-            margin-top: 16px;
         }
         .athlete-card {
             background: var(--bg-card-secondary);
@@ -21,7 +89,7 @@
             text-align: center;
             text-decoration: none;
             color: inherit;
-            transition: transform 0.2s ease;
+            transition: transform 0.2s ease, border-color 0.2s ease;
         }
         .athlete-card:hover {
             transform: translateY(-3px);
@@ -32,9 +100,40 @@
             height: 72px;
             border-radius: 50%;
             object-fit: cover;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             background: var(--bg-card);
             border: 1px solid var(--border-color);
+        }
+        .schedule-table, .standings-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        .schedule-table th, .standings-table th {
+            background: var(--bg-card-secondary);
+            color: var(--text-secondary);
+            padding: 12px;
+            text-align: left;
+            font-weight: 700;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .schedule-table td, .standings-table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-subtle);
+            vertical-align: middle;
+        }
+        .result-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-weight: 800;
+            font-size: 0.8rem;
+        }
+        .result-w { background: rgba(52, 199, 89, 0.2); color: var(--accent-green); }
+        .result-l { background: rgba(255, 69, 58, 0.2); color: var(--accent-red); }
+        .current-team-row {
+            background: rgba(10, 132, 255, 0.12) !important;
+            font-weight: 700;
         }
     </style>
 </head>
@@ -47,48 +146,232 @@
             <span style="font-size: 1.25rem; font-weight: 800;">GamePulse Team</span>
         </a>
         <div class="nav-links">
-            <a href="/?lang={{ lang }}" class="nav-btn"><i class="fa-solid fa-arrow-left"></i> {% if lang == 'es' %}Volver al Inicio{% else %}Back Home{% endif %}</a>
-            <a href="https://t.me/GamePulseUS" target="_blank" class="nav-btn"><i class="fa-brands fa-telegram"></i> Telegram</a>
+            <a href="/?lang={{ lang }}" class="nav-btn"><i class="fa-solid fa-fire-flame-curved"></i> {{ ui.nav_games }}</a>
+            <a href="/noticias?lang={{ lang }}" class="nav-btn"><i class="fa-solid fa-newspaper"></i> {{ ui.nav_news }}</a>
+            <a href="/posiciones?lang={{ lang }}" class="nav-btn"><i class="fa-solid fa-list-ol"></i> {{ ui.nav_standings }}</a>
+            <a href="/lideres?lang={{ lang }}" class="nav-btn"><i class="fa-solid fa-trophy"></i> {{ ui.nav_leaders }}</a>
+            <a href="/h2h?lang={{ lang }}" class="nav-btn"><i class="fa-solid fa-square-poll-vertical"></i> {{ ui.nav_h2h }}</a>
+            <a href="/videos?lang={{ lang }}" class="nav-btn"><i class="fa-solid fa-circle-play"></i> {{ ui.nav_videos }}</a>
+            <a href="https://t.me/{% if lang == 'es' %}GamePulseES{% else %}GamePulseUS{% endif %}" target="_blank" class="nav-btn"><i class="fa-brands fa-telegram"></i> {{ ui.nav_telegram }}</a>
+            
             <a href="/equipo/{{ team.id }}?league={{ team.league }}&sport={{ team.sport }}&lang={{ ui.switch_lang_target }}" class="nav-btn" style="border: 1px solid var(--accent-blue); color: var(--accent-blue); font-weight: 700;">
                 <i class="fa-solid fa-globe"></i> {{ ui.switch_lang_label }}
             </a>
         </div>
     </header>
 
-    <main class="detail-container">
+    <main class="container">
 
-        <div class="info-card" style="display: flex; align-items: center; gap: 24px; flex-wrap: wrap;">
-            {% if team.logo %}
-                <img src="{{ team.logo }}" alt="{{ team.name }}" style="width: 100px; height: 100px; max-width: 100px; max-height: 100px; object-fit: contain;">
-            {% endif %}
-            <div>
-                <h1 style="font-size: 2.2rem; font-weight: 800; margin-bottom: 4px;">{{ team.name }}</h1>
-                <div style="font-size: 1rem; color: var(--text-secondary); margin-bottom: 8px;">
-                    {{ team.league | upper }} • {% if lang == 'es' %}Récord{% else %}Record{% endif %}: <strong style="color: var(--accent-green);">{{ team.record }}</strong>
+        <!-- Team Header Hero Card -->
+        <div class="team-hero-card">
+            <div style="display: flex; align-items: center; gap: 24px; flex-wrap: wrap;">
+                {% if team.logo %}
+                    <img src="{{ team.logo }}" alt="{{ team.name }}" style="width: 100px; height: 100px; object-fit: contain; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));">
+                {% endif %}
+                <div>
+                    <h1 style="font-size: 2.2rem; font-weight: 800; margin-bottom: 6px;">
+                        {{ team.name }} 
+                        <span style="font-size: 1rem; color: var(--text-secondary); background: var(--bg-card); padding: 4px 10px; border-radius: 8px; border: 1px solid var(--border-color);">
+                            {{ team.abbreviation }}
+                        </span>
+                    </h1>
+                    <div style="font-size: 1rem; color: var(--text-secondary); margin-bottom: 6px;">
+                        {{ team.league | upper }} • {% if lang == 'es' %}Récord General{% else %}Overall Record{% endif %}: <strong style="color: var(--accent-green); font-size: 1.1rem;">{{ team.record.summary }}</strong>
+                    </div>
+                    {% if team.standing_summary %}
+                        <div style="font-size: 0.95rem; color: var(--accent-blue); font-weight: 700;">
+                            <i class="fa-solid fa-ranking-star"></i> {{ team.standing_summary }}
+                        </div>
+                    {% endif %}
+                    {% if team.coach %}
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px;">
+                            <i class="fa-solid fa-user-tie"></i> {% if lang == 'es' %}Entrenador / Mánager{% else %}Head Coach{% endif %}: <strong>{{ team.coach }}</strong>
+                        </div>
+                    {% endif %}
                 </div>
-                <div style="font-size: 0.9rem; color: var(--accent-blue); font-weight: 600;">{{ team.standing_summary }}</div>
+            </div>
+
+            <!-- Team Performance Metrics Pills -->
+            <div class="stats-pills-grid">
+                <div class="stat-pill-card">
+                    <div class="stat-pill-label">{% if lang == 'es' %}Récord{% else %}Record{% endif %}</div>
+                    <div class="stat-pill-value" style="color: var(--accent-green);">{{ team.record.summary or 'N/A' }}</div>
+                </div>
+                <div class="stat-pill-card">
+                    <div class="stat-pill-label">{% if lang == 'es' %}Local{% else %}Home{% endif %}</div>
+                    <div class="stat-pill-value">{{ team.record.home or 'N/A' }}</div>
+                </div>
+                <div class="stat-pill-card">
+                    <div class="stat-pill-label">{% if lang == 'es' %}Visitante{% else %}Away{% endif %}</div>
+                    <div class="stat-pill-value">{{ team.record.away or 'N/A' }}</div>
+                </div>
+                <div class="stat-pill-card">
+                    <div class="stat-pill-label">{% if lang == 'es' %}PCT de Victorias{% else %}Win %{% endif %}</div>
+                    <div class="stat-pill-value" style="color: var(--accent-blue);">{{ team.record.win_pct or 'N/A' }}</div>
+                </div>
+                <div class="stat-pill-card">
+                    <div class="stat-pill-label">{% if lang == 'es' %}Racha Actual{% else %}Streak{% endif %}</div>
+                    <div class="stat-pill-value" style="color: {% if team.record.streak.startswith('W') %}var(--accent-green){% else %}var(--accent-red){% endif %};">
+                        {{ team.record.streak or 'N/A' }}
+                    </div>
+                </div>
+                <div class="stat-pill-card">
+                    <div class="stat-pill-label">{% if lang == 'es' %}Diferencial{% else %}Diff{% endif %}</div>
+                    <div class="stat-pill-value">{{ team.record.diff or 'N/A' }}</div>
+                </div>
             </div>
         </div>
 
-        <div class="info-card">
-            <h3 class="info-card-title">
-                <i class="fa-solid fa-users" style="color: var(--accent-blue);"></i>
-                <span>{% if lang == 'es' %}Plantilla de Jugadores (Roster Oficial){% else %}Official Team Roster{% endif %}</span>
-            </h3>
+        <!-- Navigation Tabs -->
+        <div class="tab-buttons">
+            <button class="tab-btn active" onclick="showTab('tab-schedule')">
+                <i class="fa-solid fa-calendar-days"></i> {% if lang == 'es' %}Calendario & Resultados{% else %}Schedule & Results{% endif %}
+            </button>
+            <button class="tab-btn" onclick="showTab('tab-standings')">
+                <i class="fa-solid fa-list-ol"></i> {% if lang == 'es' %}Posiciones de División{% else %}Division Standings{% endif %}
+            </button>
+            <button class="tab-btn" onclick="showTab('tab-roster')">
+                <i class="fa-solid fa-users"></i> {% if lang == 'es' %}Plantilla Oficial (Roster){% else %}Official Roster{% endif %}
+            </button>
+        </div>
 
-            {% if team.roster %}
-                <div class="roster-grid">
-                    {% for ath in team.roster %}
-                        <a href="/jugador/{{ ath.id }}?sport={{ team.sport }}&league={{ team.league }}&lang={{ lang }}" class="athlete-card">
-                            <img src="{{ ath.headshot }}" alt="{{ ath.name }}" onerror="this.src='https://a.espncdn.com/i/headshots/mlb/players/full/default.png'">
-                            <div style="font-weight: 700; font-size: 0.95rem;">{{ ath.name }}</div>
-                            <div style="font-size: 0.8rem; color: var(--text-secondary);">#{{ ath.jersey }} • {{ ath.position }}</div>
-                        </a>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <p style="color: var(--text-secondary);">Roster currently unavailable.</p>
-            {% endif %}
+        <!-- Tab 1: Schedule & Results -->
+        <div id="tab-schedule" class="tab-content active">
+            <div class="info-card">
+                <h3 class="info-card-title">
+                    <i class="fa-solid fa-calendar-days" style="color: var(--accent-blue);"></i>
+                    <span>{% if lang == 'es' %}Partidos Recientes & Próximos Encuentros (2026){% else %}Recent Games & Upcoming Schedule{% endif %}</span>
+                </h3>
+
+                {% if team.schedule %}
+                    <div class="table-responsive">
+                        <table class="schedule-table">
+                            <thead>
+                                <tr>
+                                    <th>{% if lang == 'es' %}Rival / Opponent{% else %}Opponent{% endif %}</th>
+                                    <th>{% if lang == 'es' %}Resultado / Estado{% else %}Result / Status{% endif %}</th>
+                                    <th>{% if lang == 'es' %}Marcador{% else %}Score{% endif %}</th>
+                                    <th>{% if lang == 'es' %}Detalles{% else %}Details{% endif %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for g in team.schedule[:25] %}
+                                    <tr>
+                                        <td>
+                                            <div style="display: flex; align-items: center; gap: 10px;">
+                                                <span style="color: var(--text-secondary); font-weight: 700;">{{ g.prefix }}</span>
+                                                {% if g.opp_logo %}
+                                                    <img src="{{ g.opp_logo }}" alt="{{ g.opp_name }}" style="width: 24px; height: 24px; object-fit: contain;">
+                                                {% endif %}
+                                                <strong style="font-size: 0.95rem;">{{ g.opp_name }}</strong>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if g.is_completed %}
+                                                {% if g.win %}
+                                                    <span class="result-badge result-w">W (Victoria)</span>
+                                                {% else %}
+                                                    <span class="result-badge result-l">L (Derrota)</span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span style="color: var(--accent-blue); font-weight: 600;">{{ g.status_detail }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <strong style="font-size: 1rem;">{{ g.score_str or '-' }}</strong>
+                                        </td>
+                                        <td>
+                                            <a href="/partido/{{ g.id }}?sport={{ team.sport }}&league={{ team.league }}&lang={{ lang }}" class="nav-btn" style="padding: 6px 12px; font-size: 0.8rem;">
+                                                {% if lang == 'es' %}Ver Partido →{% else %}View Match →{% endif %}
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p style="color: var(--text-secondary); padding: 16px;">Schedule data currently unavailable.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Tab 2: Division Standings -->
+        <div id="tab-standings" class="tab-content">
+            <div class="info-card">
+                <h3 class="info-card-title">
+                    <i class="fa-solid fa-list-ol" style="color: var(--accent-blue);"></i>
+                    <span>{% if lang == 'es' %}Tabla de Posiciones de la División{% else %}Division Standings{% endif %}</span>
+                </h3>
+
+                {% if team.standings %}
+                    <div class="table-responsive">
+                        <table class="standings-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>{% if lang == 'es' %}Equipo{% else %}Team{% endif %}</th>
+                                    <th>W</th>
+                                    <th>L</th>
+                                    <th>PCT</th>
+                                    <th>GB</th>
+                                    <th>STRK</th>
+                                    <th>{% if lang == 'es' %}Local{% else %}Home{% endif %}</th>
+                                    <th>{% if lang == 'es' %}Visitante{% else %}Away{% endif %}</th>
+                                    <th>DIFF</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in team.standings %}
+                                    <tr class="{% if row.id|string == team.id|string %}current-team-row{% endif %}">
+                                        <td>{{ loop.index }}</td>
+                                        <td>
+                                            <a href="/equipo/{{ row.id }}?sport={{ team.sport }}&league={{ team.league }}&lang={{ lang }}" style="display: flex; align-items: center; gap: 10px; color: inherit; text-decoration: none;">
+                                                <img src="{{ row.logo }}" alt="{{ row.name }}" style="width: 24px; height: 24px; object-fit: contain;">
+                                                <span>{{ row.name }}</span>
+                                            </a>
+                                        </td>
+                                        <td><strong>{{ row.wins }}</strong></td>
+                                        <td>{{ row.losses }}</td>
+                                        <td style="color: var(--accent-blue); font-weight: 700;">{{ row.win_pct }}</td>
+                                        <td>{{ row.games_behind }}</td>
+                                        <td style="color: {% if row.streak.startswith('W') %}var(--accent-green){% else %}var(--accent-red){% endif %}; font-weight: 700;">{{ row.streak }}</td>
+                                        <td>{{ row.home_record }}</td>
+                                        <td>{{ row.away_record }}</td>
+                                        <td>{{ row.diff }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p style="color: var(--text-secondary); padding: 16px;">Standings currently unavailable.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Tab 3: Roster -->
+        <div id="tab-roster" class="tab-content">
+            <div class="info-card">
+                <h3 class="info-card-title">
+                    <i class="fa-solid fa-users" style="color: var(--accent-blue);"></i>
+                    <span>{% if lang == 'es' %}Plantilla Oficial de Jugadores (Roster){% else %}Official Team Roster{% endif %}</span>
+                </h3>
+
+                {% if team.roster %}
+                    <div class="roster-grid">
+                        {% for ath in team.roster %}
+                            <a href="/jugador/{{ ath.id }}?sport={{ team.sport }}&league={{ team.league }}&lang={{ lang }}" class="athlete-card">
+                                <img src="{{ ath.headshot }}" alt="{{ ath.name }}" onerror="this.src='https://a.espncdn.com/i/headshots/mlb/players/full/default.png'">
+                                <div style="font-weight: 700; font-size: 0.95rem;">{{ ath.name }}</div>
+                                <div style="font-size: 0.8rem; color: var(--text-secondary);">#{{ ath.jersey }} • {{ ath.position }}</div>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p style="color: var(--text-secondary);">Roster currently unavailable.</p>
+                {% endif %}
+            </div>
         </div>
 
     </main>
@@ -96,6 +379,18 @@
     <footer>
         <p>{{ ui.footer_rights }}</p>
     </footer>
+
+    <script>
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+
+            const targetTab = document.getElementById(tabId);
+            if (targetTab) targetTab.classList.add('active');
+
+            event.currentTarget.classList.add('active');
+        }
+    </script>
 
 </body>
 </html>

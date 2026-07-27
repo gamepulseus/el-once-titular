@@ -841,11 +841,63 @@ class ESPNClient:
 
         t = data.get("team", {})
         logo = t.get("logos", [{}])[0].get("href") if t.get("logos") else ""
-        
+
+        # Head Coach / Manager
+        coach_name = ""
+        coach_arr = t.get("coaches", []) or t.get("coach", [])
+        if isinstance(coach_arr, list) and coach_arr:
+            c = coach_arr[0]
+            if isinstance(c, dict):
+                coach_name = f"{c.get('firstName', '')} {c.get('lastName', '')}".strip() or c.get("displayName", "")
+
+        # Detailed Records (Overall, Home, Away, Streak, Differential, Points For/Against)
+        record_info = {
+            "summary": "",
+            "home": "",
+            "away": "",
+            "win_pct": "",
+            "streak": "",
+            "diff": "",
+            "pf": "",
+            "pa": ""
+        }
+        if t.get("record") and "items" in t["record"]:
+            for item in t["record"]["items"]:
+                rec_type = item.get("type", "")
+                summary = item.get("summary", "")
+                stats_list = item.get("stats", [])
+                
+                if rec_type == "total":
+                    record_info["summary"] = summary
+                    for st in stats_list:
+                        s_name = st.get("name", "")
+                        s_val = st.get("value")
+                        if s_name == "winPercent" and s_val is not None:
+                            record_info["win_pct"] = f"{float(s_val):.3f}".lstrip("0")
+                        elif s_name == "streak" and s_val is not None:
+                            val_int = int(s_val)
+                            record_info["streak"] = f"W{val_int}" if val_int > 0 else (f"L{abs(val_int)}" if val_int < 0 else "-")
+                        elif s_name == "pointDifferential" and s_val is not None:
+                            val_int = int(s_val)
+                            record_info["diff"] = f"+{val_int}" if val_int > 0 else str(val_int)
+                        elif s_name == "pointsFor" and s_val is not None:
+                            record_info["pf"] = str(int(s_val))
+                        elif s_name == "pointsAgainst" and s_val is not None:
+                            record_info["pa"] = str(int(s_val))
+                elif rec_type == "home":
+                    record_info["home"] = summary
+                elif rec_type in ["road", "away"]:
+                    record_info["away"] = summary
+
+        # Fetch Official Roster
         roster_url = f"{self.BASE_URL}/{sport}/{league}/teams/{team_id}/roster"
         roster_data = self._fetch_json(roster_url)
         athletes = []
-        
+        if not coach_name and roster_data and "coach" in roster_data and roster_data["coach"]:
+            c = roster_data["coach"][0] if isinstance(roster_data["coach"], list) else roster_data["coach"]
+            if isinstance(c, dict):
+                coach_name = f"{c.get('firstName', '')} {c.get('lastName', '')}".strip()
+
         if roster_data and "athletes" in roster_data:
             for group in roster_data.get("athletes", []):
                 if isinstance(group, dict) and "items" in group:
@@ -853,7 +905,6 @@ class ESPNClient:
                     for ath in group.get("items", []):
                         ath_id = ath.get("id")
                         name = ath.get("fullName", ath.get("displayName", ""))
-                        
                         headshot_obj = ath.get("headshot", {})
                         if isinstance(headshot_obj, dict):
                             headshot = headshot_obj.get("href", f"https://a.espncdn.com/i/headshots/{league}/players/full/{ath_id}.png")
@@ -861,13 +912,8 @@ class ESPNClient:
                             headshot = headshot_obj
                         else:
                             headshot = f"https://a.espncdn.com/i/headshots/{league}/players/full/{ath_id}.png"
-                        
                         pos_obj = ath.get("position", "")
-                        if isinstance(pos_obj, dict):
-                            position = pos_obj.get("abbreviation", pos_obj.get("displayName", pos_group_name))
-                        else:
-                            position = str(pos_group_name)
-                            
+                        position = pos_obj.get("abbreviation", pos_obj.get("displayName", pos_group_name)) if isinstance(pos_obj, dict) else str(pos_group_name)
                         jersey = ath.get("jersey", "")
                         athletes.append({
                             "id": ath_id,
@@ -886,7 +932,6 @@ class ESPNClient:
                         headshot = headshot_obj
                     else:
                         headshot = f"https://a.espncdn.com/i/headshots/{league}/players/full/{ath_id}.png"
-                        
                     pos_obj = group.get("position", "")
                     position = pos_obj.get("abbreviation", "") if isinstance(pos_obj, dict) else str(pos_obj)
                     jersey = group.get("jersey", "")
@@ -898,15 +943,78 @@ class ESPNClient:
                         "jersey": jersey
                     })
 
+        # Fetch Team Schedule & Results
+        schedule = []
+        sched_url = f"{self.BASE_URL}/{sport}/{league}/teams/{team_id}/schedule"
+        sched_data = self._fetch_json(sched_url)
+        if sched_data and "events" in sched_data:
+            for ev in sched_data.get("events", []):
+                ev_id = str(ev.get("id"))
+                comps = ev.get("competitions", [{}])[0]
+                date_utc = ev.get("date", "")
+                
+                home_c = None
+                away_c = None
+                for c in comps.get("competitors", []):
+                    if c.get("homeAway") == "home": home_c = c
+                    else: away_c = c
+                    
+                is_home = str(home_c.get("id")) == str(team_id) if home_c else True
+                team_c = home_c if is_home else away_c
+                opp_c = away_c if is_home else home_c
+                
+                opp_name = opp_c.get("team", {}).get("displayName", "") if opp_c else "Opponent"
+                opp_logo = opp_c.get("team", {}).get("logo", "") if opp_c else ""
+                
+                status_type = comps.get("status", {}).get("type", {}).get("name", "")
+                status_detail = comps.get("status", {}).get("type", {}).get("shortDetail", "")
+                is_completed = status_type == "STATUS_FINAL"
+                win = False
+                score_str = ""
+                
+                if is_completed and team_c and opp_c:
+                    t_val = int(team_c.get("score", {}).get("value", 0))
+                    o_val = int(opp_c.get("score", {}).get("value", 0))
+                    win = team_c.get("winner", False) or (t_val > o_val)
+                    score_str = f"{t_val}-{o_val}"
+                    
+                schedule.append({
+                    "id": ev_id,
+                    "date": date_utc,
+                    "is_home": is_home,
+                    "prefix": "vs" if is_home else "@",
+                    "opp_name": opp_name,
+                    "opp_logo": opp_logo,
+                    "is_completed": is_completed,
+                    "win": win,
+                    "score_str": score_str,
+                    "status_detail": status_detail
+                })
+
+        # Fetch League Division Standings Table for Team
+        division_standings = []
+        try:
+            all_standings = self.get_full_standings(sport, league)
+            for group in all_standings:
+                t_list = group.get("teams", [])
+                if any(str(t_item.get("id")) == str(team_id) for t_item in t_list):
+                    division_standings = t_list
+                    break
+        except Exception:
+            pass
+
         return {
             "id": t.get("id"),
             "name": t.get("displayName"),
             "abbreviation": t.get("abbreviation"),
             "logo": logo,
             "color": t.get("color", "1C1C1E"),
-            "record": t.get("record", {}).get("items", [{}])[0].get("summary", "") if t.get("record") else "",
+            "record": record_info,
             "standing_summary": t.get("standingSummary", ""),
+            "coach": coach_name,
             "roster": athletes,
+            "schedule": schedule,
+            "standings": division_standings,
             "sport": sport,
             "league": league
         }
