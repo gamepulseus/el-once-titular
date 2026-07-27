@@ -251,22 +251,52 @@ class ESPNClient:
             "moneyline_away": "N/A"
         }
 
+        odds_obj = None
         if summary_data and "pickcenter" in summary_data and len(summary_data["pickcenter"]) > 0:
-            pc = summary_data["pickcenter"][0]
-            odds_info["details"] = pc.get("details", "N/A")
-            odds_info["over_under"] = str(pc.get("overUnder", "N/A"))
-            odds_info["spread"] = str(pc.get("spread", "N/A"))
-            odds_info["moneyline_home"] = str(pc.get("homeTeamOdds", {}).get("moneyLine", "N/A"))
-            odds_info["moneyline_away"] = str(pc.get("awayTeamOdds", {}).get("moneyLine", "N/A"))
+            odds_obj = summary_data["pickcenter"][0]
+        elif "odds" in competition and len(competition["odds"]) > 0:
+            odds_obj = competition["odds"][0]
+
+        if not odds_obj:
             return odds_info
 
-        if "odds" in competition and len(competition["odds"]) > 0:
-            o = competition["odds"][0]
-            odds_info["details"] = o.get("details", "N/A")
-            odds_info["over_under"] = str(o.get("overUnder", "N/A"))
-            odds_info["spread"] = str(o.get("spread", "N/A"))
-            odds_info["moneyline_home"] = str(o.get("homeTeamOdds", {}).get("moneyLine", "N/A"))
-            odds_info["moneyline_away"] = str(o.get("awayTeamOdds", {}).get("moneyLine", "N/A"))
+        # 1. Details & Spread
+        details = odds_obj.get("details", "N/A")
+        if details == "N/A" or not details:
+            details = str(odds_obj.get("spread", "N/A"))
+        odds_info["details"] = details
+        odds_info["spread"] = str(odds_obj.get("spread", details))
+
+        # 2. Over / Under Total
+        ou = odds_obj.get("overUnder")
+        if ou is None:
+            ou = odds_obj.get("total", {}).get("over", {}).get("close", {}).get("line", "N/A")
+        ou_str = str(ou) if ou is not None else "N/A"
+        if ou_str.startswith("o"):
+            ou_str = ou_str[1:]
+        odds_info["over_under"] = ou_str
+
+        # 3. Moneyline Home & Away
+        ml_home = "N/A"
+        ml_away = "N/A"
+
+        # Check moneyline object in ESPN structure
+        ml_dict = odds_obj.get("moneyline", {})
+        if isinstance(ml_dict, dict) and ml_dict:
+            ml_home = ml_dict.get("home", {}).get("close", {}).get("odds") or ml_dict.get("home", {}).get("open", {}).get("odds") or "N/A"
+            ml_away = ml_dict.get("away", {}).get("close", {}).get("odds") or ml_dict.get("away", {}).get("open", {}).get("odds") or "N/A"
+
+        # Fallback to homeTeamOdds / awayTeamOdds
+        if ml_home == "N/A":
+            ht_odds = odds_obj.get("homeTeamOdds", {})
+            ml_home = str(ht_odds.get("moneyLine", ht_odds.get("summary", "N/A"))) if isinstance(ht_odds, dict) else "N/A"
+
+        if ml_away == "N/A":
+            at_odds = odds_obj.get("awayTeamOdds", {})
+            ml_away = str(at_odds.get("moneyLine", at_odds.get("summary", "N/A"))) if isinstance(at_odds, dict) else "N/A"
+
+        odds_info["moneyline_home"] = str(ml_home)
+        odds_info["moneyline_away"] = str(ml_away)
 
         return odds_info
 
