@@ -161,6 +161,18 @@ class GamePulseScheduler:
                 status_completed = ev.get("status_completed", False)
 
                 if not status_completed and status_state == "pre":
+                    date_utc = ev.get("date", "")
+                    if date_utc:
+                        try:
+                            clean_str = date_utc.replace("Z", "+00:00")
+                            dt_utc = datetime.fromisoformat(clean_str)
+                            dt_et = dt_utc.astimezone(ET_ZONE)
+                            ev_date_et = dt_et.strftime("%Y-%m-%d")
+                            if ev_date_et != today_str:
+                                continue  # Skip future games scheduled for upcoming months/weeks!
+                        except Exception as e:
+                            logger.warning(f"Error parsing date {date_utc}: {e}")
+
                     home_name = ev.get("home_team", {}).get("name", "")
                     away_name = ev.get("away_team", {}).get("name", "")
                     h_clean = re.sub(r'[^a-zA-Z0-9]', '', home_name.lower())
@@ -422,7 +434,7 @@ class GamePulseScheduler:
         while True:
             now = time.time()
 
-            # 100% EXCLUSIVE: Sports Betting & Picks Engine (Picks, Value Bets & Handicaps)
+            # 100% EXCLUSIVE: Game Analytics & Player-by-Player Props Engine 📊
             if now - last_news_check >= config.NEWS_CHECK_INTERVAL:
                 try:
                     self.process_betting_picks()

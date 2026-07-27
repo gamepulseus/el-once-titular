@@ -98,25 +98,32 @@ class TelegramPublisher:
             logger.warning("No chat_id specified.")
             return False
 
-        # Telegram sendPhoto caption character limit is 1024
-        safe_caption = caption
-        if len(safe_caption) > 1024:
-            safe_caption = safe_caption[:1020] + "..."
+        # If caption fits within Telegram's 1024 character photo caption limit
+        if len(caption) <= 1024:
+            if os.path.exists(photo_input):
+                return self.publish_photo_file(chat_id, photo_input, caption)
+
+            data = {
+                "chat_id": chat_id,
+                "photo": photo_input,
+                "caption": caption,
+                "parse_mode": "HTML"
+            }
+            res = self._post("sendPhoto", data)
+            return res.get("ok", False)
+
+        # If caption exceeds 1024 characters: send photo with top header, then send complete untruncated text!
+        header_lines = caption.strip().split("\n")
+        header_caption = "\n".join(header_lines[:2]) if len(header_lines) >= 2 else header_lines[0]
 
         if os.path.exists(photo_input):
-            return self.publish_photo_file(chat_id, photo_input, safe_caption)
+            self.publish_photo_file(chat_id, photo_input, header_caption)
+        else:
+            data = {"chat_id": chat_id, "photo": photo_input, "caption": header_caption, "parse_mode": "HTML"}
+            self._post("sendPhoto", data)
 
-        data = {
-            "chat_id": chat_id,
-            "photo": photo_input,
-            "caption": safe_caption,
-            "parse_mode": "HTML"
-        }
-        res = self._post("sendPhoto", data)
-        if not res.get("ok"):
-            logger.warning(f"Photo send failed for chat {chat_id}: {res.get('description')}")
-            return False
-        return True
+        time.sleep(1)
+        return self.publish_text(chat_id, caption)
 
     def publish_poll(self, chat_id: str, question: str, options: List[str], is_anonymous: bool = True) -> bool:
         if not chat_id:
