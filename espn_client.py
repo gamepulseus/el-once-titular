@@ -667,9 +667,44 @@ class ESPNClient:
         parsed_plays = []
         for p in plays:
             p_text = p.get("text", "").strip()
-            p_period = p.get("period", {}).get("displayValue", "")
+            per_obj = p.get("period", {}) if isinstance(p.get("period"), dict) else {}
+            per_type = per_obj.get("type", "")
+            per_num = per_obj.get("number", "")
+            per_disp = per_obj.get("displayValue", "")
             p_clock = p.get("clock", {}).get("displayValue", "")
-            is_scoring = p.get("scoringPlay", False) or p.get("scoreValue", 0) > 0 or "scored" in p_text.lower() or "homered" in p_text.lower() or "grand slam" in p_text.lower()
+
+            # Build bilingual period label (Top = Parte Alta, Bottom = Parte Baja)
+            if per_type == "Top":
+                period_es = f"🔺 Parte Alta ({per_num}º Inning)"
+                period_en = f"🔺 Top ({per_disp})"
+            elif per_type == "Bottom":
+                period_es = f"🔻 Parte Baja ({per_num}º Inning)"
+                period_en = f"🔻 Bottom ({per_disp})"
+            elif per_type == "Mid":
+                period_es = f"⏱️ Mitad del {per_num}º Inning"
+                period_en = f"⏱️ Mid {per_disp}"
+            elif per_type == "End":
+                period_es = f"🏁 Fin del {per_num}º Inning"
+                period_en = f"🏁 End {per_disp}"
+            else:
+                period_es = per_disp
+                period_en = per_disp
+
+            # Detect if play is an Inning Header (e.g. "Top of the 1st inning")
+            p_type_code = p.get("type", {}).get("type", "") if isinstance(p.get("type"), dict) else ""
+            p_text_lower = p_text.lower()
+            is_header = p_type_code in ["start-inning", "end-inning"] or any(k in p_text_lower for k in ["top of the", "bottom of the", "end of the", "mid "])
+
+            # Translate text for inning headers
+            text_es = p_text
+            if is_header:
+                m = re.search(r'(top|bottom|end)\s+of\s+the\s+(\d+)(st|nd|rd|th)\s+inning', p_text_lower)
+                if m:
+                    half, num, _ = m.groups()
+                    half_str = "🔺 Inicio: Parte Alta" if half == "top" else ("🔻 Inicio: Parte Baja" if half == "bottom" else "🏁 Fin")
+                    text_es = f"{half_str} del {num}º Inning"
+
+            is_scoring = p.get("scoringPlay", False) or p.get("scoreValue", 0) > 0 or "scored" in p_text_lower or "homered" in p_text_lower or "grand slam" in p_text_lower
 
             p_team_id = str(p.get("team", {}).get("id", "")) if isinstance(p.get("team"), dict) else ""
             team_info = None
@@ -682,10 +717,13 @@ class ESPNClient:
                 parsed_plays.append({
                     "id": p.get("id", ""),
                     "text": p_text,
-                    "period": p_period,
+                    "text_es": text_es,
+                    "period": period_en,
+                    "period_es": period_es,
                     "clock": p_clock,
                     "scoringPlay": is_scoring,
                     "scoring": is_scoring,
+                    "is_header": is_header,
                     "team": team_info
                 })
 
