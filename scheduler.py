@@ -373,13 +373,12 @@ class GamePulseScheduler:
         while True:
             now = time.time()
 
-            # Pillar 1 & 5: Stat of the Day & Breaking News (Every 60 Seconds)
+            # Pillar 5: Stat of the Day & Curious Facts ONLY (Every 60 Seconds)
             if now - last_news_check >= config.NEWS_CHECK_INTERVAL:
                 try:
-                    self.process_news()
                     self.process_stat_of_the_day()
                 except Exception as e:
-                    logger.error(f"Error in process_news or process_stat_of_the_day: {e}")
+                    logger.error(f"Error in process_stat_of_the_day: {e}")
                 last_news_check = now
 
             # Pillar 2 & 3: Scoreboard & Live In-Game Milestone Tracker (Every 10 Seconds)
