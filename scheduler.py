@@ -78,11 +78,12 @@ class GamePulseScheduler:
             news_items = self.espn.get_news(sport, l_code, limit=5)
             
             for item in news_items:
-                news_id = item["id"]
+                news_id = str(item["id"])
                 if self.db.is_news_processed(news_id):
                     continue
 
-                headline = item["headline"]
+                headline = item.get("headline", "")
+                self.db.mark_news_processed(news_id, headline, sport, l_code)
                 logger.info(f"[{l_code.upper()}] New article/alert found: {headline}")
 
                 msg_es, msg_en, image_url = PostFormatter.format_news(item, league)
@@ -93,8 +94,6 @@ class GamePulseScheduler:
                 else:
                     self.publisher.publish_bilingual(msg_es, msg_en, image_url)
 
-                self.db.mark_news_processed(news_id, headline, sport, l_code)
-
     def process_daily_schedule(self):
         logger.info("=== Running Morning Daily Match Schedule Slate ===")
         today_et = datetime.now(ET_ZONE)
@@ -104,6 +103,7 @@ class GamePulseScheduler:
         if self.db.is_daily_schedule_processed(schedule_key):
             return
 
+        self.db.mark_daily_schedule_processed(schedule_key)
         logger.info(f"Generating full daily match schedule slate for TODAY ({today_et_str})...")
         all_events_by_league = {}
         
@@ -136,8 +136,6 @@ class GamePulseScheduler:
                 print(f"--- [DRY RUN - DAILY SCHEDULE - EN] ---\n{msg_en}")
             else:
                 self.publisher.publish_bilingual(msg_es, msg_en)
-
-            self.db.mark_daily_schedule_processed(schedule_key)
             logger.info(f"Daily match schedule slate for TODAY ({today_et_str}) published successfully.")
 
     def process_scoreboard(self):
@@ -157,6 +155,7 @@ class GamePulseScheduler:
                 # Pillar 2A: Pre-Game Preview & Betting Lines
                 if not status_completed and status_state == "pre":
                     if not self.db.is_preview_processed(event_id):
+                        self.db.mark_preview_processed(event_id, sport, l_code, event_name)
                         summary_data = self.espn.get_game_summary(sport, l_code, event_id)
                         logger.info(f"[{l_code.upper()}] Pre-Game Analysis & Poll: {event_name}")
                         msg_es, msg_en, image_url = PostFormatter.format_preview(ev, league, summary_data)
@@ -170,12 +169,11 @@ class GamePulseScheduler:
                             time.sleep(1)
                             self.publisher.publish_bilingual_poll(q_es, q_en, opt_es, opt_en)
 
-                        self.db.mark_preview_processed(event_id, sport, l_code, event_name)
-
                 # Pillar 2B: Game Started & Live In-Game Tracker (FAST LOOKUP ONLY FOR LIVE GAMES)
                 elif not status_completed and status_state == "in":
                     # 1. Game Started Alert
                     if not self.db.is_game_start_processed(event_id):
+                        self.db.mark_game_start_processed(event_id, sport, l_code, event_name)
                         logger.info(f"[{l_code.upper()}] Live Game Started Alert: {event_name}")
                         msg_es, msg_en, image_url = PostFormatter.format_game_start(ev, league)
 
@@ -183,8 +181,6 @@ class GamePulseScheduler:
                             print(f"\n--- [DRY RUN - GAME START - ES] ---\n{msg_es}")
                         else:
                             self.publisher.publish_bilingual(msg_es, msg_en, image_url)
-
-                        self.db.mark_game_start_processed(event_id, sport, l_code, event_name)
 
                     # 2. Live Run Alert (MLB) or In-Game Plays
                     summary_data = self.espn.get_game_summary(sport, l_code, event_id)
@@ -209,6 +205,8 @@ class GamePulseScheduler:
                             play_text_key = f"{event_id}_text_{text_hash}"
                             
                             if not self.db.is_scoring_play_processed(play_id_key) and not self.db.is_scoring_play_processed(play_text_key):
+                                self.db.mark_scoring_play_processed(play_id_key, event_id, p_text)
+                                self.db.mark_scoring_play_processed(play_text_key, event_id, p_text)
                                 logger.info(f"[{l_code.upper()}] Live Run Alert Auto Publishing: {p_text}")
                                 msg_es, msg_en, image_url = PostFormatter.format_mlb_run_alert(ev, p_text, league)
                                 
@@ -217,15 +215,13 @@ class GamePulseScheduler:
                                 else:
                                     self.publisher.publish_bilingual(msg_es, msg_en, image_url)
 
-                                self.db.mark_scoring_play_processed(play_id_key, event_id, p_text)
-                                self.db.mark_scoring_play_processed(play_text_key, event_id, p_text)
-
                     # 3. NBA / NFL / NHL Quarter Updates
                     else:
                         period = summary_data.get("header", {}).get("competitions", [{}])[0].get("status", {}).get("period", 0) if summary_data else 0
                         if period > 0:
                             quarter_key = f"{event_id}_q{period}"
                             if not self.db.is_quarter_update_processed(quarter_key):
+                                self.db.mark_quarter_update_processed(quarter_key, event_id, period)
                                 logger.info(f"[{l_code.upper()}] Quarter/Period {period} Update: {event_name}")
                                 msg_es, msg_en, image_url = PostFormatter.format_quarter_update(ev, summary_data, league)
 
@@ -234,11 +230,10 @@ class GamePulseScheduler:
                                 else:
                                     self.publisher.publish_bilingual(msg_es, msg_en, image_url)
 
-                                self.db.mark_quarter_update_processed(quarter_key, event_id, period)
-
                 # Pillar 3: Post-Game Summaries for finished games
                 elif status_completed or status_state == "post" or "final" in status_detail.lower():
                     if not self.db.is_summary_processed(event_id):
+                        self.db.mark_summary_processed(event_id, sport, l_code, event_name)
                         logger.info(f"[{l_code.upper()}] Finished Game found: {event_name}")
                         summary_data = self.espn.get_game_summary(sport, l_code, event_id)
                         if summary_data:
@@ -248,8 +243,6 @@ class GamePulseScheduler:
                                 print(f"\n--- [DRY RUN - SUMMARY - ES] ---\n{msg_es}")
                             else:
                                 self.publisher.publish_bilingual(msg_es, msg_en, image_url)
-
-                            self.db.mark_summary_processed(event_id, sport, l_code, event_name)
 
     def process_standings(self):
         logger.info("=== Running Pillar 4: Community & Standings ===")

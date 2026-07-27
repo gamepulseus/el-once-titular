@@ -83,7 +83,7 @@ class TelegramPublisher:
                 return data.get('ok', False)
         except Exception as e:
             logger.error(f"Error publishing local photo file: {e}")
-            return self.publish_text(chat_id, caption)
+            return False
 
     def publish_photo(self, chat_id: str, photo_input: str, caption: str) -> bool:
         if not chat_id:
@@ -101,8 +101,8 @@ class TelegramPublisher:
         }
         res = self._post("sendPhoto", data)
         if not res.get("ok"):
-            logger.warning("Photo send failed, falling back to text message.")
-            return self.publish_text(chat_id, caption)
+            logger.warning(f"Photo send failed for chat {chat_id}: {res.get('description')}")
+            return False
         return True
 
     def publish_poll(self, chat_id: str, question: str, options: List[str], is_anonymous: bool = True) -> bool:
