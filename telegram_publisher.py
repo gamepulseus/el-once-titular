@@ -90,13 +90,18 @@ class TelegramPublisher:
             logger.warning("No chat_id specified.")
             return False
 
+        # Telegram sendPhoto caption character limit is 1024
+        safe_caption = caption
+        if len(safe_caption) > 1024:
+            safe_caption = safe_caption[:1020] + "..."
+
         if os.path.exists(photo_input):
-            return self.publish_photo_file(chat_id, photo_input, caption)
+            return self.publish_photo_file(chat_id, photo_input, safe_caption)
 
         data = {
             "chat_id": chat_id,
             "photo": photo_input,
-            "caption": caption,
+            "caption": safe_caption,
             "parse_mode": "HTML"
         }
         res = self._post("sendPhoto", data)
@@ -130,6 +135,9 @@ class TelegramPublisher:
         if target_es:
             if image_url:
                 res_es = self.publish_photo(target_es, image_url, msg_es)
+                if not res_es:
+                    logger.warning(f"Photo publish failed for Spanish channel ({target_es}). Falling back to text.")
+                    res_es = self.publish_text(target_es, msg_es)
             else:
                 res_es = self.publish_text(target_es, msg_es)
         else:
@@ -138,6 +146,9 @@ class TelegramPublisher:
         if target_en:
             if image_url:
                 res_en = self.publish_photo(target_en, image_url, msg_en)
+                if not res_en:
+                    logger.warning(f"Photo publish failed for English channel ({target_en}). Falling back to text.")
+                    res_en = self.publish_text(target_en, msg_en)
             else:
                 res_en = self.publish_text(target_en, msg_en)
         else:
