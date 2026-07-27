@@ -450,6 +450,44 @@ class PostFormatter:
 
         return msg_es, msg_en, image_url
 
+    # Live Milestone / In-Game Historic Record Alert 🌟
+    @staticmethod
+    def format_live_milestone(event: Dict[str, Any], milestone_text: str, league_info: Dict[str, Any]) -> Tuple[str, str, Optional[str]]:
+        emoji = league_info.get("emoji", "🌟")
+        league_code = event.get("league", "").lower()
+        sport = event.get("sport", "baseball")
+        league_name_es = league_info.get("name_es", league_code.upper())
+        league_name_en = league_info.get("name_en", league_code.upper())
+
+        home = event.get("home_team", {})
+        away = event.get("away_team", {})
+        detail = event.get("status_detail", "En Vivo")
+        event_id = event.get("id", "milestone")
+
+        text_es = translate_text(milestone_text, "Spanish")
+        match_site_url = f"{SITE_BASE_URL}/partido/{event_id}?sport={sport}&league={league_code}"
+        image_url = MatchupGraphics.generate_matchup_banner(home, away, event_id) or home.get("logo")
+
+        msg_es = (
+            f"🌟 <b>¡HITO HISTÓRICO Y DATO EN VIVO!</b> | {league_name_es} {emoji}\n\n"
+            f"🔥 <b>{text_es}</b>\n\n"
+            f"📍 <b>Estado del Partido:</b> <code>{detail}</code>\n"
+            f"🆚 <b>{home.get('name')} vs {away.get('name')}</b>\n\n"
+            f"🔗 <a href='{match_site_url}'>Sigue el partido en vivo en GamePulse</a>\n\n"
+            f"📲 <i>Sigue cada momento histórico al instante en @GamePulseES</i>"
+        )
+
+        msg_en = (
+            f"🌟 <b>LIVE MILESTONE & HISTORIC RECORD!</b> | {league_name_en} {emoji}\n\n"
+            f"🔥 <b>{milestone_text}</b>\n\n"
+            f"📍 <b>Game Status:</b> <code>{detail}</code>\n"
+            f"🆚 <b>{home.get('name')} vs {away.get('name')}</b>\n\n"
+            f"🔗 <a href='{match_site_url}'>Follow live game on GamePulse</a>\n\n"
+            f"📲 <i>Follow every historic moment live on @GamePulseUS</i>"
+        )
+
+        return msg_es, msg_en, image_url
+
     # Interactive Poll Generator
     @staticmethod
     def format_preview_poll(event: Dict[str, Any], league_info: Dict[str, Any]) -> Tuple[str, str, List[str], List[str]]:
