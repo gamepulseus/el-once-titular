@@ -204,18 +204,15 @@ class GamePulseScheduler:
 
                     if not self.db.is_pick_processed(pick_key):
                         summary_data = self.espn.get_game_summary(sport, l_code, event_id)
-                        odds = summary_data.get("odds", {}) if summary_data else {}
+                        self.db.mark_pick_processed(pick_key)
+                        logger.info(f"[{l_code.upper()}] Publishing Pick of the Day for All Games: {event_name}")
+                        msg_es, msg_en, image_url = PostFormatter.format_betting_pick(ev, league, summary_data)
 
-                        if odds.get("moneyline_home") or odds.get("moneyline_away") or odds.get("over_under"):
-                            self.db.mark_pick_processed(pick_key)
-                            logger.info(f"[{l_code.upper()}] Publishing Pick of the Day: {event_name}")
-                            msg_es, msg_en, image_url = PostFormatter.format_betting_pick(ev, league, summary_data)
-
-                            if self.dry_run:
-                                print(f"\n--- [DRY RUN - PICK OF THE DAY - ES] ---\n{msg_es}")
-                            else:
-                                self.publisher.publish_bilingual(msg_es, msg_en, image_url)
-                                time.sleep(1)
+                        if self.dry_run:
+                            print(f"\n--- [DRY RUN - PICK OF THE DAY - ES] ---\n{msg_es}")
+                        else:
+                            self.publisher.publish_bilingual(msg_es, msg_en, image_url)
+                            time.sleep(1)
 
     def process_scoreboard(self):
         logger.info("=== Running Ultra-Fast Live In-Game Tracker ===")
