@@ -11,7 +11,12 @@ logger = logging.getLogger("GamePulse.Graphics")
 BANNER_DIR = Path(__file__).resolve().parent / "cache" / "banners"
 BANNER_DIR.mkdir(parents=True, exist_ok=True)
 
-GAMEPULSE_LOGO_PATH = r"C:\Users\Sergio Amorelli\Downloads\photo_5994478025761820201_y-Photoroom.png"
+REPO_ROOT = Path(__file__).resolve().parent
+GAMEPULSE_LOGO_PATH = REPO_ROOT / "static" / "images" / "gamepulse_logo.png"
+if not GAMEPULSE_LOGO_PATH.exists():
+    LOCAL_FALLBACK = Path(r"C:\Users\Sergio Amorelli\Downloads\photo_5994478025761820201_y-Photoroom.png")
+    if LOCAL_FALLBACK.exists():
+        GAMEPULSE_LOGO_PATH = LOCAL_FALLBACK
 
 class MatchupGraphics:
 
