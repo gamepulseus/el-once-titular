@@ -188,13 +188,24 @@ class GamePulseScheduler:
                             msg_es, msg_en, image_url = PostFormatter.format_preview(ev, league, summary_data)
                             q_es, q_en, opt_es, opt_en = PostFormatter.format_preview_poll(ev, league)
 
+                            # Dedicated Poll Key per matchup per day to guarantee POLL is sent ONLY ONCE
+                            home_name = ev.get("home_team", {}).get("name", "")
+                            away_name = ev.get("away_team", {}).get("name", "")
+                            h_clean = re.sub(r'[^a-zA-Z0-9]', '', home_name.lower())
+                            a_clean = re.sub(r'[^a-zA-Z0-9]', '', away_name.lower())
+                            teams_sorted = "_".join(sorted([h_clean, a_clean]))
+                            today_str = datetime.now(ET_ZONE).strftime("%Y-%m-%d")
+                            poll_key = f"poll_{l_code}_{teams_sorted}_{today_str}"
+
                             if self.dry_run:
                                 print(f"\n--- [DRY RUN - PREVIEW - ES] ---\n{msg_es}")
                                 print(f"--- [DRY RUN - POLL - ES] --- Question: {q_es}")
                             else:
                                 self.publisher.publish_bilingual(msg_es, msg_en, image_url)
-                                time.sleep(1)
-                                self.publisher.publish_bilingual_poll(q_es, q_en, opt_es, opt_en)
+                                if not self.db.is_poll_processed(poll_key):
+                                    self.db.mark_poll_processed(poll_key)
+                                    time.sleep(1)
+                                    self.publisher.publish_bilingual_poll(q_es, q_en, opt_es, opt_en)
 
                 # Pillar 2A-Sub: Official Starting Lineups Alert (Strictly for active MLB/Soccer games with 8+ confirmed starters)
                 if not status_completed and status_state in ["pre", "in"] and l_code in ["mlb", "usa.1"]:

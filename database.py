@@ -110,6 +110,14 @@ class DatabaseManager:
                 )
             """)
 
+            # Processed Pre-Game Polls
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS processed_polls (
+                    poll_key TEXT PRIMARY KEY,
+                    processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+
             # Processed Official Lineups
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS processed_lineups (
@@ -120,9 +128,6 @@ class DatabaseManager:
                     processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
-
-            conn.commit()
-            logger.info("SQLite database initialized successfully.")
 
             conn.commit()
             logger.info("SQLite database initialized successfully.")
@@ -138,6 +143,7 @@ class DatabaseManager:
             self._sent_summaries = set()
             self._sent_standings = set()
             self._sent_daily_schedules = set()
+            self._sent_polls = set()
 
             try:
                 cursor.execute("SELECT news_id, headline FROM processed_news")
@@ -178,6 +184,10 @@ class DatabaseManager:
                 cursor.execute("SELECT schedule_key FROM processed_daily_schedules")
                 for row in cursor.fetchall():
                     if row[0]: self._sent_daily_schedules.add(str(row[0]).strip())
+
+                cursor.execute("SELECT poll_key FROM processed_polls")
+                for row in cursor.fetchall():
+                    if row[0]: self._sent_polls.add(str(row[0]).strip())
 
             except Exception as e:
                 logger.warning(f"Error loading deduplication memory cache: {e}")
@@ -409,6 +419,29 @@ class DatabaseManager:
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT OR IGNORE INTO processed_daily_schedules (schedule_key)
+                VALUES (?)
+            """, (clean_key,))
+            conn.commit()
+
+    # Pre-Game Poll Methods
+    def is_poll_processed(self, poll_key: str) -> bool:
+        clean_key = str(poll_key).strip()
+        if clean_key in self._sent_polls:
+            return True
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT 1 FROM processed_polls WHERE poll_key = ?", (clean_key,))
+            res = cursor.fetchone() is not None
+            if res: self._sent_polls.add(clean_key)
+            return res
+
+    def mark_poll_processed(self, poll_key: str):
+        clean_key = str(poll_key).strip()
+        self._sent_polls.add(clean_key)
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT OR IGNORE INTO processed_polls (poll_key)
                 VALUES (?)
             """, (clean_key,))
             conn.commit()
