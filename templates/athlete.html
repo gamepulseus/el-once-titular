@@ -128,7 +128,9 @@
             <a href="/noticias?lang={{ lang }}" class="nav-btn"><i class="fa-solid fa-newspaper"></i> {{ ui.nav_news }}</a>
             <a href="/posiciones?lang={{ lang }}" class="nav-btn"><i class="fa-solid fa-list-ol"></i> {{ ui.nav_standings }}</a>
             <a href="/lideres?lang={{ lang }}" class="nav-btn"><i class="fa-solid fa-trophy"></i> {{ ui.nav_leaders }}</a>
-            <a href="https://t.me/GamePulseUS" target="_blank" class="nav-btn"><i class="fa-brands fa-telegram"></i> {{ ui.nav_telegram }}</a>
+            <a href="/h2h?lang={{ lang }}" class="nav-btn"><i class="fa-solid fa-square-poll-vertical"></i> {{ ui.nav_h2h }}</a>
+            <a href="/videos?lang={{ lang }}" class="nav-btn"><i class="fa-solid fa-circle-play"></i> {{ ui.nav_videos }}</a>
+            <a href="https://t.me/{% if lang == 'es' %}GamePulseES{% else %}GamePulseUS{% endif %}" target="_blank" class="nav-btn"><i class="fa-brands fa-telegram"></i> {{ ui.nav_telegram }}</a>
             
             <a href="/jugador/{{ athlete.id }}?league={{ athlete.league }}&sport={{ athlete.sport }}&lang={{ ui.switch_lang_target }}" class="nav-btn" style="border: 1px solid var(--accent-blue); color: var(--accent-blue); font-weight: 700;">
                 <i class="fa-solid fa-globe"></i> {{ ui.switch_lang_label }}
