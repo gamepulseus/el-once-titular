@@ -152,9 +152,24 @@ class GamePulseScheduler:
                 status_detail = ev.get("status_detail", "")
                 status_completed = ev.get("status_completed", False)
 
-                # Pillar 2A: Pre-Game Preview & Betting Lines
+                # Pillar 2A: Pre-Game Preview & Betting Lines (Strictly for games starting within 24 hours)
                 if not status_completed and status_state == "pre":
-                    if not self.db.is_preview_processed(event_id):
+                    date_utc = ev.get("date", "")
+                    is_upcoming_soon = False
+                    if date_utc:
+                        try:
+                            clean_str = date_utc.replace("Z", "+00:00")
+                            dt_utc = datetime.fromisoformat(clean_str)
+                            dt_et = dt_utc.astimezone(ET_ZONE)
+                            now_et = datetime.now(ET_ZONE)
+                            hours_diff = (dt_et - now_et).total_seconds() / 3600.0
+                            # Only publish preview if game starts within 24 hours (today or tomorrow)
+                            if -2 <= hours_diff <= 24:
+                                is_upcoming_soon = True
+                        except Exception as e:
+                            logger.warning(f"Error parsing preview date {date_utc}: {e}")
+
+                    if is_upcoming_soon and not self.db.is_preview_processed(event_id):
                         self.db.mark_preview_processed(event_id, sport, l_code, event_name)
                         summary_data = self.espn.get_game_summary(sport, l_code, event_id)
                         logger.info(f"[{l_code.upper()}] Pre-Game Analysis & Poll: {event_name}")
