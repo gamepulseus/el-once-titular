@@ -653,7 +653,6 @@ class PostFormatter:
             f"🆚 <b>{away.get('name')} vs {home.get('name')}</b>\n\n"
             f"{game_block_es}\n"
             f"{props_block_es}\n\n"
-            f"🔗 <a href='{match_site_url}'>Ver todas las cuotas de jugadores en vivo en GamePulse</a>\n\n"
             f"📲 <i>Sigue los mejores análisis en @GamePulseES</i>"
         )
 
@@ -662,7 +661,6 @@ class PostFormatter:
             f"🆚 <b>{away.get('name')} vs {home.get('name')}</b>\n\n"
             f"{game_block_en}\n"
             f"{props_block_en}\n\n"
-            f"🔗 <a href='{match_site_url}'>View all game & player props odds live on GamePulse</a>\n\n"
             f"📲 <i>Follow deep game & player props analytics on @GamePulseUS</i>"
         )
 
