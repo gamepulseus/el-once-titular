@@ -157,6 +157,7 @@ class GamePulseScheduler:
                 status_state = ev.get("status_state", "pre")
                 status_detail = ev.get("status_detail", "")
                 status_completed = ev.get("status_completed", False)
+                summary_data = None  # EXPLICITLY RESET TO PREVENT VARIABLE LEAKAGE ACROSS GAMES!
 
                 # Pillar 2A: Pre-Game Preview & Betting Lines (Strictly ONCE per game, 2 to 3 hours before start with complete data)
                 if not status_completed and status_state == "pre":
@@ -195,16 +196,17 @@ class GamePulseScheduler:
                                 time.sleep(1)
                                 self.publisher.publish_bilingual_poll(q_es, q_en, opt_es, opt_en)
 
-                # Pillar 2A-Sub: Official Starting Lineups Alert (When confirmed starters are released by ESPN)
-                if not status_completed and status_state in ["pre", "in"]:
+                # Pillar 2A-Sub: Official Starting Lineups Alert (Strictly for active MLB/Soccer games with 8+ confirmed starters)
+                if not status_completed and status_state in ["pre", "in"] and l_code in ["mlb", "usa.1"]:
                     if not self.db.is_lineups_processed(event_id):
-                        summary_data = summary_data if 'summary_data' in locals() and summary_data else self.espn.get_game_summary(sport, l_code, event_id)
+                        if summary_data is None:
+                            summary_data = self.espn.get_game_summary(sport, l_code, event_id)
                         lineups = summary_data.get("lineups", {}) if summary_data else {}
                         home_l = lineups.get("home", [])
                         away_l = lineups.get("away", [])
 
-                        # Only publish lineups post if confirmed starters for both teams are released
-                        if len(home_l) >= 5 and len(away_l) >= 5:
+                        # Only publish lineups post if confirmed starters for both teams are released for THIS specific game
+                        if len(home_l) >= 8 and len(away_l) >= 8:
                             self.db.mark_lineups_processed(event_id, sport, l_code, event_name)
                             logger.info(f"[{l_code.upper()}] Official Lineups Released: {event_name}")
                             msg_es, msg_en, image_url = PostFormatter.format_official_lineups(ev, league, summary_data)
