@@ -657,12 +657,27 @@ class ESPNClient:
         odds_info = self._parse_odds(header_comp, data)
 
         # Format play-by-play list preserving scoringPlay and scoring flags (FULL game timeline from start to finish)
+        home_id = str(event_home.get("id", ""))
+        away_id = str(event_away.get("id", ""))
+        home_name = event_home.get("short_name", event_home.get("name", "Local"))
+        away_name = event_away.get("short_name", event_away.get("name", "Visitante"))
+        home_logo = event_home.get("logo", "")
+        away_logo = event_away.get("logo", "")
+
         parsed_plays = []
         for p in plays:
             p_text = p.get("text", "").strip()
             p_period = p.get("period", {}).get("displayValue", "")
             p_clock = p.get("clock", {}).get("displayValue", "")
-            is_scoring = p.get("scoringPlay", False) or p.get("scoreValue", 0) > 0
+            is_scoring = p.get("scoringPlay", False) or p.get("scoreValue", 0) > 0 or "scored" in p_text.lower() or "homered" in p_text.lower() or "grand slam" in p_text.lower()
+
+            p_team_id = str(p.get("team", {}).get("id", "")) if isinstance(p.get("team"), dict) else ""
+            team_info = None
+            if p_team_id == home_id:
+                team_info = {"name": home_name, "logo": home_logo, "side": "home"}
+            elif p_team_id == away_id:
+                team_info = {"name": away_name, "logo": away_logo, "side": "away"}
+
             if p_text:
                 parsed_plays.append({
                     "id": p.get("id", ""),
@@ -670,7 +685,8 @@ class ESPNClient:
                     "period": p_period,
                     "clock": p_clock,
                     "scoringPlay": is_scoring,
-                    "scoring": is_scoring
+                    "scoring": is_scoring,
+                    "team": team_info
                 })
 
         return {

@@ -215,16 +215,27 @@
             </h3>
             <div class="play-timeline">
                 {% for p in plays %}
-                    <div class="play-item">
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; font-size: 0.8rem; color: var(--text-secondary);">
-                            <span>{{ p.period }} {{ p.clock }}</span>
+                    <div class="play-item {% if p.scoring %}play-scoring{% elif p.team and p.team.side == 'home' %}play-home{% elif p.team and p.team.side == 'away' %}play-away{% endif %}" style="padding: 12px 16px; border-radius: var(--radius-md); margin-bottom: 10px; border: 1px solid var(--border-color); {% if p.scoring %}border-left: 5px solid var(--accent-yellow); background: rgba(255, 204, 0, 0.12);{% elif p.team and p.team.side == 'home' %}border-left: 5px solid var(--accent-blue); background: rgba(0, 122, 255, 0.05);{% elif p.team and p.team.side == 'away' %}border-left: 5px solid var(--accent-green); background: rgba(48, 209, 88, 0.05);{% endif %}">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; font-size: 0.82rem; color: var(--text-secondary); flex-wrap: wrap; gap: 8px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="font-weight: 700; color: var(--text-secondary);">{{ p.period }} {{ p.clock }}</span>
+                                {% if p.team %}
+                                    <span style="display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 12px; font-size: 0.78rem; font-weight: 800; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary);">
+                                        {% if p.team.logo %}
+                                            <img src="{{ p.team.logo }}" alt="{{ p.team.name }}" style="height: 16px; width: auto; object-fit: contain;" onerror="this.style.display='none'">
+                                        {% endif %}
+                                        <span>{{ p.team.name }}</span>
+                                    </span>
+                                {% endif %}
+                            </div>
+
                             {% if p.scoring %}
-                                <span style="color: var(--accent-yellow); font-weight: 800; display: inline-flex; align-items: center; gap: 4px;">
-                                    <i class="fa-solid fa-bolt"></i> {% if lang == 'es' %}¡CARRERA / ANOTACIÓN!{% else %}SCORING PLAY!{% endif %}
+                                <span style="background: var(--accent-yellow); color: #000; font-weight: 800; padding: 3px 10px; border-radius: 12px; font-size: 0.78rem; display: inline-flex; align-items: center; gap: 4px;">
+                                    <i class="fa-solid fa-fire"></i> {% if lang == 'es' %}¡CARRERA / ANOTACIÓN!{% else %}SCORING PLAY!{% endif %}
                                 </span>
                             {% endif %}
                         </div>
-                        <div>{{ p.text }}</div>
+                        <div style="font-size: 0.92rem; line-height: 1.45; color: var(--text-primary); font-weight: 600;">{{ p.text }}</div>
                     </div>
                 {% endfor %}
             </div>
