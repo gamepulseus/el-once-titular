@@ -939,7 +939,7 @@ class ESPNClient:
                     ev_id = str(item.get("eventId", ""))
                     ev_info = gl_events_dict.get(ev_id, {})
                     
-                    dt_raw = ev_info.get("eventDate", "")
+                    dt_raw = ev_info.get("gameDate", ev_info.get("eventDate", ""))
                     dt_fmt = ""
                     if dt_raw:
                         try:
