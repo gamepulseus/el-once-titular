@@ -519,16 +519,18 @@ class PostFormatter:
 
         if "mlb" in league_code or "baseball" in league_code:
             game_block_es = (
-                f"🏟️ <b>ANÁLISIS DEL PARTIDO Y LÍNEAS:</b>\n"
-                f"• 📈 <b>Línea de Carreras (Over/Under):</b> <code>{ou} Carreras</code>\n"
+                f"🏟️ <b>ANÁLISIS COMPLETO DEL PARTIDO:</b>\n"
+                f"• 📈 <b>Línea de Carreras Totales (Over/Under):</b> <code>{ou} Carreras</code>\n"
                 f"• 💰 <b>Cuotas de Victoria (Moneyline):</b> <code>{away.get('short_name')} ({ml_away})</code> vs <code>{home.get('short_name')} ({ml_home})</code>\n"
-                f"• 📊 <b>Récord de Temporada:</b> {away.get('short_name')} (<code>{record_away}</code>) | {home.get('short_name')} (<code>{record_home}</code>)\n"
+                f"• 📊 <b>Récord de Temporada:</b> {away.get('name')} (<code>{record_away}</code>) | {home.get('name')} (<code>{record_home}</code>)\n"
+                f"• ⚖️ <b>Línea de Handicap (Run Line):</b> <code>{away.get('short_name')} +1.5</code> vs <code>{home.get('short_name')} -1.5</code>\n"
             )
             game_block_en = (
-                f"🏟️ <b>GAME ANALYTICS & BETTING LINES:</b>\n"
+                f"🏟️ <b>FULL GAME ANALYTICS & BETTING LINES:</b>\n"
                 f"• 📈 <b>Total Run Line (Over/Under):</b> <code>{ou} Runs</code>\n"
                 f"• 💰 <b>Moneyline Odds:</b> <code>{away.get('short_name')} ({ml_away})</code> vs <code>{home.get('short_name')} ({ml_home})</code>\n"
-                f"• 📊 <b>Season Record:</b> {away.get('short_name')} (<code>{record_away}</code>) | {home.get('short_name')} (<code>{record_home}</code>)\n"
+                f"• 📊 <b>Season Record:</b> {away.get('name')} (<code>{record_away}</code>) | {home.get('name')} (<code>{record_home}</code>)\n"
+                f"• ⚖️ <b>Run Line Handicap:</b> <code>{away.get('short_name')} +1.5</code> vs <code>{home.get('short_name')} -1.5</code>\n"
             )
 
             props_block_es = (
