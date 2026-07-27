@@ -143,9 +143,16 @@ class TelegramPublisher:
         else:
             logger.info("Spanish Channel ID not configured.")
 
+        # Brief delay to prevent Telegram server media caching rate limits between channels
+        time.sleep(1.5)
+
         if target_en:
             if image_url:
                 res_en = self.publish_photo(target_en, image_url, msg_en)
+                if not res_en:
+                    # Retry photo publication once after short delay before resorting to text
+                    time.sleep(1.5)
+                    res_en = self.publish_photo(target_en, image_url, msg_en)
                 if not res_en:
                     logger.warning(f"Photo publish failed for English channel ({target_en}). Falling back to text.")
                     res_en = self.publish_text(target_en, msg_en)
