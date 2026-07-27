@@ -60,12 +60,16 @@ class TelegramPublisher:
         if not self.base_url or not chat_id:
             return False
 
+        safe_caption = caption
+        if len(safe_caption) > 1024:
+            safe_caption = safe_caption[:1020] + "..."
+
         boundary = '----WebKitFormBoundary7MA4YWxkTrZu0gW'
         body = []
 
         body.append(f'--{boundary}\r\nContent-Disposition: form-data; name="chat_id"\r\n\r\n{chat_id}\r\n'.encode('utf-8'))
         body.append(f'--{boundary}\r\nContent-Disposition: form-data; name="parse_mode"\r\n\r\nHTML\r\n'.encode('utf-8'))
-        body.append(f'--{boundary}\r\nContent-Disposition: form-data; name="caption"\r\n\r\n{caption}\r\n'.encode('utf-8'))
+        body.append(f'--{boundary}\r\nContent-Disposition: form-data; name="caption"\r\n\r\n{safe_caption}\r\n'.encode('utf-8'))
 
         filename = os.path.basename(photo_path)
         body.append(f'--{boundary}\r\nContent-Disposition: form-data; name="photo"; filename="{filename}"\r\nContent-Type: image/png\r\n\r\n'.encode('utf-8'))
@@ -80,10 +84,14 @@ class TelegramPublisher:
         try:
             with urllib.request.urlopen(req, timeout=15) as resp:
                 data = json.loads(resp.read().decode('utf-8'))
-                return data.get('ok', False)
+                if data.get('ok', False):
+                    return True
+                logger.warning(f"Telegram photo upload rejected: {data.get('description')}")
         except Exception as e:
             logger.error(f"Error publishing local photo file: {e}")
-            return False
+        
+        # Fallback: publish text message if photo upload fails
+        return self.publish_text(chat_id, caption)
 
     def publish_photo(self, chat_id: str, photo_input: str, caption: str) -> bool:
         if not chat_id:
