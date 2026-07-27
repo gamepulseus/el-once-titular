@@ -227,64 +227,6 @@
                     </div>
                 {% endfor %}
             </div>
-        {% else %}
-            <p style="color: var(--text-secondary); text-align: center; margin-bottom: 32px;">Loading general leaders...</p>
-        {% endif %}
-
-        <!-- Section 2: Leaders By Team -->
-        <div class="section-header" style="margin-top: 40px;">
-            <h2 class="section-title">
-                <i class="fa-solid fa-shield-halved" style="color: var(--accent-blue);"></i>
-                <span>{% if lang == 'es' %}Líderes e Individuales Por Equipo{% else %}Individual Leaders By Team{% endif %}</span>
-            </h2>
-        </div>
-
-        <div style="text-align: center;">
-            <form action="/lideres" method="GET">
-                <input type="hidden" name="lang" value="{{ lang }}">
-                <input type="hidden" name="league" value="{{ active_league }}">
-                <select name="team_id" onchange="this.form.submit()" class="team-select-box">
-                    <option value="">-- {% if lang == 'es' %}Selecciona un equipo para ver su plantilla y líderes{% else %}Select a team to view leaders & roster{% endif %} --</option>
-                    {% for team in teams %}
-                        <option value="{{ team.id }}" {% if selected_team_id == team.id %}selected{% endif %}>{{ team.name }}</option>
-                    {% endfor %}
-                </select>
-            </form>
-        </div>
-
-        {% if selected_team %}
-            <div class="info-card" style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
-                {% if selected_team.logo %}
-                    <img src="{{ selected_team.logo }}" alt="{{ selected_team.name }}" style="width: 80px; height: 80px; max-width: 80px; max-height: 80px; object-fit: contain;">
-                {% endif %}
-                <div>
-                    <h3 style="font-size: 1.8rem; font-weight: 800;">{{ selected_team.name }}</h3>
-                    <div style="color: var(--accent-blue); font-weight: 700;">
-                        {% if lang == 'es' %}Récord{% else %}Record{% endif %}: {{ selected_team.record }} • {{ selected_team.standing_summary }}
-                    </div>
-                </div>
-            </div>
-
-            {% if selected_team.roster %}
-                <div class="leaders-grid">
-                    <div class="leader-card" style="grid-column: 1 / -1;">
-                        <div class="leader-card-title">
-                            <span><i class="fa-solid fa-users" style="color: var(--accent-blue); margin-right: 6px;"></i> {% if lang == 'es' %}Jugadores Destacados del Equipo{% else %}Featured Team Roster{% endif %}</span>
-                        </div>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px;">
-                            {% for ath in selected_team.roster %}
-                                <a href="/jugador/{{ ath.id }}?league={{ active_league }}&lang={{ lang }}" style="display: flex; align-items: center; gap: 12px; background: var(--bg-card-secondary); padding: 10px; border-radius: var(--radius-md); text-decoration: none; color: inherit; border: 1px solid var(--border-subtle);">
-                                    <img src="{{ ath.headshot }}" alt="{{ ath.name }}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" onerror="this.src='https://a.espncdn.com/i/headshots/mlb/players/full/default.png'">
-                                    <div>
-                                        <div style="font-weight: 700; font-size: 0.9rem;">{{ ath.name }}</div>
-                                        <div style="font-size: 0.78rem; color: var(--text-secondary);">#{{ ath.jersey }} • {{ ath.position }}</div>
-                                    </div>
-                                </a>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
-            {% endif %}
         {% endif %}
 
     </main>

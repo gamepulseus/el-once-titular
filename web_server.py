@@ -203,25 +203,14 @@ def leaders_view():
     sport = league_info["sport"]
     league = league_info["league"]
 
-    # 1. Fetch Overall General League Leaders (Home Runs, Hits, RBIs, AVG, Pitching, Points, etc.)
+    # Fetch Overall General League Leaders (Home Runs, Hits, RBIs, AVG, Pitching, Points, etc.)
     general_categories = espn.get_general_league_leaders(sport, league)
-
-    # 2. Fetch Teams List for By Team Leaders Filter
-    teams = espn.get_teams(sport, league)
-    selected_team_id = request.args.get("team_id", "").strip()
-
-    selected_team_data = None
-    if selected_team_id:
-        selected_team_data = espn.get_team_detail(sport, league, selected_team_id)
 
     resp = make_response(render_template(
         "leaders.html",
         ui=ui,
         lang=lang,
         categories=general_categories,
-        teams=teams,
-        selected_team_id=selected_team_id,
-        selected_team=selected_team_data,
         active_league=league_filter
     ))
     resp.set_cookie("gamepulse_lang", lang, max_age=30*24*3600)
