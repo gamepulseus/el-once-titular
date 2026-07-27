@@ -192,7 +192,7 @@ class GamePulseScheduler:
                                 self.db.mark_quarter_update_processed(quarter_key, event_id, period)
 
                 # Pillar 3: Post-Game Summaries for finished games
-                elif status_completed:
+                elif status_completed or status_state == "post" or "final" in status_detail.lower():
                     if not self.db.is_summary_processed(event_id):
                         logger.info(f"[{l_code.upper()}] Finished Game found: {event_name}")
                         summary_data = self.espn.get_game_summary(sport, l_code, event_id)
