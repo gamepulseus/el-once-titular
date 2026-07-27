@@ -41,14 +41,7 @@ class GamePulseScheduler:
             sport = league["sport"]
             l_code = league["league"]
 
-            # 2. Seed existing news articles silently
-            news_items = self.espn.get_news(sport, l_code, limit=15)
-            for item in news_items:
-                news_id = item["id"]
-                headline = item["headline"]
-                self.db.mark_news_processed(news_id, headline, sport, l_code)
-
-            # 3. Seed existing games (previews, starts, scoring plays, summaries) silently
+            # Seed existing games (previews, starts, scoring plays, summaries) silently
             events = self.espn.get_scoreboard(sport, l_code)
             for ev in events:
                 event_id = str(ev["id"])
@@ -56,28 +49,25 @@ class GamePulseScheduler:
                 status_state = ev.get("status_state", "pre")
                 status_completed = ev.get("status_completed", False)
 
-                if not status_completed and status_state == "pre":
-                    self.db.mark_preview_processed(event_id, sport, l_code, event_name)
-                    self.db.mark_lineups_processed(event_id, sport, l_code, event_name)
-                elif status_completed or status_state == "post" or "final" in ev.get("status_detail", "").lower():
+                if status_completed or status_state == "post" or "final" in ev.get("status_detail", "").lower():
                     self.db.mark_summary_processed(event_id, sport, l_code, event_name)
 
                 if status_state in ["in", "post"] or status_completed:
                     self.db.mark_game_start_processed(event_id, sport, l_code, event_name)
                     self.db.mark_lineups_processed(event_id, sport, l_code, event_name)
 
-            # 4. Seed today's standings
+            # Seed today's standings
             standing_key = f"{l_code}_{today_et_str}"
             self.db.mark_standing_processed(standing_key)
 
-        logger.info("=== Baseline Seeding Complete: Bot is now listening strictly for NEW future events ===")
+        logger.info("=== Baseline Seeding Complete: Bot is ready to publish all news & live events ===")
 
     def process_news(self):
         logger.info("=== Running Pillar 1: Flash Alerts, Injury Reports & Trade Alerts ===")
         for league in config.ACTIVE_LEAGUES:
             sport = league["sport"]
             l_code = league["league"]
-            news_items = self.espn.get_news(sport, l_code, limit=5)
+            news_items = self.espn.get_news(sport, l_code, limit=25)
             
             for item in news_items:
                 news_id = str(item["id"])
