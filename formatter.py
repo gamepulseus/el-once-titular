@@ -697,6 +697,24 @@ class PostFormatter:
         image_url = MatchupGraphics.generate_matchup_banner(home, away, event_id) or home.get("logo")
         match_site_url = f"{SITE_BASE_URL}/partido/{event_id}?sport={sport}&league={league_code}"
 
+        pitcher_block_es = ""
+        pitcher_block_en = ""
+        if "mlb" in league_code or "baseball" in league_code:
+            pitchers = summary_data.get("pitchers", {}) if isinstance(summary_data, dict) else {}
+            home_p = pitchers.get("home") or home.get("probable_pitcher", "Por Anunciar / TBD")
+            away_p = pitchers.get("away") or away.get("probable_pitcher", "Por Anunciar / TBD")
+
+            pitcher_block_es = (
+                f"⚾ <b>PITCHERS ABRIDORES CONFIRMADOS:</b>\n"
+                f"• 🚀 <b>{away.get('short_name', away.get('name'))}:</b> {away_p}\n"
+                f"• 🏠 <b>{home.get('short_name', home.get('name'))}:</b> {home_p}\n\n"
+            )
+            pitcher_block_en = (
+                f"⚾ <b>CONFIRMED STARTING PITCHERS:</b>\n"
+                f"• 🚀 <b>{away.get('short_name', away.get('name'))}:</b> {away_p}\n"
+                f"• 🏠 <b>{home.get('short_name', home.get('name'))}:</b> {home_p}\n\n"
+            )
+
         lineups = summary_data.get("lineups", {}) if isinstance(summary_data, dict) else {}
         home_l = lineups.get("home", [])
         away_l = lineups.get("away", [])
@@ -723,6 +741,7 @@ class PostFormatter:
         msg_es = (
             f"📋 <b>ALINEACIONES CONFIRMADAS</b> | {league_config.get('name_es', 'Deportes')} {emoji}\n\n"
             f"🆚 <b>{home.get('name')} vs {away.get('name')}</b>\n\n"
+            f"{pitcher_block_es}"
             f"🚀 <b>Alineación {away.get('name')} (Visitante):</b>\n{away_players_es}\n\n"
             f"🏠 <b>Alineación {home.get('name')} (Local):</b>\n{home_players_es}\n\n"
             f"🔗 <a href='{match_site_url}'>Ver detalles y estadísticas en GamePulse</a>\n\n"
@@ -732,6 +751,7 @@ class PostFormatter:
         msg_en = (
             f"📋 <b>OFFICIAL STARTING LINEUPS</b> | {league_config.get('name_en', 'Sports')} {emoji}\n\n"
             f"🆚 <b>{home.get('name')} vs {away.get('name')}</b>\n\n"
+            f"{pitcher_block_en}"
             f"🚀 <b>{away.get('name')} Starting Lineup (Away):</b>\n{away_players_en}\n\n"
             f"🏠 <b>{home.get('name')} Starting Lineup (Home):</b>\n{home_players_en}\n\n"
             f"🔗 <a href='{match_site_url}'>View details and stats on GamePulse</a>\n\n"
