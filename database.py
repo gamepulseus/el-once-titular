@@ -193,6 +193,18 @@ class DatabaseManager:
                 logger.warning(f"Error loading deduplication memory cache: {e}")
 
     # News Methods
+    def flush_stale_news_cache(self):
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("DELETE FROM processed_news")
+                conn.commit()
+            if hasattr(self, "_sent_news_ids"): self._sent_news_ids.clear()
+            if hasattr(self, "_sent_headlines"): self._sent_headlines.clear()
+            logger.info("Cleared stale news cache from SQLite and memory.")
+        except Exception as e:
+            logger.warning(f"Error clearing stale news cache: {e}")
+
     def is_news_processed(self, news_id: str, headline: str = "") -> bool:
         clean_id = str(news_id).strip()
         norm_hl = re.sub(r'[^a-zA-Z0-9]', '', headline.lower()) if headline else ""

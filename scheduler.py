@@ -341,8 +341,9 @@ class GamePulseScheduler:
     def start_loop(self):
         logger.info(f"Starting GamePulse continuous loop (News interval: {config.NEWS_CHECK_INTERVAL}s, Scoreboard interval: {config.SCOREBOARD_CHECK_INTERVAL}s)")
         
-        # COLD START / FIRST RUN: Warmup DB baseline silently so old items are NOT published
+        # COLD START / FIRST RUN: Warmup DB baseline silently and flush old news cache so all recent news gets published
         try:
+            self.db.flush_stale_news_cache()
             self.warmup_baseline()
         except Exception as e:
             logger.error(f"Error during baseline warmup: {e}")
