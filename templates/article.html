@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ article.headline }} | GamePulse News</title>
+    <link rel="stylesheet" href="/static/css/apple_style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .article-body p {
+            font-size: 1.05rem;
+            line-height: 1.7;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Translucent Glass Header Bar -->
+    <header class="navbar">
+        <a href="/?lang={{ lang }}" class="navbar-brand" style="display: flex; align-items: center; gap: 12px;">
+            <img src="/static/images/gamepulse_logo.png" alt="GamePulse Logo" style="height: 48px; width: auto; object-fit: contain;">
+            <span style="font-size: 1.25rem; font-weight: 800;">GamePulse News</span>
+        </a>
+        <div class="nav-links">
+            <a href="/?lang={{ lang }}" class="nav-btn"><i class="fa-solid fa-arrow-left"></i> {% if lang == 'es' %}Volver al Inicio{% else %}Back Home{% endif %}</a>
+            <a href="https://t.me/GamePulseUS" target="_blank" class="nav-btn"><i class="fa-brands fa-telegram"></i> Telegram</a>
+            <a href="/noticia/{{ article.id }}?league={{ article.league }}&sport={{ article.sport }}&lang={{ ui.switch_lang_target }}" class="nav-btn" style="border: 1px solid var(--accent-blue); color: var(--accent-blue); font-weight: 700;">
+                <i class="fa-solid fa-globe"></i> {{ ui.switch_lang_label }}
+            </a>
+        </div>
+    </header>
+
+    <main class="detail-container">
+
+        <div class="info-card">
+            <div style="font-size: 0.8rem; font-weight: 700; color: var(--accent-blue); text-transform: uppercase; margin-bottom: 8px;">
+                {{ article.league | upper }} • <i class="fa-solid fa-pen-nib"></i> {{ ui.byline_prefix }} {{ article.byline }}
+            </div>
+
+            <h1 style="font-size: 2.1rem; font-weight: 800; line-height: 1.3; margin-bottom: 16px;">
+                {{ article.headline }}
+            </h1>
+
+            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 24px; padding-bottom: 12px; border-bottom: 1px solid var(--border-subtle);">
+                <i class="fa-regular fa-clock"></i> {{ article.published }}
+            </div>
+
+            {% if article.images %}
+                <img src="{{ article.images[0] }}" alt="{{ article.headline }}" style="width: 100%; max-height: 440px; object-fit: cover; border-radius: var(--radius-md); margin-bottom: 24px;" onerror="this.style.display='none'">
+            {% endif %}
+
+            <div class="article-body">
+                {% for paragraph in paragraphs %}
+                    <p>{{ paragraph }}</p>
+                {% endfor %}
+            </div>
+        </div>
+
+    </main>
+
+    <footer>
+        <p>{{ ui.footer_rights }}</p>
+    </footer>
+
+</body>
+</html>

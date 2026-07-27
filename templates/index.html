@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GamePulse | Real-Time Sports, Scores, News & Stats</title>
+    <link rel="stylesheet" href="/static/css/apple_style.css">
+    <!-- FontAwesome 6 Vector Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .calendar-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .date-btn {
+            padding: 8px 16px;
+            border-radius: 16px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 0.88rem;
+            font-weight: 600;
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .date-btn.active, .date-btn:hover {
+            background: var(--accent-blue);
+            color: #FFFFFF;
+            border-color: var(--accent-blue);
+        }
+        .date-picker-input {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 7px 14px;
+            font-size: 0.88rem;
+            font-family: inherit;
+            outline: none;
+            cursor: pointer;
+        }
+        .filter-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 24px;
+            gap: 8px;
+        }
+        .scroll-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: 50%;
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            font-size: 0.95rem;
+            flex-shrink: 0;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+        .scroll-btn:hover {
+            background: var(--accent-blue);
+            color: #FFF;
+            border-color: var(--accent-blue);
+        }
+        .filter-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            padding: 4px 0;
+            width: 100%;
+            scrollbar-width: none;
+        }
+        .filter-bar::-webkit-scrollbar {
+            display: none;
+        }
+        .filter-pill {
+            padding: 8px 18px;
+            border-radius: 20px;
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.88rem;
+            font-weight: 600;
+            white-space: nowrap;
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .filter-pill.active, .filter-pill:hover {
+            background: var(--accent-blue);
+            color: #FFFFFF;
+            border-color: var(--accent-blue);
+        }
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 8px 16px;
+            width: 100%;
+            max-width: 480px;
+            margin-bottom: 20px;
+        }
+        .search-input {
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            width: 100%;
+            outline: none;
+        }
+    </style>
+    <script>
+        function changeDate(dateVal) {
+            const urlParams = new URLSearchParams(window.location.search);
+            urlParams.set("date", dateVal);
+            window.location.search = urlParams.toString();
+        }
+        function scrollFilters(direction) {
+            const container = document.getElementById("filterBarContainer");
+            const scrollAmount = 260;
+            container.scrollBy({ left: direction * scrollAmount, behavior: "smooth" });
+        }
+    </script>
+</head>
+<body>
+
+    <!-- Translucent Glass Header Bar with Larger Official GamePulse Logo -->
+    <header class="navbar">
+        <a href="/?lang={{ lang }}" class="navbar-brand" style="display: flex; align-items: center; gap: 12px;">
+            <img src="/static/images/gamepulse_logo.png" alt="GamePulse Logo" style="height: 56px; width: auto; object-fit: contain;">
+            <span style="font-size: 1.35rem; font-weight: 800;">GamePulse</span>
+        </a>
+        <div class="nav-links">
+            <a href="/?lang={{ lang }}" class="nav-btn" style="background: var(--accent-blue); color: #FFF;">
+                <i class="fa-solid fa-fire-flame-curved"></i> {{ ui.nav_games }}
+            </a>
+            <a href="/posiciones?lang={{ lang }}" class="nav-btn">
+                <i class="fa-solid fa-list-ol"></i> {{ ui.nav_standings }}
+            </a>
+            <a href="/lideres?lang={{ lang }}" class="nav-btn">
+                <i class="fa-solid fa-trophy"></i> {{ ui.nav_leaders }}
+            </a>
+            <a href="/h2h?lang={{ lang }}" class="nav-btn">
+                <i class="fa-solid fa-square-poll-vertical"></i> {{ ui.nav_h2h }}
+            </a>
+            <a href="/videos?lang={{ lang }}" class="nav-btn">
+                <i class="fa-solid fa-circle-play"></i> {{ ui.nav_videos }}
+            </a>
+            <a href="https://t.me/GamePulseUS" target="_blank" class="nav-btn">
+                <i class="fa-brands fa-telegram"></i> {{ ui.nav_telegram }}
+            </a>
+            
+            <!-- Language Switcher Button -->
+            <a href="/?lang={{ ui.switch_lang_target }}" class="nav-btn" style="border: 1px solid var(--accent-blue); color: var(--accent-blue); font-weight: 700;">
+                <i class="fa-solid fa-globe"></i> {{ ui.switch_lang_label }}
+            </a>
+        </div>
+    </header>
+
+    <main class="container">
+
+        <!-- Header Hero Title & Larger Prominent Official GamePulse Brand Logo -->
+        <div style="display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 24px;">
+            <img src="/static/images/gamepulse_logo.png" alt="GamePulse Official Logo" style="height: 170px; width: auto; object-fit: contain; margin-bottom: 16px; filter: drop-shadow(0 8px 24px rgba(255, 69, 58, 0.45));">
+
+            <h1 style="font-size: 2.3rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 8px;">
+                {{ ui.hero_title }}
+            </h1>
+            <p style="font-size: 0.95rem; color: var(--text-secondary); max-width: 600px; margin-bottom: 16px;">
+                {{ ui.hero_desc }}
+            </p>
+
+            <form action="/" method="GET" class="search-box">
+                <input type="hidden" name="lang" value="{{ lang }}">
+                <i class="fa-solid fa-magnifying-glass" style="margin-right: 10px; color: var(--text-secondary);"></i>
+                <input type="text" name="q" value="{{ search_query }}" placeholder="{{ ui.search_placeholder }}" class="search-input">
+                {% if active_league %}
+                    <input type="hidden" name="league" value="{{ active_league }}">
+                {% endif %}
+                {% if selected_date %}
+                    <input type="hidden" name="date" value="{{ selected_date }}">
+                {% endif %}
+            </form>
+
+            <!-- Calendar & Date Selector Bar -->
+            <div class="calendar-bar">
+                <a href="/?date={{ yesterday_date }}&lang={{ lang }}{% if active_league %}&league={{ active_league }}{% endif %}" class="date-btn {% if selected_date == yesterday_date %}active{% endif %}">
+                    <i class="fa-solid fa-chevron-left"></i> {{ ui.btn_yesterday }}
+                </a>
+                <a href="/?date={{ today_date }}&lang={{ lang }}{% if active_league %}&league={{ active_league }}{% endif %}" class="date-btn {% if selected_date == today_date %}active{% endif %}">
+                    <i class="fa-solid fa-calendar-day"></i> {{ ui.btn_today }} ({{ today_date }})
+                </a>
+                <a href="/?date={{ tomorrow_date }}&lang={{ lang }}{% if active_league %}&league={{ active_league }}{% endif %}" class="date-btn {% if selected_date == tomorrow_date %}active{% endif %}">
+                    {{ ui.btn_tomorrow }} <i class="fa-solid fa-chevron-right"></i>
+                </a>
+                <input type="date" value="{{ selected_date }}" onchange="changeDate(this.value)" class="date-picker-input">
+            </div>
+        </div>
+
+        <!-- Sport & League Filter Bar with Vector Icon Pills & Scroll Arrows -->
+        <div class="filter-wrapper">
+            <button class="scroll-btn" onclick="scrollFilters(-1)" title="Scroll left">
+                <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            
+            <div class="filter-bar" id="filterBarContainer">
+                <a href="/?date={{ selected_date }}&lang={{ lang }}" class="filter-pill {% if not active_league %}active{% endif %}">
+                    <i class="fa-solid fa-fire"></i> {{ ui.all_sports }}
+                </a>
+                <a href="/?league=mlb&date={{ selected_date }}&lang={{ lang }}" class="filter-pill {% if active_league == 'mlb' %}active{% endif %}">
+                    <i class="fa-solid fa-baseball"></i> MLB Baseball
+                </a>
+                <a href="/?league=nba&date={{ selected_date }}&lang={{ lang }}" class="filter-pill {% if active_league == 'nba' %}active{% endif %}">
+                    <i class="fa-solid fa-basketball"></i> NBA Basketball
+                </a>
+                <a href="/?league=nfl&date={{ selected_date }}&lang={{ lang }}" class="filter-pill {% if active_league == 'nfl' %}active{% endif %}">
+                    <i class="fa-solid fa-football"></i> NFL Football
+                </a>
+                <a href="/?league=nhl&date={{ selected_date }}&lang={{ lang }}" class="filter-pill {% if active_league == 'nhl' %}active{% endif %}">
+                    <i class="fa-solid fa-hockey-puck"></i> NHL Hockey
+                </a>
+                <a href="/?league=college-football&date={{ selected_date }}&lang={{ lang }}" class="filter-pill {% if active_league == 'college-football' %}active{% endif %}">
+                    <i class="fa-solid fa-graduation-cap"></i> NCAA Football
+                </a>
+                <a href="/?league=mens-college-basketball&date={{ selected_date }}&lang={{ lang }}" class="filter-pill {% if active_league == 'mens-college-basketball' %}active{% endif %}">
+                    <i class="fa-solid fa-graduation-cap"></i> NCAA Basketball
+                </a>
+            </div>
+
+            <button class="scroll-btn" onclick="scrollFilters(1)" title="Scroll right">
+                <i class="fa-solid fa-chevron-right"></i>
+            </button>
+        </div>
+
+        <!-- Live Games Section -->
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="fa-solid fa-chart-line" style="color: var(--accent-blue);"></i>
+                <span>{{ ui.section_games }} ({{ selected_date }})</span>
+                {% if selected_date == today_date %}
+                    <span class="badge-live"><span class="live-dot"></span> {{ ui.badge_live }}</span>
+                {% endif %}
+            </h2>
+        </div>
+
+        <div class="games-grid">
+            {% if games %}
+                {% for game in games %}
+                    <a href="/partido/{{ game.id }}?league={{ game.league }}&sport={{ game.sport }}&lang={{ lang }}" class="game-card" {% if game.status_state == 'in' %}style="border: 2px solid var(--accent-red); shadow: 0 0 15px rgba(255, 45, 85, 0.3);"{% endif %}>
+                        <div class="game-card-header">
+                            <span>{{ game.league | upper }}</span>
+                            {% if game.status_state == 'in' %}
+                                <span style="color: var(--accent-red); font-weight: 800; display: inline-flex; align-items: center; gap: 6px;">
+                                    <span class="live-dot"></span> {{ game.status_detail }}
+                                </span>
+                            {% else %}
+                                <span style="color: var(--text-secondary); font-weight: 700;">{{ game.status_detail }}</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="game-team">
+                            <div class="game-team-info">
+                                <img src="{{ game.home_team.logo }}" alt="{{ game.home_team.name }}" onerror="this.src='https://a.espncdn.com/i/teamlogos/default-team-logo.png'">
+                                <span class="game-team-name">{{ game.home_team.name }}</span>
+                            </div>
+                            <span class="game-team-score {% if game.home_team.score > game.away_team.score %}winner-score{% endif %}">{{ game.home_team.score }}</span>
+                        </div>
+
+                        <div class="game-team">
+                            <div class="game-team-info">
+                                <img src="{{ game.away_team.logo }}" alt="{{ game.away_team.name }}" onerror="this.src='https://a.espncdn.com/i/teamlogos/default-team-logo.png'">
+                                <span class="game-team-name">{{ game.away_team.name }}</span>
+                            </div>
+                            <span class="game-team-score {% if game.away_team.score > game.home_team.score %}winner-score{% endif %}">{{ game.away_team.score }}</span>
+                        </div>
+
+                        <div class="game-card-footer">
+                            <span>Lineups • Odds</span>
+                            <span>{{ ui.view_details }}</span>
+                        </div>
+                    </a>
+                {% endfor %}
+            {% else %}
+                <div style="background: var(--bg-card); padding: 24px; border-radius: var(--radius-lg); color: var(--text-secondary); text-align: center; grid-column: 1 / -1;">
+                    No games scheduled for {{ selected_date }}.
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Flash News Section -->
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="fa-solid fa-newspaper" style="color: var(--accent-blue);"></i>
+                <span>{{ ui.section_news }}</span>
+            </h2>
+        </div>
+
+        <div class="news-grid">
+            {% if news %}
+                {% for item in news %}
+                    <a href="/noticia/{{ item.id }}?league={{ item.league }}&sport={{ item.sport }}&lang={{ lang }}" class="news-card">
+                        {% if item.images %}
+                            <img src="{{ item.images[0] }}" alt="{{ item.headline }}" class="news-card-image" onerror="this.style.display='none'">
+                        {% endif %}
+                        <div class="news-card-content">
+                            <div class="news-category">{{ item.league | upper }} • <i class="fa-solid fa-pen-nib"></i> {{ item.byline }}</div>
+                            <h3 class="news-title">{{ item.headline }}</h3>
+                            <p class="news-desc">{{ item.description }}</p>
+                            <div class="news-time"><i class="fa-regular fa-clock"></i> {{ item.published }}</div>
+                        </div>
+                    </a>
+                {% endfor %}
+            {% endif %}
+        </div>
+
+    </main>
+
+    <footer>
+        <p>{{ ui.footer_rights }}</p>
+        <p style="margin-top: 8px;">
+            <a href="https://t.me/GamePulseUS" target="_blank"><i class="fa-brands fa-telegram"></i> Telegram 🇺🇸</a> • 
+            <a href="https://t.me/GamePulseES" target="_blank"><i class="fa-brands fa-telegram"></i> Telegram 🇪🇸</a>
+        </p>
+    </footer>
+
+</body>
+</html>

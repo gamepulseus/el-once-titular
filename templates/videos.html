@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HD Video Highlights Gallery | GamePulse</title>
+    <link rel="stylesheet" href="/static/css/apple_style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 24px;
+            margin-bottom: 36px;
+        }
+        .video-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+        .video-player-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            background: #000;
+        }
+        .video-player-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+        .video-card-content {
+            padding: 16px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Translucent Glass Header Bar -->
+    <header class="navbar">
+        <a href="/?lang={{ lang }}" class="navbar-brand" style="display: flex; align-items: center; gap: 12px;">
+            <img src="/static/images/gamepulse_logo.png" alt="GamePulse Logo" style="height: 56px; width: auto; object-fit: contain;">
+            <span style="font-size: 1.35rem; font-weight: 800;">GamePulse Videos</span>
+        </a>
+        <div class="nav-links">
+            <a href="/?lang={{ lang }}" class="nav-btn"><i class="fa-solid fa-fire-flame-curved"></i> {{ ui.nav_games }}</a>
+            <a href="/posiciones?lang={{ lang }}" class="nav-btn"><i class="fa-solid fa-list-ol"></i> {{ ui.nav_standings }}</a>
+            <a href="/lideres?lang={{ lang }}" class="nav-btn"><i class="fa-solid fa-trophy"></i> {{ ui.nav_leaders }}</a>
+            <a href="/h2h?lang={{ lang }}" class="nav-btn"><i class="fa-solid fa-square-poll-vertical"></i> {{ ui.nav_h2h }}</a>
+            <a href="/videos?lang={{ lang }}" class="nav-btn" style="background: var(--accent-blue); color: #FFF;"><i class="fa-solid fa-circle-play"></i> {{ ui.nav_videos }}</a>
+            <a href="https://t.me/GamePulseUS" target="_blank" class="nav-btn"><i class="fa-brands fa-telegram"></i> {{ ui.nav_telegram }}</a>
+            
+            <a href="/videos?lang={{ ui.switch_lang_target }}" class="nav-btn" style="border: 1px solid var(--accent-blue); color: var(--accent-blue); font-weight: 700;">
+                <i class="fa-solid fa-globe"></i> {{ ui.switch_lang_label }}
+            </a>
+        </div>
+    </header>
+
+    <main class="container">
+
+        <div style="text-align: center; margin-bottom: 28px;">
+            <h1 style="font-size: 2.2rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 8px;">
+                <i class="fa-solid fa-play" style="color: var(--accent-red);"></i>
+                {% if lang == 'es' %}Centro de Videos & Highlights HD{% else %}HD Video Highlights & Game Clips{% endif %}
+            </h1>
+            <p style="font-size: 0.95rem; color: var(--text-secondary);">
+                {% if lang == 'es' %}Resúmenes oficiales de partidos, jonrones del día y las mejores jugadas.{% else %}Official game highlights, home runs of the day, and top plays.{% endif %}
+            </p>
+        </div>
+
+        <div class="video-grid">
+            <!-- Video 1 -->
+            <div class="video-card">
+                <div class="video-player-container">
+                    <iframe src="https://www.youtube.com/embed/videoseries?list=PL8SLw4xZtV3-zO5ZcKz9V-rW6R1Xw4-8k" allowfullscreen></iframe>
+                </div>
+                <div class="video-card-content">
+                    <div style="font-size: 0.75rem; font-weight: 700; color: var(--accent-blue);">MLB BASEBALL</div>
+                    <h3 style="font-size: 1.05rem; font-weight: 700; margin-top: 4px;">MLB Official Game Highlights</h3>
+                </div>
+            </div>
+
+            <!-- Video 2 -->
+            <div class="video-card">
+                <div class="video-player-container">
+                    <iframe src="https://www.youtube.com/embed/videoseries?list=PLT6Z7K79Ww9z2w1yZ1K2Y3X4W5V6U7T8" allowfullscreen></iframe>
+                </div>
+                <div class="video-card-content">
+                    <div style="font-size: 0.75rem; font-weight: 700; color: var(--accent-blue);">NBA BASKETBALL</div>
+                    <h3 style="font-size: 1.05rem; font-weight: 700; margin-top: 4px;">NBA Top Plays & Game Recaps</h3>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer>
+        <p>{{ ui.footer_rights }}</p>
+    </footer>
+
+</body>
+</html>

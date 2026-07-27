@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Standings & League Tables | GamePulse</title>
+    <link rel="stylesheet" href="/static/css/apple_style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .filter-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 12px;
+            margin-bottom: 24px;
+            scrollbar-width: none;
+        }
+        .filter-bar::-webkit-scrollbar {
+            display: none;
+        }
+        .filter-pill {
+            padding: 8px 18px;
+            border-radius: 20px;
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.88rem;
+            font-weight: 600;
+            white-space: nowrap;
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .filter-pill.active, .filter-pill:hover {
+            background: var(--accent-blue);
+            color: #FFFFFF;
+            border-color: var(--accent-blue);
+        }
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            margin-top: 12px;
+            margin-bottom: 32px;
+        }
+        .standings-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            text-align: left;
+        }
+        .standings-table th {
+            background: var(--bg-card-secondary);
+            color: var(--text-secondary);
+            padding: 12px 14px;
+            font-weight: 700;
+            border-bottom: 1px solid var(--border-color);
+            white-space: nowrap;
+        }
+        .standings-table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border-subtle);
+            white-space: nowrap;
+        }
+        .standings-table tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Translucent Glass Header Bar -->
+    <header class="navbar">
+        <a href="/?lang={{ lang }}" class="navbar-brand" style="display: flex; align-items: center; gap: 12px;">
+            <img src="/static/images/gamepulse_logo.png" alt="GamePulse Logo" style="height: 56px; width: auto; object-fit: contain;">
+            <span style="font-size: 1.35rem; font-weight: 800;">GamePulse Standings</span>
+        </a>
+        <div class="nav-links">
+            <a href="/?lang={{ lang }}" class="nav-btn"><i class="fa-solid fa-fire-flame-curved"></i> {{ ui.nav_games }}</a>
+            <a href="/posiciones?lang={{ lang }}" class="nav-btn" style="background: var(--accent-blue); color: #FFF;"><i class="fa-solid fa-list-ol"></i> {{ ui.nav_standings }}</a>
+            <a href="/lideres?lang={{ lang }}" class="nav-btn"><i class="fa-solid fa-trophy"></i> {{ ui.nav_leaders }}</a>
+            <a href="/h2h?lang={{ lang }}" class="nav-btn"><i class="fa-solid fa-square-poll-vertical"></i> {{ ui.nav_h2h }}</a>
+            <a href="/videos?lang={{ lang }}" class="nav-btn"><i class="fa-solid fa-circle-play"></i> {{ ui.nav_videos }}</a>
+            <a href="https://t.me/GamePulseUS" target="_blank" class="nav-btn"><i class="fa-brands fa-telegram"></i> {{ ui.nav_telegram }}</a>
+            
+            <a href="/posiciones?lang={{ ui.switch_lang_target }}" class="nav-btn" style="border: 1px solid var(--accent-blue); color: var(--accent-blue); font-weight: 700;">
+                <i class="fa-solid fa-globe"></i> {{ ui.switch_lang_label }}
+            </a>
+        </div>
+    </header>
+
+    <main class="container">
+
+        <div style="text-align: center; margin-bottom: 28px;">
+            <h1 style="font-size: 2.2rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 8px;">
+                <i class="fa-solid fa-ranking-star" style="color: var(--accent-blue);"></i>
+                {% if lang == 'es' %}Tabla de Posiciones & Clasificación Oficial{% else %}Official League Standings & Tables{% endif %}
+            </h1>
+            <p style="font-size: 0.95rem; color: var(--text-secondary);">
+                {% if lang == 'es' %}Récord de victorias, derrotas, porcentaje, racha y diferencia.{% else %}Wins, losses, win percentage, streak, and run differential.{% endif %}
+            </p>
+        </div>
+
+        <!-- Sport Filter Pills -->
+        <div class="filter-bar">
+            <a href="/posiciones?league=mlb&lang={{ lang }}" class="filter-pill {% if active_league == 'mlb' %}active{% endif %}"><i class="fa-solid fa-baseball"></i> MLB Baseball</a>
+            <a href="/posiciones?league=nba&lang={{ lang }}" class="filter-pill {% if active_league == 'nba' %}active{% endif %}"><i class="fa-solid fa-basketball"></i> NBA Basketball</a>
+            <a href="/posiciones?league=nfl&lang={{ lang }}" class="filter-pill {% if active_league == 'nfl' %}active{% endif %}"><i class="fa-solid fa-football"></i> NFL Football</a>
+            <a href="/posiciones?league=nhl&lang={{ lang }}" class="filter-pill {% if active_league == 'nhl' %}active{% endif %}"><i class="fa-solid fa-hockey-puck"></i> NHL Hockey</a>
+        </div>
+
+        {% if standings %}
+            {% for conf in standings %}
+                <div class="info-card">
+                    <h3 class="info-card-title" style="color: var(--accent-blue);">
+                        <i class="fa-solid fa-trophy" style="color: var(--accent-yellow); margin-right: 8px;"></i> {{ conf.name }}
+                    </h3>
+
+                    <div class="table-responsive">
+                        <table class="standings-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>{% if lang == 'es' %}Equipo{% else %}Team{% endif %}</th>
+                                    <th>W</th>
+                                    <th>L</th>
+                                    <th>PCT</th>
+                                    <th>GB</th>
+                                    <th>{% if lang == 'es' %}Racha{% else %}Streak{% endif %}</th>
+                                    <th>{% if lang == 'es' %}Local{% else %}Home{% endif %}</th>
+                                    <th>{% if lang == 'es' %}Visitante{% else %}Away{% endif %}</th>
+                                    <th>{% if lang == 'es' %}Diferencia{% else %}DIFF{% endif %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for team in conf.teams %}
+                                    <tr>
+                                        <td><strong>{{ loop.index }}</strong></td>
+                                        <td>
+                                            <a href="/equipo/{{ team.id }}?league={{ active_league }}&lang={{ lang }}" style="color: var(--text-primary); text-decoration: none; display: inline-flex; align-items: center; gap: 10px; font-weight: 700;">
+                                                {% if team.logo %}
+                                                    <img src="{{ team.logo }}" alt="{{ team.name }}" style="width: 24px; height: 24px; object-fit: contain;" onerror="this.style.display='none'">
+                                                {% endif %}
+                                                <span>{{ team.name }}</span>
+                                            </a>
+                                        </td>
+                                        <td><strong style="color: var(--accent-green);">{{ team.wins }}</strong></td>
+                                        <td><strong style="color: var(--accent-red);">{{ team.losses }}</strong></td>
+                                        <td><code>{{ team.win_pct }}</code></td>
+                                        <td>{{ team.games_behind }}</td>
+                                        <td><code>{{ team.streak }}</code></td>
+                                        <td>{{ team.home_record }}</td>
+                                        <td>{{ team.away_record }}</td>
+                                        <td>{{ team.diff }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p style="color: var(--text-secondary); text-align: center;">Loading standings...</p>
+        {% endif %}
+
+    </main>
+
+    <footer>
+        <p>{{ ui.footer_rights }}</p>
+    </footer>
+
+</body>
+</html>

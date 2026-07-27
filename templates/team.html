@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ team.name }} | GamePulse Team Profile</title>
+    <link rel="stylesheet" href="/static/css/apple_style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .roster-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+        .athlete-card {
+            background: var(--bg-card-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            text-align: center;
+            text-decoration: none;
+            color: inherit;
+            transition: transform 0.2s ease;
+        }
+        .athlete-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--accent-blue);
+        }
+        .athlete-card img {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 8px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Translucent Glass Header Bar -->
+    <header class="navbar">
+        <a href="/?lang={{ lang }}" class="navbar-brand" style="display: flex; align-items: center; gap: 12px;">
+            <img src="/static/images/gamepulse_logo.png" alt="GamePulse Logo" style="height: 48px; width: auto; object-fit: contain;">
+            <span style="font-size: 1.25rem; font-weight: 800;">GamePulse Team</span>
+        </a>
+        <div class="nav-links">
+            <a href="/?lang={{ lang }}" class="nav-btn"><i class="fa-solid fa-arrow-left"></i> {% if lang == 'es' %}Volver al Inicio{% else %}Back Home{% endif %}</a>
+            <a href="https://t.me/GamePulseUS" target="_blank" class="nav-btn"><i class="fa-brands fa-telegram"></i> Telegram</a>
+            <a href="/equipo/{{ team.id }}?league={{ team.league }}&sport={{ team.sport }}&lang={{ ui.switch_lang_target }}" class="nav-btn" style="border: 1px solid var(--accent-blue); color: var(--accent-blue); font-weight: 700;">
+                <i class="fa-solid fa-globe"></i> {{ ui.switch_lang_label }}
+            </a>
+        </div>
+    </header>
+
+    <main class="detail-container">
+
+        <div class="info-card" style="display: flex; align-items: center; gap: 24px; flex-wrap: wrap;">
+            {% if team.logo %}
+                <img src="{{ team.logo }}" alt="{{ team.name }}" style="width: 100px; height: 100px; max-width: 100px; max-height: 100px; object-fit: contain;">
+            {% endif %}
+            <div>
+                <h1 style="font-size: 2.2rem; font-weight: 800; margin-bottom: 4px;">{{ team.name }}</h1>
+                <div style="font-size: 1rem; color: var(--text-secondary); margin-bottom: 8px;">
+                    {{ team.league | upper }} • {% if lang == 'es' %}Récord{% else %}Record{% endif %}: <strong style="color: var(--accent-green);">{{ team.record }}</strong>
+                </div>
+                <div style="font-size: 0.9rem; color: var(--accent-blue); font-weight: 600;">{{ team.standing_summary }}</div>
+            </div>
+        </div>
+
+        <div class="info-card">
+            <h3 class="info-card-title">
+                <i class="fa-solid fa-users" style="color: var(--accent-blue);"></i>
+                <span>{% if lang == 'es' %}Plantilla de Jugadores (Roster Oficial){% else %}Official Team Roster{% endif %}</span>
+            </h3>
+
+            {% if team.roster %}
+                <div class="roster-grid">
+                    {% for ath in team.roster %}
+                        <a href="/jugador/{{ ath.id }}?sport={{ team.sport }}&league={{ team.league }}&lang={{ lang }}" class="athlete-card">
+                            <img src="{{ ath.headshot }}" alt="{{ ath.name }}" onerror="this.src='https://a.espncdn.com/i/headshots/mlb/players/full/default.png'">
+                            <div style="font-weight: 700; font-size: 0.95rem;">{{ ath.name }}</div>
+                            <div style="font-size: 0.8rem; color: var(--text-secondary);">#{{ ath.jersey }} • {{ ath.position }}</div>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p style="color: var(--text-secondary);">Roster currently unavailable.</p>
+            {% endif %}
+        </div>
+
+    </main>
+
+    <footer>
+        <p>{{ ui.footer_rights }}</p>
+    </footer>
+
+</body>
+</html>

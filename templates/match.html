@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ event.home_team.name }} vs {{ event.away_team.name }} | GamePulse Match Center</title>
+    <link rel="stylesheet" href="/static/css/apple_style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            margin-top: 12px;
+            margin-bottom: 24px;
+        }
+        .box-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            text-align: left;
+        }
+        .box-table th {
+            background: var(--bg-card-secondary);
+            color: var(--text-secondary);
+            padding: 10px 12px;
+            font-weight: 700;
+            border-bottom: 1px solid var(--border-color);
+            white-space: nowrap;
+        }
+        .box-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border-subtle);
+            white-space: nowrap;
+        }
+        .box-table tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .play-timeline {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            background: var(--bg-card-secondary);
+        }
+        .play-item {
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-subtle);
+            font-size: 0.9rem;
+        }
+        .play-item:last-child {
+            border-bottom: none;
+        }
+        .lineup-list {
+            list-style: none;
+            padding: 0;
+        }
+        .lineup-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-subtle);
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Translucent Glass Header Bar with Official GamePulse Logo -->
+    <header class="navbar">
+        <a href="/?lang={{ lang }}" class="navbar-brand" style="display: flex; align-items: center; gap: 12px;">
+            <img src="/static/images/gamepulse_logo.png" alt="GamePulse Logo" style="height: 48px; width: auto; object-fit: contain;">
+            <span style="font-size: 1.25rem; font-weight: 800;">GamePulse Match Center</span>
+        </a>
+        <div class="nav-links">
+            <a href="/?lang={{ lang }}" class="nav-btn"><i class="fa-solid fa-arrow-left"></i> {{ ui.btn_yesterday if lang == 'es' else 'Back Home' }}</a>
+            <a href="https://t.me/GamePulseUS" target="_blank" class="nav-btn"><i class="fa-brands fa-telegram"></i> Telegram</a>
+            <a href="/partido/{{ event.id }}?league={{ event.league }}&sport={{ event.sport }}&lang={{ ui.switch_lang_target }}" class="nav-btn" style="border: 1px solid var(--accent-blue); color: var(--accent-blue); font-weight: 700;">
+                <i class="fa-solid fa-globe"></i> {{ ui.switch_lang_label }}
+            </a>
+        </div>
+    </header>
+
+    <main class="detail-container">
+
+        <!-- Match Hero Scoreboard Banner -->
+        <div class="match-hero">
+            <div style="font-size: 0.85rem; font-weight: 700; color: var(--accent-red); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">
+                {{ event.league | upper }} • {{ event.status_detail }}
+            </div>
+
+            <div class="match-score-board">
+                <a href="/equipo/{{ event.home_team.id }}?sport={{ event.sport }}&league={{ event.league }}&lang={{ lang }}" class="match-team-block" style="text-decoration: none; color: inherit;">
+                    <img src="{{ event.home_team.logo }}" alt="{{ event.home_team.name }}" onerror="this.src='https://a.espncdn.com/i/teamlogos/default-team-logo.png'">
+                    <span class="match-team-name">{{ event.home_team.name }}</span>
+                    <span style="font-size: 0.85rem; color: var(--text-secondary);">{% if lang == 'es' %}Récord{% else %}Record{% endif %}: {{ event.home_team.record }}</span>
+                </a>
+
+                <div class="match-score-big">
+                    <span>{{ event.home_team.score }}</span>
+                    <span class="match-vs">-</span>
+                    <span>{{ event.away_team.score }}</span>
+                </div>
+
+                <a href="/equipo/{{ event.away_team.id }}?sport={{ event.sport }}&league={{ event.league }}&lang={{ lang }}" class="match-team-block" style="text-decoration: none; color: inherit;">
+                    <img src="{{ event.away_team.logo }}" alt="{{ event.away_team.name }}" onerror="this.src='https://a.espncdn.com/i/teamlogos/default-team-logo.png'">
+                    <span class="match-team-name">{{ event.away_team.name }}</span>
+                    <span style="font-size: 0.85rem; color: var(--text-secondary);">{% if lang == 'es' %}Récord{% else %}Record{% endif %}: {{ event.away_team.record }}</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Betting Lines & Odds Card -->
+        {% if odds %}
+        <div class="info-card">
+            <h3 class="info-card-title">
+                <i class="fa-solid fa-coins" style="color: var(--accent-yellow);"></i>
+                <span>{% if lang == 'es' %}Líneas de Apuestas & Odds{% else %}Betting Lines & Odds{% endif %}</span>
+            </h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: 0.95rem;">
+                <div>
+                    <span style="color: var(--text-secondary);"><i class="fa-solid fa-house"></i> {{ event.home_team.name }}:</span>
+                    <strong style="color: var(--accent-yellow);">{{ odds.moneyline_home }}</strong>
+                </div>
+                <div>
+                    <span style="color: var(--text-secondary);"><i class="fa-solid fa-plane-departure"></i> {{ event.away_team.name }}:</span>
+                    <strong style="color: var(--accent-yellow);">{{ odds.moneyline_away }}</strong>
+                </div>
+                <div>
+                    <span style="color: var(--text-secondary);"><i class="fa-solid fa-bullseye"></i> {% if lang == 'es' %}Alta / Baja (Over/Under Total){% else %}Over/Under Total{% endif %}:</span>
+                    <strong>{{ odds.over_under }}</strong>
+                </div>
+                <div>
+                    <span style="color: var(--text-secondary);"><i class="fa-solid fa-chart-column"></i> Spread:</span>
+                    <strong>{{ odds.details }}</strong>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Pitching Decisions (MLB) -->
+        {% if decisions and (decisions.win or decisions.loss) %}
+        <div class="info-card">
+            <h3 class="info-card-title">
+                <i class="fa-solid fa-baseball" style="color: var(--accent-blue);"></i>
+                <span>{% if lang == 'es' %}Decisiones de Pitcheo{% else %}Pitching Decisions{% endif %}</span>
+            </h3>
+            <ul class="lineup-list">
+                {% if decisions.win %}<li><i class="fa-solid fa-circle-check" style="color: var(--accent-green);"></i> <b>{% if lang == 'es' %}Ganó (W){% else %}Win (W){% endif %}:</b> {{ decisions.win }}</li>{% endif %}
+                {% if decisions.loss %}<li><i class="fa-solid fa-circle-xmark" style="color: var(--accent-red);"></i> <b>{% if lang == 'es' %}Perdió (L){% else %}Loss (L){% endif %}:</b> {{ decisions.loss }}</li>{% endif %}
+                {% if decisions.save %}<li><i class="fa-solid fa-lock" style="color: var(--accent-yellow);"></i> <b>{% if lang == 'es' %}Salvó (SV){% else %}Save (SV){% endif %}:</b> {{ decisions.save }}</li>{% endif %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <!-- COMPLETE BOXSCORE TABLES SECTION -->
+        {% if boxscore_tables and (boxscore_tables.home.categories or boxscore_tables.away.categories) %}
+        <div class="info-card">
+            <h3 class="info-card-title">
+                <i class="fa-solid fa-chart-pie" style="color: var(--accent-blue);"></i>
+                <span>{% if lang == 'es' %}Estadísticas Completas & Boxscore{% else %}Full Game Boxscore & Player Stats{% endif %}</span>
+            </h3>
+
+            {% for side in ['home', 'away'] %}
+                {% set team_box = boxscore_tables[side] %}
+                {% if team_box and team_box.categories %}
+                    <h4 style="margin-top: 20px; margin-bottom: 10px; color: var(--accent-blue); display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-shield-halved"></i> {% if side == 'home' %}{{ event.home_team.name }}{% else %}{{ event.away_team.name }}{% endif %}
+                    </h4>
+
+                    {% for cat in team_box.categories %}
+                        <div style="font-size: 0.9rem; font-weight: 700; color: var(--text-secondary); margin-top: 14px;">
+                            {{ cat.name if cat.name else 'Player Stats' }}
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="box-table">
+                                <thead>
+                                    <tr>
+                                        <th>{% if lang == 'es' %}Jugador{% else %}Player{% endif %}</th>
+                                        {% for lbl in cat.labels %}
+                                            <th>{{ lbl }}</th>
+                                        {% endfor %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for ath in cat.athletes %}
+                                        <tr>
+                                            <td>
+                                                <a href="/jugador/{{ ath.id }}?sport={{ event.sport }}&league={{ event.league }}&lang={{ lang }}" style="color: var(--text-primary); text-decoration: none; font-weight: 600;">
+                                                    {{ ath.name }}
+                                                </a>
+                                            </td>
+                                            {% for val in ath.stats %}
+                                                <td>{{ val }}</td>
+                                            {% endfor %}
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Play-by-Play Chronological Timeline -->
+        {% if plays %}
+        <div class="info-card">
+            <h3 class="info-card-title">
+                <i class="fa-solid fa-clock-rotate-left" style="color: var(--accent-blue);"></i>
+                <span>{% if lang == 'es' %}Secuencia de Jugadas Minuto a Minuto{% else %}Play-by-Play Timeline{% endif %}</span>
+            </h3>
+            <div class="play-timeline">
+                {% for p in plays %}
+                    <div class="play-item">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; font-size: 0.8rem; color: var(--text-secondary);">
+                            <span>{{ p.period }} {{ p.clock }}</span>
+                            {% if p.scoring %}
+                                <span style="color: var(--accent-yellow); font-weight: 800; display: inline-flex; align-items: center; gap: 4px;">
+                                    <i class="fa-solid fa-bolt"></i> {% if lang == 'es' %}¡CARRERA / ANOTACIÓN!{% else %}SCORING PLAY!{% endif %}
+                                </span>
+                            {% endif %}
+                        </div>
+                        <div>{{ p.text }}</div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Highlights / Video Section -->
+        <div class="info-card">
+            <h3 class="info-card-title">
+                <i class="fa-solid fa-circle-play" style="color: var(--accent-red);"></i>
+                <span>{% if lang == 'es' %}Resumen en Video & Highlights{% else %}Video Highlights & Game Summary{% endif %}</span>
+            </h3>
+            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 16px;">
+                {% if lang == 'es' %}Mira las mejores jugadas, carreras y momentos destacados de este encuentro.{% else %}Watch top plays, scoring runs, and official game highlights.{% endif %}
+            </p>
+            <a href="https://www.youtube.com/results?search_query={{ event.home_team.name }}+vs+{{ event.away_team.name }}+highlights" target="_blank" class="nav-btn" style="background: #FF0000; color: #FFF; font-weight: 700; padding: 12px 20px;">
+                <i class="fa-brands fa-youtube"></i> {% if lang == 'es' %}Ver Highlights Oficiales en YouTube{% else %}Watch Official YouTube Highlights{% endif %}
+            </a>
+        </div>
+
+    </main>
+
+    <footer>
+        <p>{{ ui.footer_rights }}</p>
+    </footer>
+
+</body>
+</html>

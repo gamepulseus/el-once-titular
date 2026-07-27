@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ athlete.name }} | GamePulse Athlete Profile</title>
+    <link rel="stylesheet" href="/static/css/apple_style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+
+    <!-- Translucent Glass Header Bar -->
+    <header class="navbar">
+        <a href="/?lang={{ lang }}" class="navbar-brand" style="display: flex; align-items: center; gap: 12px;">
+            <img src="/static/images/gamepulse_logo.png" alt="GamePulse Logo" style="height: 48px; width: auto; object-fit: contain;">
+            <span style="font-size: 1.25rem; font-weight: 800;">GamePulse Player Profile</span>
+        </a>
+        <div class="nav-links">
+            <a href="/?lang={{ lang }}" class="nav-btn"><i class="fa-solid fa-arrow-left"></i> {% if lang == 'es' %}Volver al Inicio{% else %}Back Home{% endif %}</a>
+            <a href="https://t.me/GamePulseUS" target="_blank" class="nav-btn"><i class="fa-brands fa-telegram"></i> Telegram</a>
+            <a href="/jugador/{{ athlete.id }}?league={{ athlete.league }}&sport={{ athlete.sport }}&lang={{ ui.switch_lang_target }}" class="nav-btn" style="border: 1px solid var(--accent-blue); color: var(--accent-blue); font-weight: 700;">
+                <i class="fa-solid fa-globe"></i> {{ ui.switch_lang_label }}
+            </a>
+        </div>
+    </header>
+
+    <main class="detail-container">
+
+        <div class="info-card" style="display: flex; align-items: center; gap: 24px; flex-wrap: wrap;">
+            <img src="{{ athlete.headshot }}" alt="{{ athlete.name }}" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-color);" onerror="this.src='https://a.espncdn.com/i/headshots/mlb/players/full/default.png'">
+            <div>
+                <h1 style="font-size: 2.2rem; font-weight: 800; margin-bottom: 4px;">{{ athlete.name }}</h1>
+                <div style="font-size: 1.1rem; color: var(--accent-blue); font-weight: 700; margin-bottom: 8px;">
+                    {{ athlete.team_name }} • #{{ athlete.jersey }} • {{ athlete.position }}
+                </div>
+                <div style="font-size: 0.9rem; color: var(--text-secondary); display: flex; gap: 16px;">
+                    <span><i class="fa-solid fa-ruler-vertical"></i> Height: {{ athlete.height }}</span>
+                    <span><i class="fa-solid fa-weight-hanging"></i> Weight: {{ athlete.weight }}</span>
+                    <span><i class="fa-solid fa-award"></i> Exp: {{ athlete.experience }} yrs</span>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer>
+        <p>{{ ui.footer_rights }}</p>
+    </footer>
+
+</body>
+</html>
