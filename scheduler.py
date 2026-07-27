@@ -85,10 +85,24 @@ class GamePulseScheduler:
                 if self.db.is_news_processed(news_id, headline):
                     continue
 
-                self.db.mark_news_processed(news_id, headline, sport, l_code)
-                logger.info(f"[{l_code.upper()}] New article/alert found: {headline}")
-
                 msg_es, msg_en, image_url = PostFormatter.format_news(item, league)
+                
+                # Extract translated Spanish headline to check for Spanish duplicate stories
+                headline_es = ""
+                m_es = re.search(r'📌\s*<b>(.*?)</b>', msg_es)
+                if m_es:
+                    headline_es = m_es.group(1).strip()
+
+                if headline_es and self.db.is_news_processed(news_id, headline_es):
+                    logger.info(f"[{l_code.upper()}] Skipping duplicate Spanish story: {headline_es}")
+                    continue
+
+                # Mark BOTH English and Spanish headlines as processed IMMEDIATELY before sending to Telegram
+                self.db.mark_news_processed(news_id, headline, sport, l_code)
+                if headline_es:
+                    self.db.mark_news_processed(news_id, headline_es, sport, l_code)
+
+                logger.info(f"[{l_code.upper()}] New article/alert found: {headline}")
 
                 if self.dry_run:
                     print(f"\n--- [DRY RUN - NEWS - ES] ---\n{msg_es}")
