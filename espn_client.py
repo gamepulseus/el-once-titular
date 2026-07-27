@@ -316,27 +316,46 @@ class ESPNClient:
                                 "stats": stats_vals
                             })
 
-                            # Pitching stats
-                            if len(stats_vals) >= 6 and "." in str(stats_vals[0]):
-                                ip, er, so = stats_vals[0], stats_vals[3], stats_vals[5]
-                                by_team[team_abbrev].append({
-                                    "id": ath_id,
-                                    "team": team_abbrev,
-                                    "category": "Pitcheo",
-                                    "athlete": ath_name,
-                                    "stats": f"{ip} IP, {so} K, {er} CL"
-                                })
-                            # Batting stats
-                            elif len(stats_vals) >= 2:
-                                h_ab = stats_vals[0]
-                                if h_ab not in ["0-4", "0-3", "0-2", "0-1", "0-5"] and "-" in h_ab:
-                                    by_team[team_abbrev].append({
-                                        "id": ath_id,
-                                        "team": team_abbrev,
-                                        "category": "Bateo",
-                                        "athlete": ath_name,
-                                        "stats": f"{h_ab} H-AB"
-                                    })
+                            # Batting stats (Scored by performance: RBIs, HRs, Hits, Runs)
+                            if "H-AB" in labels and len(stats_vals) >= 6:
+                                try:
+                                    h_ab = stats_vals[0]
+                                    h = float(stats_vals[3]) if len(stats_vals) > 3 else 0
+                                    rbi = float(stats_vals[4]) if len(stats_vals) > 4 else 0
+                                    hr = float(stats_vals[5]) if len(stats_vals) > 5 else 0
+                                    r = float(stats_vals[2]) if len(stats_vals) > 2 else 0
+                                    score = rbi * 3.5 + hr * 4.0 + h * 2.0 + r * 1.5
+                                    if h_ab not in ["0-4", "0-3", "0-2", "0-1", "0-5"] and score > 0:
+                                        detail_str = h_ab
+                                        if rbi > 0: detail_str += f", {int(rbi)} RBI"
+                                        if hr > 0: detail_str += f", {int(hr)} HR"
+                                        by_team[team_abbrev].append((score, {
+                                            "id": ath_id,
+                                            "team": team_abbrev,
+                                            "category": "Bateo",
+                                            "athlete": ath_name,
+                                            "stats": detail_str
+                                        }))
+                                except Exception:
+                                    pass
+
+                            # Pitching stats (Scored by IP, Ks, ERs)
+                            elif "IP" in labels and len(stats_vals) >= 6:
+                                try:
+                                    ip = float(stats_vals[0])
+                                    er = float(stats_vals[3])
+                                    so = float(stats_vals[5])
+                                    score = ip * 3.0 + so * 2.0 - er * 3.0
+                                    if ip >= 1.0 and score > 0:
+                                        by_team[team_abbrev].append((score, {
+                                            "id": ath_id,
+                                            "team": team_abbrev,
+                                            "category": "Pitcheo",
+                                            "athlete": ath_name,
+                                            "stats": f"{ip} IP, {int(so)} K, {int(er)} CL"
+                                        }))
+                                except Exception:
+                                    pass
 
                     team_categories.append({
                         "name": cat_name,
@@ -349,12 +368,15 @@ class ESPNClient:
                     "categories": team_categories
                 }
 
-        # Balance performers from BOTH teams
+        # Select Top 2 Ranked Performers from BOTH teams
         team_keys = list(by_team.keys())
         if len(team_keys) >= 2:
             team1, team2 = team_keys[0], team_keys[1]
-            t1_list = by_team[team1][:2]
-            t2_list = by_team[team2][:2]
+            by_team[team1].sort(key=lambda x: x[0], reverse=True)
+            by_team[team2].sort(key=lambda x: x[0], reverse=True)
+            
+            t1_list = [item[1] for item in by_team[team1][:2]]
+            t2_list = [item[1] for item in by_team[team2][:2]]
             
             max_len = max(len(t1_list), len(t2_list))
             for i in range(max_len):
