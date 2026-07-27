@@ -411,21 +411,12 @@ class GamePulseScheduler:
         while True:
             now = time.time()
 
-            # Pillar 5 & 6: Stat of the Day & Betting Picks Engine (Every 60 Seconds)
+            # 100% EXCLUSIVE: Sports Betting & Picks Engine (Picks, Value Bets & Handicaps)
             if now - last_news_check >= config.NEWS_CHECK_INTERVAL:
                 try:
-                    self.process_stat_of_the_day()
                     self.process_betting_picks()
                 except Exception as e:
-                    logger.error(f"Error in process_stat_of_the_day or process_betting_picks: {e}")
+                    logger.error(f"Error in process_betting_picks: {e}")
                 last_news_check = now
 
-            # Pillar 2 & 3: Scoreboard & Live In-Game Milestone Tracker (Every 10 Seconds)
-            if now - last_scoreboard_check >= config.SCOREBOARD_CHECK_INTERVAL:
-                try:
-                    self.process_scoreboard()
-                except Exception as e:
-                    logger.error(f"Error in process_scoreboard: {e}")
-                last_scoreboard_check = now
-
-            time.sleep(2)
+            time.sleep(5)
