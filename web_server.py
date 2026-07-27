@@ -282,24 +282,16 @@ def article_detail(article_id):
 
     sport = request.args.get("sport", "baseball")
     league = request.args.get("league", "mlb")
-    
-    articles = espn.get_news(sport, league, limit=15)
-    target_article = None
-    for art in articles:
-        if str(art["id"]) == str(article_id):
-            target_article = art
-            break
 
-    if not target_article and articles:
-        target_article = articles[0]
+    target_article = espn.get_article_by_id(article_id, sport, league)
 
     if not target_article:
         target_article = {
             "id": article_id,
-            "headline": "GamePulse Sports Headline",
+            "headline": "GamePulse Sports Article",
             "description": "Full details of the sports alert.",
             "published": "",
-            "byline": "ESPN Staff",
+            "byline": "Redacción ESPN",
             "images": [],
             "sport": sport,
             "league": league
@@ -314,12 +306,16 @@ def article_detail(article_id):
             translated_paragraphs.append(p)
 
     if lang == "es":
-        target_article["headline"] = translate_text(target_article["headline"], "Spanish")
-        target_article["description"] = translate_text(target_article["description"], "Spanish")
-        
+        target_article["headline"] = translate_text(target_article.get("headline", ""), "Spanish")
+        target_article["description"] = translate_text(target_article.get("description", ""), "Spanish")
+
     target_article["published"] = format_datetime_et(target_article.get("published", ""), lang)
 
     resp = make_response(render_template("article.html", ui=ui, lang=lang, article=target_article, paragraphs=translated_paragraphs))
+    # Prevent browser caching of news article pages so clicking a new link in Telegram always loads the fresh article
+    resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
+    resp.headers["Pragma"] = "no-cache"
+    resp.headers["Expires"] = "0"
     resp.set_cookie("gamepulse_lang", lang, max_age=30*24*3600)
     return resp
 

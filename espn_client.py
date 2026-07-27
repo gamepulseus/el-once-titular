@@ -174,6 +174,29 @@ class ESPNClient:
             })
         return articles
 
+    def get_article_by_id(self, article_id: str, sport: str = "baseball", league: str = "mlb") -> Optional[Dict[str, Any]]:
+        target_id_str = str(article_id).strip()
+        if not target_id_str:
+            return None
+
+        # 1. Search target sport/league first with limit=50
+        articles = self.get_news(sport, league, limit=50)
+        for art in articles:
+            if str(art.get("id")) == target_id_str:
+                return art
+
+        # 2. Search across all other active leagues if not found in primary league
+        leagues = [("baseball", "mlb"), ("basketball", "nba"), ("football", "nfl"), ("hockey", "nhl")]
+        for s, l in leagues:
+            if s == sport and l == league:
+                continue
+            other_articles = self.get_news(s, l, limit=25)
+            for art in other_articles:
+                if str(art.get("id")) == target_id_str:
+                    return art
+
+        return None
+
     # Fetch 100% full-length article story paragraphs using ESPN Core API, Summary API & Scraping
     def get_full_article_content(self, article: Dict[str, Any]) -> List[str]:
         art_id = str(article.get("id", ""))
