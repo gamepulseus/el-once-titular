@@ -559,9 +559,9 @@ class ESPNClient:
         parsed_leaders, decisions, boxscore_tables = self._parse_leaders_and_decisions(data)
         odds_info = self._parse_odds(header_comp, data)
 
-        # Format play-by-play list preserving scoringPlay and scoring flags
+        # Format play-by-play list preserving scoringPlay and scoring flags (FULL game timeline from start to finish)
         parsed_plays = []
-        for p in plays[-100:]:
+        for p in plays:
             p_text = p.get("text", "").strip()
             p_period = p.get("period", {}).get("displayValue", "")
             p_clock = p.get("clock", {}).get("displayValue", "")
