@@ -144,6 +144,28 @@ def index():
     resp.set_cookie("gamepulse_lang", lang, max_age=30*24*3600)
     return resp
 
+@app.route("/buscar")
+def search_view():
+    lang = get_current_lang()
+    ui = UI_LABELS[lang]
+    query = request.args.get("q", "").strip()
+
+    if not query:
+        results = {"players": [], "teams": []}
+    else:
+        results = espn.search_global(query)
+
+    resp = make_response(render_template(
+        "search.html",
+        ui=ui,
+        lang=lang,
+        query=query,
+        players=results.get("players", []),
+        teams=results.get("teams", [])
+    ))
+    resp.set_cookie("gamepulse_lang", lang, max_age=30*24*3600)
+    return resp
+
 @app.route("/noticias")
 def news_view():
     lang = get_current_lang()

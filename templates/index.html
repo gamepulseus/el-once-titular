@@ -194,16 +194,10 @@
                 {{ ui.hero_desc }}
             </p>
 
-            <form action="/" method="GET" class="search-box">
+            <form action="/buscar" method="GET" class="search-box">
                 <input type="hidden" name="lang" value="{{ lang }}">
                 <i class="fa-solid fa-magnifying-glass" style="margin-right: 10px; color: var(--text-secondary);"></i>
-                <input type="text" name="q" value="{{ search_query }}" placeholder="{{ ui.search_placeholder }}" class="search-input">
-                {% if active_league %}
-                    <input type="hidden" name="league" value="{{ active_league }}">
-                {% endif %}
-                {% if selected_date %}
-                    <input type="hidden" name="date" value="{{ selected_date }}">
-                {% endif %}
+                <input type="text" name="q" value="" placeholder="{{ ui.search_placeholder }}" class="search-input">
             </form>
 
             <!-- Calendar & Date Selector Bar -->

@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if lang == 'es' %}Búsqueda de Equipos y Jugadores{% else %}Team & Player Search{% endif %} - GamePulse</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-dark: #0b0e14;
+            --bg-card: #151921;
+            --bg-card-secondary: #1c222d;
+            --accent-blue: #007AFF;
+            --accent-red: #FF3B30;
+            --accent-green: #30D158;
+            --accent-yellow: #FFCC00;
+            --text-primary: #FFFFFF;
+            --text-secondary: #9A9EA7;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --radius-lg: 16px;
+            --radius-md: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            padding-bottom: 60px;
+        }
+
+        .navbar {
+            background: rgba(11, 14, 20, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-btn {
+            background: var(--bg-card-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .nav-btn:hover {
+            background: var(--accent-blue);
+            color: #FFF;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .search-hero {
+            background: linear-gradient(135deg, rgba(0, 122, 255, 0.1) 0%, rgba(21, 25, 33, 0.9) 100%);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 32px;
+            margin-bottom: 32px;
+            text-align: center;
+        }
+
+        .search-box {
+            background: var(--bg-card-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 30px;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            max-width: 650px;
+            margin: 20px auto 0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .search-input {
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1rem;
+            width: 100%;
+            outline: none;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 800;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-primary);
+        }
+
+        .grid-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+
+        .item-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            text-decoration: none;
+            color: inherit;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .item-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--accent-blue);
+        }
+
+        .item-img {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            border-radius: 50%;
+            background: var(--bg-card-secondary);
+            padding: 4px;
+        }
+
+        .item-info {
+            flex: 1;
+        }
+
+        .item-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: var(--text-primary);
+        }
+
+        .item-sub {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .badge-league {
+            display: inline-block;
+            background: var(--bg-card-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--accent-blue);
+            font-size: 0.72rem;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 10px;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header class="navbar">
+        <a href="/?lang={{ lang }}" class="navbar-brand">
+            <img src="/static/images/gamepulse_logo.png" alt="GamePulse Logo" style="height: 44px;">
+            <span style="font-size: 1.2rem; font-weight: 800;">GamePulse Search</span>
+        </a>
+        <div class="nav-links">
+            <a href="/?lang={{ lang }}" class="nav-btn"><i class="fa-solid fa-house"></i> {% if lang == 'es' %}Inicio{% else %}Home{% endif %}</a>
+            <a href="/noticias?lang={{ lang }}" class="nav-btn"><i class="fa-solid fa-newspaper"></i> Noticias</a>
+            <a href="/posiciones?lang={{ lang }}" class="nav-btn"><i class="fa-solid fa-list-ol"></i> Posiciones</a>
+            <a href="/lideres?lang={{ lang }}" class="nav-btn"><i class="fa-solid fa-trophy"></i> Líderes</a>
+            <a href="/buscar?q={{ query }}&lang={{ ui.switch_lang_target }}" class="nav-btn" style="border-color: var(--accent-blue); color: var(--accent-blue);">
+                <i class="fa-solid fa-globe"></i> {{ ui.switch_lang_label }}
+            </a>
+        </div>
+    </header>
+
+    <main class="container">
+
+        <!-- Search Header Box -->
+        <div class="search-hero">
+            <h1 style="font-size: 2rem; font-weight: 800; margin-bottom: 8px;">
+                🔍 {% if lang == 'es' %}Buscador de Equipos y Jugadores{% else %}Team & Player Search{% endif %}
+            </h1>
+            <p style="color: var(--text-secondary); font-size: 0.95rem;">
+                {% if lang == 'es' %}Encuentra perfiles de jugadores, equipos de MLB, NBA, NFL y NHL en un solo lugar.{% else %}Search athletes, franchises and teams across MLB, NBA, NFL and NHL.{% endif %}
+            </p>
+
+            <form action="/buscar" method="GET" class="search-box">
+                <input type="hidden" name="lang" value="{{ lang }}">
+                <i class="fa-solid fa-magnifying-glass" style="margin-right: 12px; color: var(--text-secondary);"></i>
+                <input type="text" name="q" value="{{ query }}" placeholder="{% if lang == 'es' %}Escribe el nombre de un equipo o jugador...{% else %}Search by team or player name...{% endif %}" class="search-input">
+            </form>
+        </div>
+
+        {% if query %}
+            <div style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 24px;">
+                {% if lang == 'es' %}Resultados para: <b>"{{ query }}"</b>{% else %}Results for: <b>"{{ query }}"</b>{% endif %}
+            </div>
+        {% endif %}
+
+        <!-- Teams Section -->
+        {% if teams %}
+            <h2 class="section-title">
+                <i class="fa-solid fa-shield-halved" style="color: var(--accent-blue);"></i>
+                <span>{% if lang == 'es' %}Equipos Encontrados{% else %}Teams Found{% endif %} ({{ teams|length }})</span>
+            </h2>
+
+            <div class="grid-cards">
+                {% for t in teams %}
+                    <a href="/equipo/{{ t.id }}?sport={{ t.sport }}&league={{ t.league }}&lang={{ lang }}" class="item-card">
+                        <img src="{{ t.logo }}" alt="{{ t.name }}" class="item-img" onerror="this.src='https://a.espncdn.com/i/teamlogos/default-team-logo.png'">
+                        <div class="item-info">
+                            <div class="item-title">{{ t.name }}</div>
+                            <div class="item-sub">{{ t.abbreviation }}</div>
+                            <span class="badge-league">{{ t.league | upper }}</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-right" style="color: var(--text-secondary);"></i>
+                    </a>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Players Section -->
+        {% if players %}
+            <h2 class="section-title">
+                <i class="fa-solid fa-user-ninja" style="color: var(--accent-yellow);"></i>
+                <span>{% if lang == 'es' %}Jugadores Encontrados{% else %}Players Found{% endif %} ({{ players|length }})</span>
+            </h2>
+
+            <div class="grid-cards">
+                {% for p in players %}
+                    <a href="/jugador/{{ p.id }}?sport={{ p.sport }}&league={{ p.league }}&lang={{ lang }}" class="item-card">
+                        <img src="{{ p.photo }}" alt="{{ p.name }}" class="item-img" onerror="this.src='https://a.espncdn.com/i/headshots/nopicture.png'">
+                        <div class="item-info">
+                            <div class="item-title">{{ p.name }}</div>
+                            <div class="item-sub">{{ p.subtitle }}</div>
+                            <span class="badge-league">{{ p.league | upper }}</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-right" style="color: var(--text-secondary);"></i>
+                    </a>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- No Results State -->
+        {% if query and not teams and not players %}
+            <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 48px; text-align: center; margin-top: 24px;">
+                <i class="fa-solid fa-magnifying-glass" style="font-size: 3rem; color: var(--text-secondary); margin-bottom: 16px;"></i>
+                <h3 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 8px;">
+                    {% if lang == 'es' %}No se encontraron resultados{% else %}No Results Found{% endif %}
+                </h3>
+                <p style="color: var(--text-secondary); max-width: 500px; margin: 0 auto 20px;">
+                    {% if lang == 'es' %}No encontramos equipos ni jugadores coincidentes con "{{ query }}". Intenta con otro término (ej: "Bryson Stott", "Yankees", "Harper").{% else %}We couldn't find any team or athlete matching "{{ query }}". Try searching for "Bryson Stott", "Yankees", or "Harper".{% endif %}
+                </p>
+            </div>
+        {% endif %}
+
+        {% if not query %}
+            <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 48px; text-align: center; margin-top: 24px;">
+                <i class="fa-solid fa-baseball-bat-ball" style="font-size: 3rem; color: var(--accent-blue); margin-bottom: 16px;"></i>
+                <h3 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 8px;">
+                    {% if lang == 'es' %}Busca a tu equipo o jugador favorito{% else %}Search your favorite team or player{% endif %}
+                </h3>
+                <p style="color: var(--text-secondary); max-width: 500px; margin: 0 auto;">
+                    {% if lang == 'es' %}Escribe en la barra de arriba para obtener el perfil completo, estadísticas y partidos recientes.{% else %}Type in the search bar above to view full player profiles, stats, and recent games.{% endif %}
+                </p>
+            </div>
+        {% endif %}
+
+    </main>
+
+</body>
+</html>

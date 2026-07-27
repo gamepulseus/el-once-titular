@@ -1102,3 +1102,77 @@ class ESPNClient:
 
     def get_standings(self, sport: str, league: str) -> List[Dict[str, Any]]:
         return self.get_full_standings(sport, league)
+
+    # Unified Global Search for Players, Teams & Leagues 🔍
+    def search_global(self, query: str) -> Dict[str, Any]:
+        query_clean = query.strip()
+        if not query_clean:
+            return {"players": [], "teams": []}
+
+        results = {"players": [], "teams": []}
+        q_lower = query_clean.lower()
+
+        leagues_list = [
+            ("baseball", "mlb", "MLB"),
+            ("basketball", "nba", "NBA"),
+            ("football", "nfl", "NFL"),
+            ("hockey", "nhl", "NHL")
+        ]
+
+        # 1. Search Teams across all 4 major leagues (MLB, NBA, NFL, NHL)
+        for sport, league, l_name in leagues_list:
+            try:
+                teams = self.get_teams(sport, league)
+                for t in teams:
+                    t_name = t.get("name", "")
+                    t_abbrev = t.get("abbreviation", "")
+                    if q_lower in t_name.lower() or q_lower in t_abbrev.lower():
+                        if not any(item["id"] == t.get("id") and item["league"] == league for item in results["teams"]):
+                            results["teams"].append({
+                                "id": t.get("id"),
+                                "name": t_name,
+                                "abbreviation": t_abbrev,
+                                "logo": t.get("logo"),
+                                "sport": sport,
+                                "league": league,
+                                "league_name": l_name
+                            })
+            except Exception as e:
+                logger.warning(f"Error searching teams in {league}: {e}")
+
+        # 2. Search Players / Athletes via ESPN Search V2 API
+        try:
+            url = f"https://site.api.espn.com/apis/search/v2?query={urllib.parse.quote(query_clean)}&limit=25"
+            data = self._fetch_json(url)
+            if isinstance(data, dict):
+                for res_group in data.get("results", []):
+                    if res_group.get("type") == "player":
+                        for item in res_group.get("contents", []):
+                            name = item.get("displayName", "")
+                            sub = item.get("subtitle", "")
+                            desc = item.get("description", "")
+                            web_link = item.get("link", {}).get("web", "")
+                            
+                            ath_id_match = re.search(r'/id/(\d+)', web_link)
+                            ath_id = ath_id_match.group(1) if ath_id_match else ""
+
+                            league = "mlb"
+                            sport = "baseball"
+                            if "/nba/" in web_link: league, sport = "nba", "basketball"
+                            elif "/nfl/" in web_link: league, sport = "nfl", "football"
+                            elif "/nhl/" in web_link: league, sport = "nhl", "hockey"
+
+                            if ath_id and name:
+                                if not any(p["id"] == ath_id for p in results["players"]):
+                                    results["players"].append({
+                                        "id": ath_id,
+                                        "name": name,
+                                        "subtitle": sub or desc,
+                                        "sport": sport,
+                                        "league": league,
+                                        "photo": f"https://a.espncdn.com/i/headshots/{league}/players/full/{ath_id}.png"
+                                    })
+        except Exception as e:
+            logger.warning(f"Error searching players via ESPN Search API: {e}")
+
+        return results
