@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 from typing import Dict, Any, Tuple, Optional, List
 import urllib.request
 import urllib.parse
@@ -206,19 +207,28 @@ class PostFormatter:
         # Direct GamePulse Web Portal URL
         site_link = f"{SITE_BASE_URL}/noticia/{news_id}?sport={sport}&league={league}"
 
-        # Check Injury Keywords 🚑
-        injury_keywords = ['injur', 'il ', 'ir ', 'disabled list', 'out for', 'surgery', 'lesió', 'lesio', 'baja', 'descartad', 'hamstring', 'knee', 'shoulder', 'elbow']
-        is_injury = any(k in full_text_lower for k in injury_keywords)
+        # Check Injury Keywords 🚑 (Whole-word regex to avoid false positives like 'their')
+        injury_words = [
+            r'injur\w*', r'injured', r'injury', r'injuries', r'disabled list', r'out for', 
+            r'surgery', r'lesion\w*', r'lesión', r'lesiones', r'baja', r'descartad\w*', 
+            r'hamstring', r'acl', r'mcl', r'concussion', r'fracture', r'sprain', r'torn'
+        ]
+        injury_pattern = r'\b(' + '|'.join(injury_words) + r')\b'
+        is_injury = bool(re.search(injury_pattern, full_text_lower, re.IGNORECASE))
 
-        # Check Trade/Transfer Keywords 🔄
-        trade_keywords = ['trade', 'traded', 'transf', 'sign', 'waiv', 'acquir', 'deal', 'contract', 'traspaso', 'canje', 'fichaje', 'firmad']
-        is_trade = any(k in full_text_lower for k in trade_keywords) and not is_injury
+        # Check Trade/Transfer Keywords 🔄 (Whole-word regex)
+        trade_words = [
+            r'trade\w*', r'traded', r'transfer\w*', r'sign\w*', r'waiv\w*', r'acquir\w*', 
+            r'contract', r'traspaso\w*', r'canje\w*', r'fichaje\w*', r'firmad\w*', r'signing'
+        ]
+        trade_pattern = r'\b(' + '|'.join(trade_words) + r')\b'
+        is_trade = bool(re.search(trade_pattern, full_text_lower, re.IGNORECASE)) and not is_injury
 
         if is_injury:
             header_es = f"🚑 <b>¡ALERTA DE LESIÓN Y BAJA!</b> | {league_name_es} ⚕️"
             header_en = f"🚑 <b>INJURY REPORT & OUT ALERT</b> | {league_name_en} ⚕️"
         elif is_trade:
-            header_es = f"🔄 <b>¡ALERTA DE TRASPASO Y MOVIMIENTO!</b> | {league_name_es} 🤝"
+            header_es = f"🔄 <b>¡ALERTA DE TRASPASO Y FICHAJE!</b> | {league_name_es} 🤝"
             header_en = f"🔄 <b>TRADE & TRANSACTION ALERT</b> | {league_name_en} 🤝"
         else:
             header_es = f"🚨 <b>¡ALERTA DE ÚLTIMA HORA!</b> | {league_name_es} {emoji}"
