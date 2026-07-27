@@ -456,6 +456,58 @@ def publish_to_telegram_endpoint():
 
     return jsonify({"status": "error", "message": "No se encontró el elemento a publicar."}), 404
 
+@app.route("/api/scoreboard")
+def api_scoreboard():
+    lang = get_current_lang()
+    date_str = request.args.get("date", "").strip()
+    league_filter = request.args.get("league", "all").strip().lower()
+
+    if not date_str:
+        now_et = datetime.now(ET_ZONE)
+        date_str = now_et.strftime("%Y-%m-%d")
+
+    target_leagues = ACTIVE_LEAGUES if league_filter == "all" else [l for l in ACTIVE_LEAGUES if l["league"] == league_filter]
+
+    all_games = []
+    for league in target_leagues:
+        events = espn.get_scoreboard(league["sport"], league["league"], date_str)
+        for ev in events:
+            date_utc = ev.get("date", "")
+            ev["formatted_date"] = format_datetime_et(date_utc, lang) if date_utc else ""
+            ev["sport"] = league["sport"]
+            ev["league"] = league["league"]
+            ev["league_name"] = league["name"] if lang == "es" else league["name_en"]
+            ev["league_emoji"] = league["icon"]
+            all_games.append(ev)
+
+    return jsonify({
+        "status": "success",
+        "date": date_str,
+        "games": all_games
+    })
+
+@app.route("/api/match/<event_id>")
+def api_match_detail(event_id):
+    lang = get_current_lang()
+    sport = request.args.get("sport", "baseball").strip().lower()
+    league = request.args.get("league", "mlb").strip().lower()
+
+    summary_data = espn.get_game_summary(sport, league, event_id)
+    if not summary_data:
+        return jsonify({"status": "error", "message": "Game details not found"}), 404
+
+    events = espn.get_scoreboard(sport, league)
+    target_event = next((e for e in events if str(e.get("id")) == str(event_id)), None)
+
+    date_utc = summary_data.get("header", {}).get("competitions", [{}])[0].get("date", "")
+    summary_data["formatted_date"] = format_datetime_et(date_utc, lang) if date_utc else ""
+
+    return jsonify({
+        "status": "success",
+        "event": target_event,
+        "summary": summary_data
+    })
+
 def run_web_server():
     app.run(host="0.0.0.0", port=5000, debug=False)
 

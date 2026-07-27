@@ -269,5 +269,54 @@
         <p>{{ ui.footer_rights }}</p>
     </footer>
 
+    {% if event.status_state == 'in' %}
+    <script>
+        // Live Game Auto-Refresh Polling (Every 20 Seconds)
+        (function() {
+            console.log("GamePulse: Live game auto-refresh active.");
+            setInterval(function() {
+                // Fetch fresh live data without disrupting user scroll position
+                fetch(window.location.href, { cache: "no-store" })
+                    .then(response => response.text())
+                    .then(html => {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+
+                        // 1. Update Match Header & Scorecard
+                        const oldHeader = document.querySelector('.match-header-card');
+                        const newHeader = doc.querySelector('.match-header-card');
+                        if (oldHeader && newHeader) {
+                            oldHeader.innerHTML = newHeader.innerHTML;
+                        }
+
+                        // 2. Update Linescore Grid
+                        const oldLine = document.querySelector('.linescore-card');
+                        const newLine = doc.querySelector('.linescore-card');
+                        if (oldLine && newLine) {
+                            oldLine.innerHTML = newLine.innerHTML;
+                        }
+
+                        // 3. Update Play-by-Play Timeline
+                        const oldPlays = document.querySelector('.play-timeline');
+                        const newPlays = doc.querySelector('.play-timeline');
+                        if (oldPlays && newPlays) {
+                            oldPlays.innerHTML = newPlays.innerHTML;
+                        }
+
+                        // 4. Update Boxscore Tables
+                        const oldBox = document.querySelectorAll('.box-table');
+                        const newBox = doc.querySelectorAll('.box-table');
+                        if (oldBox && newBox && oldBox.length === newBox.length) {
+                            oldBox.forEach((tbl, idx) => {
+                                tbl.innerHTML = newBox[idx].innerHTML;
+                            });
+                        }
+                    })
+                    .catch(err => console.log("Live update error:", err));
+            }, 18000);
+        })();
+    </script>
+    {% endif %}
+
 </body>
 </html>

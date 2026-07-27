@@ -257,6 +257,9 @@
                 <span>{{ ui.section_games }} ({{ selected_date }})</span>
                 {% if selected_date == today_date %}
                     <span class="badge-live"><span class="live-dot"></span> {{ ui.badge_live }}</span>
+                    <span style="font-size: 0.8rem; color: var(--accent-green); background: rgba(52, 199, 89, 0.15); border: 1px solid rgba(52, 199, 89, 0.3); padding: 4px 10px; border-radius: 12px; margin-left: 8px; font-weight: 600;">
+                        <i class="fa-solid fa-arrows-rotate fa-spin" style="--fa-animation-duration: 4s;"></i> {% if lang == 'es' %}Auto-Actualización En Vivo{% else %}Live Auto-Update Active{% endif %}
+                    </span>
                 {% endif %}
             </h2>
         </div>
@@ -264,15 +267,15 @@
         <div class="games-grid">
             {% if games %}
                 {% for game in games %}
-                    <a href="/partido/{{ game.id }}?league={{ game.league }}&sport={{ game.sport }}&lang={{ lang }}" class="game-card" {% if game.status_state == 'in' %}style="border: 2px solid var(--accent-red); shadow: 0 0 15px rgba(255, 45, 85, 0.3);"{% endif %}>
+                    <a href="/partido/{{ game.id }}?league={{ game.league }}&sport={{ game.sport }}&lang={{ lang }}" class="game-card" data-game-id="{{ game.id }}" {% if game.status_state == 'in' %}style="border: 2px solid var(--accent-red); box-shadow: 0 0 15px rgba(255, 45, 85, 0.3);"{% endif %}>
                         <div class="game-card-header">
                             <span>{{ game.league | upper }}</span>
                             {% if game.status_state == 'in' %}
-                                <span style="color: var(--accent-red); font-weight: 800; display: inline-flex; align-items: center; gap: 6px;">
+                                <span class="game-status-text" style="color: var(--accent-red); font-weight: 800; display: inline-flex; align-items: center; gap: 6px;">
                                     <span class="live-dot"></span> {{ game.status_detail }}
                                 </span>
                             {% else %}
-                                <span style="color: var(--text-secondary); font-weight: 700;">{{ game.status_detail }}</span>
+                                <span class="game-status-text" style="color: var(--text-secondary); font-weight: 700;">{{ game.status_detail }}</span>
                             {% endif %}
                         </div>
 
@@ -281,7 +284,7 @@
                                 <img src="{{ game.home_team.logo }}" alt="{{ game.home_team.name }}" onerror="this.src='https://a.espncdn.com/i/teamlogos/default-team-logo.png'">
                                 <span class="game-team-name">{{ game.home_team.name }}</span>
                             </div>
-                            <span class="game-team-score {% if game.home_team.score > game.away_team.score %}winner-score{% endif %}">{{ game.home_team.score }}</span>
+                            <span class="game-team-score home-score-text {% if game.home_team.score > game.away_team.score %}winner-score{% endif %}">{{ game.home_team.score }}</span>
                         </div>
 
                         <div class="game-team">
@@ -289,7 +292,7 @@
                                 <img src="{{ game.away_team.logo }}" alt="{{ game.away_team.name }}" onerror="this.src='https://a.espncdn.com/i/teamlogos/default-team-logo.png'">
                                 <span class="game-team-name">{{ game.away_team.name }}</span>
                             </div>
-                            <span class="game-team-score {% if game.away_team.score > game.home_team.score %}winner-score{% endif %}">{{ game.away_team.score }}</span>
+                            <span class="game-team-score away-score-text {% if game.away_team.score > game.home_team.score %}winner-score{% endif %}">{{ game.away_team.score }}</span>
                         </div>
 
                         <div class="game-card-footer">
@@ -316,6 +319,72 @@
             <a href="https://t.me/GamePulseES" target="_blank"><i class="fa-brands fa-telegram"></i> Telegram 🇪🇸</a>
         </p>
     </footer>
+
+    <!-- Client-Side Live Auto-Refresh Script -->
+    <script>
+        (function() {
+            const activeLeague = "{{ active_league }}";
+            const selectedDate = "{{ selected_date }}";
+            const currentLang = "{{ lang }}";
+
+            function pollLiveScores() {
+                const url = `/api/scoreboard?league=${activeLeague}&date=${selectedDate}&lang=${currentLang}`;
+                fetch(url)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (!data || !data.games) return;
+                        data.games.forEach(game => {
+                            const card = document.querySelector(`.game-card[data-game-id="${game.id}"]`);
+                            if (!card) return;
+
+                            // Update status detail
+                            const statusElem = card.querySelector('.game-status-text');
+                            if (statusElem) {
+                                if (game.status_state === 'in') {
+                                    statusElem.innerHTML = `<span class="live-dot"></span> ${game.status_detail}`;
+                                    statusElem.style.color = 'var(--accent-red)';
+                                    statusElem.style.fontWeight = '800';
+                                    card.style.border = '2px solid var(--accent-red)';
+                                    card.style.boxShadow = '0 0 15px rgba(255, 45, 85, 0.3)';
+                                } else {
+                                    statusElem.textContent = game.status_detail;
+                                }
+                            }
+
+                            // Update Home Score
+                            const homeElem = card.querySelector('.home-score-text');
+                            if (homeElem && game.home_team) {
+                                homeElem.textContent = game.home_team.score;
+                                const hScore = parseInt(game.home_team.score) || 0;
+                                const aScore = parseInt(game.away_team.score) || 0;
+                                if (hScore > aScore) {
+                                    homeElem.classList.add('winner-score');
+                                } else {
+                                    homeElem.classList.remove('winner-score');
+                                }
+                            }
+
+                            // Update Away Score
+                            const awayElem = card.querySelector('.away-score-text');
+                            if (awayElem && game.away_team) {
+                                awayElem.textContent = game.away_team.score;
+                                const hScore = parseInt(game.home_team.score) || 0;
+                                const aScore = parseInt(game.away_team.score) || 0;
+                                if (aScore > hScore) {
+                                    awayElem.classList.add('winner-score');
+                                } else {
+                                    awayElem.classList.remove('winner-score');
+                                }
+                            }
+                        });
+                    })
+                    .catch(err => console.log('Live poll pause:', err));
+            }
+
+            // Auto-refresh every 15 seconds
+            setInterval(pollLiveScores, 15000);
+        })();
+    </script>
 
 </body>
 </html>

@@ -573,7 +573,8 @@ class ESPNClient:
     def get_scoreboard(self, sport: str, league: str, dates: Optional[str] = None) -> List[Dict[str, Any]]:
         url = f"{self.BASE_URL}/{sport}/{league}/scoreboard"
         if dates:
-            url += f"?dates={dates}"
+            clean_date = dates.replace("-", "").strip()
+            url += f"?dates={clean_date}"
             
         data = self._fetch_json(url)
         if not data or "events" not in data:
