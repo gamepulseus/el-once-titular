@@ -991,14 +991,22 @@ class ESPNClient:
                     "status_detail": status_detail
                 })
 
+        # Sort schedule: upcoming games first, then most recent completed games (matching ESPN)
+        upcoming_games = [g for g in schedule if not g["is_completed"]]
+        completed_games = [g for g in schedule if g["is_completed"]]
+        completed_games.reverse()
+        sorted_schedule = upcoming_games[:5] + completed_games
+
         # Fetch League Division Standings Table for Team
         division_standings = []
+        division_name = "Division Standings"
         try:
             all_standings = self.get_full_standings(sport, league)
             for group in all_standings:
                 t_list = group.get("teams", [])
                 if any(str(t_item.get("id")) == str(team_id) for t_item in t_list):
                     division_standings = t_list
+                    division_name = group.get("name", "Division Standings")
                     break
         except Exception:
             pass
@@ -1013,11 +1021,68 @@ class ESPNClient:
             "standing_summary": t.get("standingSummary", ""),
             "coach": coach_name,
             "roster": athletes,
-            "schedule": schedule,
+            "schedule": sorted_schedule,
             "standings": division_standings,
+            "division_name": division_name,
             "sport": sport,
             "league": league
         }
+
+    # Standings Endpoint with level=3 for Division Breakdown
+    def get_full_standings(self, sport: str, league: str) -> List[Dict[str, Any]]:
+        url = f"{self.V2_STANDINGS_URL}/{sport}/{league}/standings?level=3"
+        data = self._fetch_json(url)
+        if not data:
+            return []
+
+        divisions = []
+        def parse_node(node, name_prefix=''):
+            c_name = node.get('name', node.get('shortName', ''))
+            full_name = f"{name_prefix} {c_name}".strip()
+            
+            entries = node.get('standings', {}).get('entries', [])
+            if entries:
+                teams_list = []
+                for entry in entries:
+                    if not isinstance(entry, dict):
+                        continue
+                    t = entry.get('team', {})
+                    if not isinstance(t, dict):
+                        t = {}
+                    t_name = t.get('displayName', t.get('name', ''))
+                    t_logo = ''
+                    logos = t.get('logos', [])
+                    if isinstance(logos, list) and len(logos) > 0 and isinstance(logos[0], dict):
+                        t_logo = logos[0].get('href', '')
+                    t_id = str(t.get('id', ''))
+                    
+                    stats = {}
+                    for s in entry.get('stats', []):
+                        if isinstance(s, dict):
+                            s_key = s.get('name', s.get('type', ''))
+                            if s_key:
+                                stats[s_key] = s.get('displayValue', '0')
+                        
+                    teams_list.append({
+                        'id': t_id,
+                        'name': t_name,
+                        'logo': t_logo,
+                        'wins': stats.get('wins', stats.get('W', '0')),
+                        'losses': stats.get('losses', stats.get('L', '0')),
+                        'win_pct': stats.get('winPercent', stats.get('pct', '.000')),
+                        'games_behind': stats.get('gamesBehind', stats.get('GB', '-')),
+                        'streak': stats.get('streak', stats.get('strk', '-')),
+                        'home_record': stats.get('Home', stats.get('home', '-')),
+                        'away_record': stats.get('Road', stats.get('road', '-')),
+                        'diff': stats.get('pointDifferential', stats.get('runDifferential', '-'))
+                    })
+                divisions.append({'name': full_name, 'teams': teams_list})
+                
+            for child in node.get('children', []):
+                parse_node(child, full_name)
+
+        parse_node(data)
+        return divisions
 
     # Full Athlete Profile Endpoint (Bio, Season Stats, Highlights Banner, Recent Games Log)
     def get_athlete_detail(self, sport: str, league: str, athlete_id: str) -> Optional[Dict[str, Any]]:
