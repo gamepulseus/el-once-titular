@@ -6,6 +6,7 @@ from typing import Dict, Any, List, Optional, Tuple
 import logging
 from datetime import datetime
 from zoneinfo import ZoneInfo
+from concurrent.futures import ThreadPoolExecutor
 
 logger = logging.getLogger("GamePulse.ESPN")
 ET_ZONE = ZoneInfo("America/New_York")
@@ -391,47 +392,40 @@ class ESPNClient:
         general_categories = []
 
         if data and "categories" in data:
-            ath_cache = {}
-            team_cache = {}
-
+            refs_to_fetch = set()
             for cat in data.get("categories", []):
-                cat_name = cat.get("displayName", cat.get("name", "Estadísticas"))
-                cat_name_lower = cat_name.lower()
-
-                # Filter main qualified leader categories
-                if not any(k in cat_name_lower for k in ["batting average", "home run", "runs batted in", "earned run", "win", "strikeout", "save", "stolen base", "hit"]):
-                    continue
-
-                leaders = []
                 for item in cat.get("leaders", [])[:10]:
                     ath_ref = item.get("athlete", {}).get("$ref", "")
                     team_ref = item.get("team", {}).get("$ref", "")
+                    if ath_ref: refs_to_fetch.add(ath_ref.replace("http://", "https://"))
+                    if team_ref: refs_to_fetch.add(team_ref.replace("http://", "https://"))
+
+            cache = {}
+            if refs_to_fetch:
+                try:
+                    with ThreadPoolExecutor(max_workers=30) as executor:
+                        results = executor.map(lambda r: (r, self._fetch_json(r)), list(refs_to_fetch))
+                        for r, res in results:
+                            if res: cache[r] = res
+                except Exception as e:
+                    logger.warning(f"Error fetching leaders refs concurrently: {e}")
+
+            for cat in data.get("categories", []):
+                cat_name = cat.get("displayName", cat.get("name", "Estadísticas"))
+                leaders = []
+                for item in cat.get("leaders", [])[:10]:
+                    ath_ref = item.get("athlete", {}).get("$ref", "").replace("http://", "https://")
+                    team_ref = item.get("team", {}).get("$ref", "").replace("http://", "https://")
                     val_raw = item.get("value", "")
                     disp_val = item.get("displayValue", "")
 
                     ath_id = ath_ref.split("/")[-1].split("?")[0] if ath_ref else ""
-                    ath_name = "Atleta"
+                    ath_data = cache.get(ath_ref, {})
+                    ath_name = ath_data.get("displayName", ath_data.get("fullName", "Atleta")) if isinstance(ath_data, dict) else "Atleta"
                     headshot = f"https://a.espncdn.com/i/headshots/{league}/players/full/{ath_id}.png"
 
-                    if ath_ref:
-                        if ath_id in ath_cache:
-                            ath_name = ath_cache[ath_id]
-                        else:
-                            a_data = self._fetch_json(ath_ref)
-                            if a_data and isinstance(a_data, dict):
-                                ath_name = a_data.get("displayName", a_data.get("fullName", "Atleta"))
-                                ath_cache[ath_id] = ath_name
-
-                    team_abbrev = league.upper()
-                    if team_ref:
-                        team_id = team_ref.split("/")[-1].split("?")[0]
-                        if team_id in team_cache:
-                            team_abbrev = team_cache[team_id]
-                        else:
-                            t_data = self._fetch_json(team_ref)
-                            if t_data and isinstance(t_data, dict):
-                                team_abbrev = t_data.get("abbreviation", league.upper())
-                                team_cache[team_id] = team_abbrev
+                    team_data = cache.get(team_ref, {})
+                    team_abbrev = team_data.get("abbreviation", league.upper()) if isinstance(team_data, dict) else league.upper()
 
                     cleaned_val = clean_stat_value(cat_name, disp_val, val_raw)
 
