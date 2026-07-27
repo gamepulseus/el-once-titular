@@ -7,11 +7,66 @@
     <link rel="stylesheet" href="/static/css/apple_style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
+        .article-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 32px;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 32px;
+        }
         .article-body p {
-            font-size: 1.05rem;
-            line-height: 1.7;
+            font-size: 1.1rem;
+            line-height: 1.8;
             color: var(--text-primary);
-            margin-bottom: 20px;
+            margin-bottom: 22px;
+            letter-spacing: -0.01em;
+        }
+        .source-banner {
+            background: var(--bg-card-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-top: 32px;
+            flex-wrap: wrap;
+        }
+        .related-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+        .related-card {
+            background: var(--bg-card-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            text-decoration: none;
+            color: inherit;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        .related-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--accent-blue);
+        }
+        .related-card img {
+            width: 100%;
+            height: 140px;
+            object-fit: cover;
+            background: var(--bg-card);
+        }
+        .related-card-content {
+            padding: 14px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
     </style>
 </head>
@@ -24,39 +79,112 @@
             <span style="font-size: 1.25rem; font-weight: 800;">GamePulse News</span>
         </a>
         <div class="nav-links">
-            <a href="/?lang={{ lang }}" class="nav-btn"><i class="fa-solid fa-arrow-left"></i> {% if lang == 'es' %}Volver al Inicio{% else %}Back Home{% endif %}</a>
-            <a href="https://t.me/GamePulseUS" target="_blank" class="nav-btn"><i class="fa-brands fa-telegram"></i> Telegram</a>
+            <a href="/?lang={{ lang }}" class="nav-btn"><i class="fa-solid fa-fire-flame-curved"></i> {{ ui.nav_games }}</a>
+            <a href="/noticias?lang={{ lang }}" class="nav-btn"><i class="fa-solid fa-newspaper"></i> {{ ui.nav_news }}</a>
+            <a href="/posiciones?lang={{ lang }}" class="nav-btn"><i class="fa-solid fa-list-ol"></i> {{ ui.nav_standings }}</a>
+            <a href="/lideres?lang={{ lang }}" class="nav-btn"><i class="fa-solid fa-trophy"></i> {{ ui.nav_leaders }}</a>
+            <a href="/h2h?lang={{ lang }}" class="nav-btn"><i class="fa-solid fa-square-poll-vertical"></i> {{ ui.nav_h2h }}</a>
+            <a href="/videos?lang={{ lang }}" class="nav-btn"><i class="fa-solid fa-circle-play"></i> {{ ui.nav_videos }}</a>
+            <a href="https://t.me/{% if lang == 'es' %}GamePulseES{% else %}GamePulseUS{% endif %}" target="_blank" class="nav-btn"><i class="fa-brands fa-telegram"></i> {{ ui.nav_telegram }}</a>
+            
             <a href="/noticia/{{ article.id }}?league={{ article.league }}&sport={{ article.sport }}&lang={{ ui.switch_lang_target }}" class="nav-btn" style="border: 1px solid var(--accent-blue); color: var(--accent-blue); font-weight: 700;">
                 <i class="fa-solid fa-globe"></i> {{ ui.switch_lang_label }}
             </a>
         </div>
     </header>
 
-    <main class="detail-container">
+    <main class="container">
 
-        <div class="info-card">
-            <div style="font-size: 0.8rem; font-weight: 700; color: var(--accent-blue); text-transform: uppercase; margin-bottom: 8px;">
-                {{ article.league | upper }} • <i class="fa-solid fa-pen-nib"></i> {{ ui.byline_prefix }} {{ article.byline }}
+        <!-- Main Article Container -->
+        <article class="article-card">
+            
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 12px;">
+                <span style="font-size: 0.85rem; font-weight: 800; color: var(--accent-blue); background: rgba(10, 132, 255, 0.15); padding: 4px 12px; border-radius: 12px; text-transform: uppercase;">
+                    {{ article.league | upper }} • {{ article.sport | upper }}
+                </span>
+                <span style="font-size: 0.85rem; color: var(--text-secondary);">
+                    <i class="fa-solid fa-pen-nib"></i> {{ ui.byline_prefix }} {{ article.byline or 'Redacción ESPN' }}
+                </span>
             </div>
 
-            <h1 style="font-size: 2.1rem; font-weight: 800; line-height: 1.3; margin-bottom: 16px;">
+            <h1 style="font-size: 2.2rem; font-weight: 800; line-height: 1.35; margin-bottom: 16px; color: var(--text-primary);">
                 {{ article.headline }}
             </h1>
 
-            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 24px; padding-bottom: 12px; border-bottom: 1px solid var(--border-subtle);">
-                <i class="fa-regular fa-clock"></i> {{ article.published }}
+            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 8px;">
+                <i class="fa-regular fa-clock" style="color: var(--accent-blue);"></i> {{ article.published }}
             </div>
 
             {% if article.images %}
-                <img src="{{ article.images[0] }}" alt="{{ article.headline }}" style="width: 100%; max-height: 440px; object-fit: cover; border-radius: var(--radius-md); margin-bottom: 24px;" onerror="this.style.display='none'">
+                <div style="position: relative; margin-bottom: 28px;">
+                    <img src="{{ article.images[0] }}" alt="{{ article.headline }}" style="width: 100%; max-height: 480px; object-fit: cover; border-radius: var(--radius-md); box-shadow: var(--shadow-sm);" onerror="this.style.display='none'">
+                    {% if article.link and '/video/clip/' in article.link %}
+                        <a href="{{ article.link }}" target="_blank" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); border: 2px solid var(--accent-blue); color: #FFF; padding: 14px 24px; border-radius: 30px; text-decoration: none; font-weight: 800; display: flex; align-items: center; gap: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.5);">
+                            <i class="fa-solid fa-circle-play" style="font-size: 1.5rem; color: var(--accent-blue);"></i>
+                            <span>{% if lang == 'es' %}Ver Video Clip Original en ESPN →{% else %}Watch Video Clip on ESPN →{% endif %}</span>
+                        </a>
+                    {% endif %}
+                </div>
             {% endif %}
 
+            <!-- Article Body Paragraphs -->
             <div class="article-body">
                 {% for paragraph in paragraphs %}
                     <p>{{ paragraph }}</p>
                 {% endfor %}
             </div>
-        </div>
+
+            <!-- ESPN Source Link Banner -->
+            {% if article.link %}
+                <div class="source-banner">
+                    <div>
+                        <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 4px;">
+                            <i class="fa-solid fa-newspaper" style="color: var(--accent-blue);"></i>
+                            {% if lang == 'es' %}Fuente Oficial de la Noticia{% else %}Official News Source{% endif %}
+                        </div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                            {% if lang == 'es' %}Consulta el reporte o video original publicado por ESPN.{% else %}Read the full coverage directly from ESPN's official reporting.{% endif %}
+                        </div>
+                    </div>
+                    <a href="{{ article.link }}" target="_blank" class="nav-btn" style="background: var(--accent-blue); color: #FFF; border: none; font-weight: 700; padding: 10px 18px; border-radius: 8px;">
+                        {% if lang == 'es' %}Abrir en ESPN.com →{% else %}Open on ESPN.com →{% endif %}
+                    </a>
+                </div>
+            {% endif %}
+
+        </article>
+
+        <!-- Related News Recommendations -->
+        {% if related_news %}
+            <div class="info-card">
+                <h3 class="info-card-title">
+                    <i class="fa-solid fa-newspaper" style="color: var(--accent-blue);"></i>
+                    <span>{% if lang == 'es' %}Más Noticias Recomendadas de la Liga{% else %}More Recommended League News{% endif %}</span>
+                </h3>
+
+                <div class="related-grid">
+                    {% for rel in related_news %}
+                        <a href="/noticia/{{ rel.id }}?sport={{ rel.sport }}&league={{ rel.league }}&lang={{ lang }}" class="related-card">
+                            {% if rel.image %}
+                                <img src="{{ rel.image }}" alt="{{ rel.headline }}" onerror="this.src='/static/images/gamepulse_logo.png'">
+                            {% else %}
+                                <div style="height: 140px; background: var(--bg-card); display: flex; align-items: center; justify-content: center;">
+                                    <img src="/static/images/gamepulse_logo.png" alt="GamePulse Logo" style="height: 48px; width: auto;">
+                                </div>
+                            {% endif %}
+                            <div class="related-card-content">
+                                <div style="font-weight: 700; font-size: 0.9rem; line-height: 1.4; margin-bottom: 8px;">
+                                    {{ rel.headline }}
+                                </div>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary);">
+                                    <i class="fa-regular fa-clock"></i> {{ rel.published }}
+                                </div>
+                            </div>
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
 
     </main>
 

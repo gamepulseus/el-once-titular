@@ -305,13 +305,35 @@ def article_detail(article_id):
         else:
             translated_paragraphs.append(p)
 
+    # Fetch related news items from the same sport & league
+    related_items = []
+    try:
+        all_news = espn.get_news(target_article.get("sport", sport), target_article.get("league", league), limit=10)
+        for rel in all_news:
+            if str(rel.get("id")) != str(article_id):
+                rel_hl = rel.get("headline", "")
+                if lang == "es":
+                    rel_hl = translate_text(rel_hl, "Spanish")
+                related_items.append({
+                    "id": rel.get("id"),
+                    "headline": rel_hl,
+                    "published": format_datetime_et(rel.get("published", ""), lang),
+                    "image": rel.get("images", [{}])[0].get("url", "") if rel.get("images") else "",
+                    "sport": rel.get("sport", sport),
+                    "league": rel.get("league", league)
+                })
+            if len(related_items) >= 4:
+                break
+    except Exception:
+        pass
+
     if lang == "es":
         target_article["headline"] = translate_text(target_article.get("headline", ""), "Spanish")
         target_article["description"] = translate_text(target_article.get("description", ""), "Spanish")
 
     target_article["published"] = format_datetime_et(target_article.get("published", ""), lang)
 
-    resp = make_response(render_template("article.html", ui=ui, lang=lang, article=target_article, paragraphs=translated_paragraphs))
+    resp = make_response(render_template("article.html", ui=ui, lang=lang, article=target_article, paragraphs=translated_paragraphs, related_news=related_items))
     # Prevent browser caching of news article pages so clicking a new link in Telegram always loads the fresh article
     resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
     resp.headers["Pragma"] = "no-cache"
