@@ -1,75 +1,33 @@
 import os
-from pathlib import Path
 from dotenv import load_dotenv
 
-# Base directory
-BASE_DIR = Path(__file__).resolve().parent
+load_dotenv()
 
-# Load environment variables from .env if present
-load_dotenv(BASE_DIR / ".env")
+# Telegram Credentials
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "8850309639:AAHLec9jo29DuEw7o8YB7O7rdTqt_zHQgvU")
+TELEGRAM_CHANNEL_ES = os.getenv("TELEGRAM_CHANNEL_ES", "@GamePulseES")
+TELEGRAM_CHANNEL_EN = os.getenv("TELEGRAM_CHANNEL_EN", "@GamePulseUS")
 
-# Telegram Configuration
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
-TELEGRAM_CHANNEL_ES = os.getenv("TELEGRAM_CHANNEL_ES", "")
-TELEGRAM_CHANNEL_EN = os.getenv("TELEGRAM_CHANNEL_EN", "")
-
-# Website Configuration (GamePulse Web Portal)
-SITE_BASE_URL = os.getenv("SITE_BASE_URL", "http://localhost:5000")
-
-# LLM Translation Key (Optional - zero-cost template engine used if empty)
+# AI Credentials
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
-# SQLite DB Path
-DB_PATH = BASE_DIR / "gamepulse.db"
-
-# Active Sports & Leagues Configuration
+# Active Leagues Matrix
 ACTIVE_LEAGUES = [
-    {
-        "sport": "basketball",
-        "league": "nba",
-        "name_es": "NBA",
-        "name_en": "NBA",
-        "emoji": "🏀"
-    },
-    {
-        "sport": "football",
-        "league": "nfl",
-        "name_es": "NFL",
-        "name_en": "NFL",
-        "emoji": "🏈"
-    },
-    {
-        "sport": "baseball",
-        "league": "mlb",
-        "name_es": "MLB",
-        "name_en": "MLB",
-        "emoji": "⚾"
-    },
-    {
-        "sport": "hockey",
-        "league": "nhl",
-        "name_es": "NHL",
-        "name_en": "NHL",
-        "emoji": "🏒"
-    },
-    {
-        "sport": "football",
-        "league": "college-football",
-        "name_es": "NCAA Football",
-        "name_en": "NCAA Football",
-        "emoji": "🏈"
-    },
-    {
-        "sport": "basketball",
-        "league": "mens-college-basketball",
-        "name_es": "NCAA Basketball",
-        "name_en": "NCAA Basketball",
-        "emoji": "🏀"
-    }
+    {"sport": "baseball", "league": "mlb", "name": "MLB Béisbol", "name_en": "MLB Baseball", "icon": "⚾"},
+    {"sport": "basketball", "league": "nba", "name": "NBA Baloncesto", "name_en": "NBA Basketball", "icon": "🏀"},
+    {"sport": "football", "league": "nfl", "name": "NFL Fútbol Americano", "name_en": "NFL Football", "icon": "🏈"},
+    {"sport": "hockey", "league": "nhl", "name": "NHL Hockey", "name_en": "NHL Hockey", "icon": "🏒"},
+    {"sport": "football", "league": "college-football", "name": "NCAA Fútbol Colegial", "name_en": "NCAA College Football", "icon": "🎓"},
+    {"sport": "basketball", "league": "mens-college-basketball", "name": "NCAA Baloncesto Colegial", "name_en": "NCAA College Basketball", "icon": "🎓"}
 ]
 
-# Ultra-Fast Live Intervals (Forced 10 Seconds for Instant Live Alerts)
-NEWS_CHECK_INTERVAL = 60          # 1 minute
-SCOREBOARD_CHECK_INTERVAL = 10    # 10 SECONDS (Instant Live Alerts)
-PREVIEW_HOURS_AHEAD = 12          # Match previews within 12h
+# Database Path
+DB_PATH = os.getenv("DB_PATH", "gamepulse.db")
+
+# Interval Speeds (Seconds)
+NEWS_CHECK_INTERVAL = 60
+SCOREBOARD_CHECK_INTERVAL = 10
+
+# Base URL for Web Site
+SITE_BASE_URL = os.getenv("SITE_BASE_URL", "https://gamepulse.up.railway.app")
