@@ -673,3 +673,59 @@ class PostFormatter:
         msg_en_parts.append("📲 <i>Follow standings & stats on @GamePulseUS</i>")
 
         return "\n".join(msg_es_parts), "\n".join(msg_en_parts)
+
+    # Pillar 2A-Sub: Official Confirmed Lineups Post
+    @classmethod
+    def format_official_lineups(cls, event: Dict[str, Any], league_config: Dict[str, Any], summary_data: Dict[str, Any]) -> Tuple[str, str, str]:
+        home = event.get("home_team", {})
+        away = event.get("away_team", {})
+        sport = league_config.get("sport", "baseball")
+        league_code = league_config.get("league", "mlb")
+        emoji = league_config.get("emoji", "⚾")
+
+        event_id = event.get("id", "lineups")
+        image_url = MatchupGraphics.generate_matchup_banner(home, away, event_id) or home.get("logo")
+        match_site_url = f"{SITE_BASE_URL}/partido/{event_id}?sport={sport}&league={league_code}"
+
+        lineups = summary_data.get("lineups", {}) if isinstance(summary_data, dict) else {}
+        home_l = lineups.get("home", [])
+        away_l = lineups.get("away", [])
+
+        away_list_es = []
+        away_list_en = []
+        for idx, p in enumerate(away_l, 1):
+            pos_str = f" ({p.get('position')})" if p.get("position") else ""
+            away_list_es.append(f"  {idx}. <b>{p['name']}</b>{pos_str}")
+            away_list_en.append(f"  {idx}. <b>{p['name']}</b>{pos_str}")
+
+        home_list_es = []
+        home_list_en = []
+        for idx, p in enumerate(home_l, 1):
+            pos_str = f" ({p.get('position')})" if p.get("position") else ""
+            home_list_es.append(f"  {idx}. <b>{p['name']}</b>{pos_str}")
+            home_list_en.append(f"  {idx}. <b>{p['name']}</b>{pos_str}")
+
+        away_players_es = "\n".join(away_list_es) or "  <i>Por anunciar</i>"
+        home_players_es = "\n".join(home_list_es) or "  <i>Por anunciar</i>"
+        away_players_en = "\n".join(away_list_en) or "  <i>To be announced</i>"
+        home_players_en = "\n".join(home_list_en) or "  <i>To be announced</i>"
+
+        msg_es = (
+            f"📋 <b>ALINEACIONES CONFIRMADAS</b> | {league_config.get('name_es', 'Deportes')} {emoji}\n\n"
+            f"🆚 <b>{home.get('name')} vs {away.get('name')}</b>\n\n"
+            f"🚀 <b>Alineación {away.get('name')} (Visitante):</b>\n{away_players_es}\n\n"
+            f"🏠 <b>Alineación {home.get('name')} (Local):</b>\n{home_players_es}\n\n"
+            f"🔗 <a href='{match_site_url}'>Ver detalles y estadísticas en GamePulse</a>\n\n"
+            f"📲 <i>Sigue a @GamePulseES para las mejores alertas en vivo.</i>"
+        )
+
+        msg_en = (
+            f"📋 <b>OFFICIAL STARTING LINEUPS</b> | {league_config.get('name_en', 'Sports')} {emoji}\n\n"
+            f"🆚 <b>{home.get('name')} vs {away.get('name')}</b>\n\n"
+            f"🚀 <b>{away.get('name')} Starting Lineup (Away):</b>\n{away_players_en}\n\n"
+            f"🏠 <b>{home.get('name')} Starting Lineup (Home):</b>\n{home_players_en}\n\n"
+            f"🔗 <a href='{match_site_url}'>View details and stats on GamePulse</a>\n\n"
+            f"📲 <i>Follow @GamePulseUS for instant live updates.</i>"
+        )
+
+        return msg_es, msg_en, image_url

@@ -109,6 +109,17 @@ class DatabaseManager:
                 )
             """)
 
+            # Processed Official Lineups
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS processed_lineups (
+                    event_id TEXT PRIMARY KEY,
+                    sport TEXT,
+                    league TEXT,
+                    event_name TEXT,
+                    processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+
             conn.commit()
             logger.info("SQLite database initialized successfully.")
 
@@ -126,6 +137,22 @@ class DatabaseManager:
                 INSERT OR IGNORE INTO processed_news (news_id, headline, sport, league)
                 VALUES (?, ?, ?, ?)
             """, (str(news_id), headline, sport, league))
+            conn.commit()
+
+    # Lineups Methods
+    def is_lineups_processed(self, event_id: str) -> bool:
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT 1 FROM processed_lineups WHERE event_id = ?", (str(event_id),))
+            return cursor.fetchone() is not None
+
+    def mark_lineups_processed(self, event_id: str, sport: str, league: str, event_name: str):
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT OR IGNORE INTO processed_lineups (event_id, sport, league, event_name)
+                VALUES (?, ?, ?, ?)
+            """, (str(event_id), sport, league, event_name))
             conn.commit()
 
     # Previews Methods

@@ -58,11 +58,13 @@ class GamePulseScheduler:
 
                 if not status_completed and status_state == "pre":
                     self.db.mark_preview_processed(event_id, sport, l_code, event_name)
+                    self.db.mark_lineups_processed(event_id, sport, l_code, event_name)
                 elif status_completed or status_state == "post" or "final" in ev.get("status_detail", "").lower():
                     self.db.mark_summary_processed(event_id, sport, l_code, event_name)
 
                 if status_state in ["in", "post"] or status_completed:
                     self.db.mark_game_start_processed(event_id, sport, l_code, event_name)
+                    self.db.mark_lineups_processed(event_id, sport, l_code, event_name)
 
             # 4. Seed today's standings
             standing_key = f"{l_code}_{today_et_str}"
@@ -152,37 +154,64 @@ class GamePulseScheduler:
                 status_detail = ev.get("status_detail", "")
                 status_completed = ev.get("status_completed", False)
 
-                # Pillar 2A: Pre-Game Preview & Betting Lines (Strictly for games starting within 24 hours)
+                # Pillar 2A: Pre-Game Preview & Betting Lines (Strictly when pitchers/odds are available or <= 3 hours from start)
                 if not status_completed and status_state == "pre":
                     date_utc = ev.get("date", "")
                     is_upcoming_soon = False
+                    hours_until_game = 999.0
                     if date_utc:
                         try:
                             clean_str = date_utc.replace("Z", "+00:00")
                             dt_utc = datetime.fromisoformat(clean_str)
                             dt_et = dt_utc.astimezone(ET_ZONE)
                             now_et = datetime.now(ET_ZONE)
-                            hours_diff = (dt_et - now_et).total_seconds() / 3600.0
-                            # Only publish preview if game starts within 24 hours (today or tomorrow)
-                            if -2 <= hours_diff <= 24:
+                            hours_until_game = (dt_et - now_et).total_seconds() / 3600.0
+                            if -2 <= hours_until_game <= 24:
                                 is_upcoming_soon = True
                         except Exception as e:
                             logger.warning(f"Error parsing preview date {date_utc}: {e}")
 
                     if is_upcoming_soon and not self.db.is_preview_processed(event_id):
-                        self.db.mark_preview_processed(event_id, sport, l_code, event_name)
                         summary_data = self.espn.get_game_summary(sport, l_code, event_id)
-                        logger.info(f"[{l_code.upper()}] Pre-Game Analysis & Poll: {event_name}")
-                        msg_es, msg_en, image_url = PostFormatter.format_preview(ev, league, summary_data)
-                        q_es, q_en, opt_es, opt_en = PostFormatter.format_preview_poll(ev, league)
+                        pitchers = summary_data.get("pitchers", {}) if summary_data else {}
+                        has_pitchers = pitchers.get("home", "TBD") != "Por Anunciar / TBD" or pitchers.get("away", "TBD") != "Por Anunciar / TBD"
+                        odds = summary_data.get("odds", {}) if summary_data else {}
+                        has_odds = bool(odds.get("over_under") or odds.get("spread") or odds.get("home_moneyline"))
 
-                        if self.dry_run:
-                            print(f"\n--- [DRY RUN - PREVIEW - ES] ---\n{msg_es}")
-                            print(f"--- [DRY RUN - POLL - ES] --- Question: {q_es}")
-                        else:
-                            self.publisher.publish_bilingual(msg_es, msg_en, image_url)
-                            time.sleep(1)
-                            self.publisher.publish_bilingual_poll(q_es, q_en, opt_es, opt_en)
+                        # Publish preview when pitchers/odds are available OR within 3 hours of start
+                        if has_pitchers or has_odds or hours_until_game <= 3.0:
+                            self.db.mark_preview_processed(event_id, sport, l_code, event_name)
+                            logger.info(f"[{l_code.upper()}] Pre-Game Analysis & Poll: {event_name}")
+                            msg_es, msg_en, image_url = PostFormatter.format_preview(ev, league, summary_data)
+                            q_es, q_en, opt_es, opt_en = PostFormatter.format_preview_poll(ev, league)
+
+                            if self.dry_run:
+                                print(f"\n--- [DRY RUN - PREVIEW - ES] ---\n{msg_es}")
+                                print(f"--- [DRY RUN - POLL - ES] --- Question: {q_es}")
+                            else:
+                                self.publisher.publish_bilingual(msg_es, msg_en, image_url)
+                                time.sleep(1)
+                                self.publisher.publish_bilingual_poll(q_es, q_en, opt_es, opt_en)
+
+                # Pillar 2A-Sub: Official Starting Lineups Alert (When confirmed starters are released by ESPN)
+                if not status_completed and status_state in ["pre", "in"]:
+                    if not self.db.is_lineups_processed(event_id):
+                        summary_data = summary_data if 'summary_data' in locals() and summary_data else self.espn.get_game_summary(sport, l_code, event_id)
+                        lineups = summary_data.get("lineups", {}) if summary_data else {}
+                        home_l = lineups.get("home", [])
+                        away_l = lineups.get("away", [])
+
+                        # Only publish lineups post if confirmed starters for both teams are released
+                        if len(home_l) >= 5 and len(away_l) >= 5:
+                            self.db.mark_lineups_processed(event_id, sport, l_code, event_name)
+                            logger.info(f"[{l_code.upper()}] Official Lineups Released: {event_name}")
+                            msg_es, msg_en, image_url = PostFormatter.format_official_lineups(ev, league, summary_data)
+
+                            if self.dry_run:
+                                print(f"\n--- [DRY RUN - OFFICIAL LINEUPS - ES] ---\n{msg_es}")
+                                print(f"--- [DRY RUN - OFFICIAL LINEUPS - EN] ---\n{msg_en}")
+                            else:
+                                self.publisher.publish_bilingual(msg_es, msg_en, image_url)
 
                 # Pillar 2B: Game Started & Live In-Game Tracker (FAST LOOKUP ONLY FOR LIVE GAMES)
                 elif not status_completed and status_state == "in":
