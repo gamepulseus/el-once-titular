@@ -240,7 +240,10 @@ class ESPNClient:
                 elif " - " in text and len(text.split(" - ", 1)[0]) < 20:
                     text = text.split(" - ", 1)[-1].strip()
 
-                if len(text) > 30 and not text.startswith("http") and not text.startswith("play") and "Terms of Use" not in text and "Privacy Policy" not in text and "Facebook Messenger" not in text:
+                if len(text) > 35 and not text.startswith("http") and not text.startswith("play") and "Terms of Use" not in text and "Privacy Policy" not in text and "Facebook Messenger" not in text:
+                    # Filter out sentence fragments that start with a lowercase letter (e.g. 'or who they will be...')
+                    if text[0].islower() and not text.startswith('"') and not text.startswith("'"):
+                        continue
                     clean_paragraphs.append(text)
             if clean_paragraphs:
                 return clean_paragraphs
