@@ -1,5 +1,6 @@
 import sqlite3
 import logging
+import re
 from pathlib import Path
 from typing import Union, Optional
 
@@ -123,28 +124,68 @@ class DatabaseManager:
             conn.commit()
             logger.info("SQLite database initialized successfully.")
 
+            # Load existing processed news into in-memory sets for ultra-fast deduplication
+            self._sent_news_ids = set()
+            self._sent_headlines = set()
+            try:
+                cursor.execute("SELECT news_id, headline FROM processed_news")
+                for row in cursor.fetchall():
+                    if row[0]:
+                        self._sent_news_ids.add(str(row[0]).strip())
+                    if row[1]:
+                        norm_h = re.sub(r'[^a-zA-Z0-9]', '', str(row[1]).lower())
+                        if norm_h:
+                            self._sent_headlines.add(norm_h)
+            except Exception as e:
+                logger.warning(f"Error loading processed news into memory cache: {e}")
+
     # News Methods
     def is_news_processed(self, news_id: str, headline: str = "") -> bool:
+        clean_id = str(news_id).strip()
+        norm_hl = re.sub(r'[^a-zA-Z0-9]', '', headline.lower()) if headline else ""
+
+        # Check in-memory cache first
+        if clean_id and clean_id in self._sent_news_ids:
+            return True
+        if norm_hl and norm_hl in self._sent_headlines:
+            return True
+
+        # Fallback to SQLite query
         with self._get_connection() as conn:
             cursor = conn.cursor()
-            clean_id = str(news_id).strip()
-            clean_hl = headline.strip().lower()
-            if clean_hl:
-                cursor.execute(
-                    "SELECT 1 FROM processed_news WHERE news_id = ? OR LOWER(TRIM(headline)) = ?",
-                    (clean_id, clean_hl)
-                )
+            if norm_hl:
+                cursor.execute("SELECT 1 FROM processed_news WHERE news_id = ?", (clean_id,))
+                if cursor.fetchone():
+                    return True
+                cursor.execute("SELECT headline FROM processed_news")
+                for row in cursor.fetchall():
+                    if row[0]:
+                        existing_norm = re.sub(r'[^a-zA-Z0-9]', '', str(row[0]).lower())
+                        if existing_norm == norm_hl:
+                            self._sent_headlines.add(norm_hl)
+                            return True
             else:
                 cursor.execute("SELECT 1 FROM processed_news WHERE news_id = ?", (clean_id,))
-            return cursor.fetchone() is not None
+                if cursor.fetchone():
+                    return True
+
+        return False
 
     def mark_news_processed(self, news_id: str, headline: str, sport: str, league: str):
+        clean_id = str(news_id).strip()
+        norm_hl = re.sub(r'[^a-zA-Z0-9]', '', headline.lower()) if headline else ""
+
+        if clean_id:
+            self._sent_news_ids.add(clean_id)
+        if norm_hl:
+            self._sent_headlines.add(norm_hl)
+
         with self._get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT OR IGNORE INTO processed_news (news_id, headline, sport, league)
                 VALUES (?, ?, ?, ?)
-            """, (str(news_id), headline, sport, league))
+            """, (clean_id, headline, sport, league))
             conn.commit()
 
     # Lineups Methods
