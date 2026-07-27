@@ -110,6 +110,17 @@ class DatabaseManager:
                 )
             """)
 
+            # Processed Lineups
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS processed_lineups (
+                    event_id TEXT PRIMARY KEY,
+                    sport TEXT,
+                    league TEXT,
+                    event_name TEXT,
+                    processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+
             # Processed Picks & Betting Insights
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS processed_picks (
