@@ -78,30 +78,17 @@ class MatchupGraphics:
         home_name = home_team.get("short_name", home_team.get("name", "Local")).upper()
         away_name = away_team.get("short_name", away_team.get("name", "Visitante")).upper()
 
-        # Home Logo Left (Center X ~ 250, Center Y ~ 280)
+        # Home Logo Left (Center X ~ 250, Center Y ~ 315)
         if home_img:
-            home_img.thumbnail((300, 300))
+            home_img.thumbnail((320, 320))
             hw, hh = home_img.size
-            banner.paste(home_img, (250 - hw // 2, 280 - hh // 2), home_img)
+            banner.paste(home_img, (250 - hw // 2, height // 2 - hh // 2), home_img)
 
-        # Away Logo Right (Center X ~ 950, Center Y ~ 280)
+        # Away Logo Right (Center X ~ 950, Center Y ~ 315)
         if away_img:
-            away_img.thumbnail((300, 300))
+            away_img.thumbnail((320, 320))
             aw, ah = away_img.size
-            banner.paste(away_img, (950 - aw // 2, 280 - ah // 2), away_img)
-
-        # 4. Team Names underneath (Large, Bold, Centered)
-        if font_name:
-            bbox_h = font_name.getbbox(home_name)
-            w_h = bbox_h[2] - bbox_h[0]
-            draw.text((250 - w_h // 2, 490), home_name, fill=(147, 197, 253, 255), font=font_name)
-
-            bbox_a = font_name.getbbox(away_name)
-            w_a = bbox_a[2] - bbox_a[0]
-            draw.text((950 - w_a // 2, 490), away_name, fill=(248, 113, 113, 255), font=font_name)
-        else:
-            draw.text((250 - len(home_name) * 6, 490), home_name, fill=(147, 197, 253, 255))
-            draw.text((950 - len(away_name) * 6, 490), away_name, fill=(248, 113, 113, 255))
+            banner.paste(away_img, (950 - aw // 2, height // 2 - ah // 2), away_img)
 
         try:
             banner.save(output_path, "PNG")
