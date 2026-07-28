@@ -70,6 +70,46 @@ UI_LABELS = {
     }
 }
 
+@app.route("/api/test_railway_publish", methods=["GET", "POST"])
+def api_test_railway_publish():
+    simulated_event = {
+        "id": "test_railway_live_999",
+        "league": "uefa.champions",
+        "sport": "soccer",
+        "status_state": "in",
+        "status_detail": "1st Half - 05:00",
+        "home_team": {
+            "name": "Real Madrid",
+            "short_name": "RMA",
+            "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/86.png"
+        },
+        "away_team": {
+            "name": "FC Barcelona",
+            "short_name": "BAR",
+            "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/83.png"
+        }
+    }
+
+    league_info = {
+        "league": "uefa.champions",
+        "name": "UEFA Champions League",
+        "name_es": "UEFA Champions League",
+        "name_en": "UEFA Champions League",
+        "emoji": "⚽",
+        "icon": "⚽"
+    }
+
+    msg_es, msg_en, image_url = PostFormatter.format_game_start(simulated_event, league_info)
+    msg_en_railway = f"🚨 [RAILWAY LIVE PRODUCTION TEST]\n\n{msg_en}"
+    
+    res_es, res_en = publisher.publish_bilingual(msg_es, msg_en_railway, image_url)
+    return jsonify({
+        "status": "success",
+        "railway_container_execution": True,
+        "telegram_published": res_en,
+        "message_sent": msg_en_railway
+    })
+
 def get_current_lang():
     lang_param = request.args.get("lang", "").strip().lower()
     if lang_param in ["en", "es"]:
