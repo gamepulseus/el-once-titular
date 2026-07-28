@@ -42,23 +42,31 @@ class GamePulseScheduler:
             sport = league["sport"]
             l_code = league["league"]
 
-            # Seed existing games (previews, lineups, scoring plays) silently so past items are NOT published
+            # Seed existing games (previews, lineups, game starts, scoring plays) silently so past items are NOT published
             events = self.espn.get_scoreboard(sport, l_code)
             for ev in events:
                 event_id = str(ev["id"])
                 event_name = ev["name"]
                 status_state = ev.get("status_state", "pre")
+                status_detail = ev.get("status_detail", "")
                 status_completed = ev.get("status_completed", False)
 
                 # Silently mark lineups as processed so past lineups are not re-published
                 self.db.mark_lineups_processed(event_id, sport, l_code, event_name)
 
-                # ONLY mark game starts & summaries as processed if game is ALREADY completed or finished
-                if status_completed or status_state == "post" or "final" in ev.get("status_detail", "").lower():
+                # If game is ALREADY in-progress ("in"/"live") or completed ("post"), SILENTLY mark game start as processed
+                if status_state in ["in", "live", "post"] or status_completed or "final" in status_detail.lower():
                     self.db.mark_game_start_processed(event_id, sport, l_code, event_name)
+                    
+                if status_completed or status_state == "post" or "final" in status_detail.lower():
                     self.db.mark_summary_processed(event_id, sport, l_code, event_name)
 
-                # Silently seed existing plays so old past plays before startup are NEVER published
+                # Silently seed existing quarter/halftime updates and plays so old past items before startup are NEVER published
+                if status_detail:
+                    detail_clean = re.sub(r'[^a-zA-Z0-9]', '', status_detail.lower())
+                    quarter_key = f"{event_id}_quarter_{detail_clean}"
+                    self.db.mark_quarter_update_processed(quarter_key, event_id)
+
                 summary_data = self.espn.get_game_summary(sport, l_code, event_id)
                 if summary_data:
                     plays = summary_data.get("plays", []) or summary_data.get("scoringPlays", [])
