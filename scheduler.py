@@ -54,9 +54,12 @@ class GamePulseScheduler:
                 # Silently mark lineups as processed so past lineups are not re-published
                 self.db.mark_lineups_processed(event_id, sport, l_code, event_name)
 
-                # If game is ALREADY in-progress ("in"/"live") or completed ("post"), SILENTLY mark game start as processed
+                # If game is ALREADY in-progress ("in"/"live") or completed ("post"), SILENTLY mark game start & summary as processed
                 if status_state in ["in", "live", "post"] or status_completed or "final" in status_detail.lower():
                     self.db.mark_game_start_processed(event_id, sport, l_code, event_name)
+                    
+                if status_completed or status_state == "post" or "final" in status_detail.lower():
+                    self.db.mark_summary_processed(event_id, sport, l_code, event_name)
 
                 # Silently seed existing quarter/halftime updates and plays so old past items before startup are NEVER published
                 if status_detail:
