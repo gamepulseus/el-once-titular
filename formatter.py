@@ -1038,18 +1038,16 @@ class PostFormatter:
         lineups_block_en = PostFormatter._format_lineups_block(summary_data, home.get('short_name'), away.get('short_name'), "en")
 
         msg_es = (
-            f"📋 <b>¡ALINEACIONES CONFIRMADAS Y CUOTAS DE APUESTAS!</b> | {league_name_es} {emoji}\n\n"
+            f"📋 <b>¡ALINEACIONES CONFIRMADAS (15 MINS ANTES DEL INICIO)!</b> | {league_name_es} {emoji}\n\n"
             f"🆚 <b>{away.get('name')} vs {home.get('name')}</b>\n\n"
             f"{lineups_block_es}"
-            f"{odds_block_es}"
             f"📲 <i>Sigue la cobertura oficial en @GamePulseES</i>"
         )
 
         msg_en = (
-            f"📋 <b>CONFIRMED LINEUPS & BETTING ODDS!</b> | {league_name_en} {emoji}\n\n"
+            f"📋 <b>CONFIRMED LINEUPS (15 MINS PRIOR TO START)!</b> | {league_name_en} {emoji}\n\n"
             f"🆚 <b>{away.get('name')} vs {home.get('name')}</b>\n\n"
             f"{lineups_block_en}"
-            f"{odds_block_en}"
             f"📲 <i>Follow official coverage on @GamePulseUS</i>"
         )
 
