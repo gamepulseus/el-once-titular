@@ -76,7 +76,7 @@ class TwitterPublisher:
             # Get image bytes from URL or file
             if image_url_or_path.startswith("http://") or image_url_or_path.startswith("https://"):
                 req = urllib.request.Request(image_url_or_path, headers={"User-Agent": "Mozilla/5.0"})
-                with urllib.request.urlopen(req, timeout=10) as resp:
+                with urllib.request.urlopen(req, timeout=15) as resp:
                     img_data = resp.read()
             else:
                 with open(image_url_or_path, "rb") as f:
@@ -104,14 +104,14 @@ class TwitterPublisher:
                 method="POST"
             )
 
-            with urllib.request.urlopen(req, timeout=15) as resp:
+            with urllib.request.urlopen(req, timeout=20) as resp:
                 res_data = json.loads(resp.read().decode("utf-8"))
                 media_id = res_data.get("media_id_string")
                 if media_id:
                     logger.info(f"Successfully uploaded media to Twitter. Media ID: {media_id}")
                     return str(media_id)
         except Exception as e:
-            logger.error(f"Failed to upload media to Twitter: {e}")
+            logger.warning(f"Failed to upload media to Twitter (will fallback to text): {e}")
             return None
 
     def publish_tweet(self, text: str, image_url: Optional[str] = None) -> bool:
@@ -150,7 +150,7 @@ class TwitterPublisher:
         )
 
         try:
-            with urllib.request.urlopen(req, timeout=12) as resp:
+            with urllib.request.urlopen(req, timeout=15) as resp:
                 result = json.loads(resp.read().decode("utf-8"))
                 logger.info(f"Tweet with image successfully posted to Twitter (X): {clean_tweet[:50]}...")
                 return True
@@ -158,10 +158,13 @@ class TwitterPublisher:
             err_body = e.read().decode("utf-8")
             logger.error(f"Twitter API HTTP error {e.code}: {err_body}")
             # Fallback retry without media if media attachment was rejected by Twitter API v2
-            if media_id and ("media" in err_body.lower() or "400" in str(e.code) or "403" in str(e.code)):
+            if media_id:
                 logger.info("Retrying Tweet text-only fallback without media...")
                 return self.publish_tweet(text, image_url=None)
             return False
         except Exception as e:
             logger.error(f"Failed to post Tweet: {e}")
+            if media_id:
+                logger.info("Retrying Tweet text-only fallback without media after exception...")
+                return self.publish_tweet(text, image_url=None)
             return False
