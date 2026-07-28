@@ -265,7 +265,7 @@ class GamePulseScheduler:
                             time.sleep(1)
 
     def process_scoreboard(self):
-        logger.info("=== Running Ultra-Fast Live In-Game Tracker ===")
+        logger.debug("=== Running Ultra-Fast Live In-Game Tracker ===")
         for league in config.ACTIVE_LEAGUES:
             sport = league["sport"]
             l_code = league["league"]
