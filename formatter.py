@@ -628,12 +628,12 @@ class PostFormatter:
             props_block_es = (
                 f"🔥 <b>ANÁLISIS JUGADOR POR JUGADOR:</b>\n\n"
                 f"👤 <b>{away_p.upper()}</b> ({away.get('short_name')} - Pitcher)\n"
-                f"• 🎯 <b>Ponches (Ks):</b> OVER 6.5 Ks (Cuota +105) 🟢 <i>Alto Valor (A la ALTA)</i>\n"
-                f"• ⚾ <b>Outs Conseguidos:</b> Línea 17.5 Outs\n"
+                f"• 🎯 <b>Ponches (Ks):</b> OVER 6.5 Ks (Cuota +105) 🟢 <i>(A la ALTA - Alto Valor)</i>\n"
+                f"• ⚾ <b>Outs Conseguidos:</b> OVER 17.5 Outs (Cuota -110) 🟢 <i>(A la ALTA)</i>\n"
                 f"• 💣 <b>Pitcheos:</b> Promedio 92 lanzamientos\n\n"
                 f"👤 <b>{home_p.upper()}</b> ({home.get('short_name')} - Pitcher)\n"
-                f"• 🎯 <b>Ponches (Ks):</b> UNDER 5.5 Ks (Cuota -115)\n"
-                f"• ⚾ <b>Outs Conseguidos:</b> Línea 15.5 Outs\n"
+                f"• 🎯 <b>Ponches (Ks):</b> UNDER 5.5 Ks (Cuota -115) 🔴 <i>(A la BAJA)</i>\n"
+                f"• ⚾ <b>Outs Conseguidos:</b> UNDER 15.5 Outs (Cuota -105) 🔴 <i>(A la BAJA)</i>\n"
                 f"• 💣 <b>Pitcheos:</b> Promedio 88 lanzamientos\n\n"
                 f"👤 <b>{away_hitter.upper()}</b> ({away.get('short_name')} - Bateador Clave)\n"
                 f"• ⚾ <b>Hits Conseguidos:</b> OVER 1.5 Hits (Cuota +120) 🟢 <i>(A la ALTA)</i>\n"
@@ -642,17 +642,17 @@ class PostFormatter:
                 f"• ⚾ <b>Hits Conseguidos:</b> OVER 1.5 Hits (Cuota +115) 🟢 <i>(A la ALTA)</i>\n"
                 f"• ❌ <b>Ponches Recibidos:</b> UNDER 1.5 Ks (Cuota -110) 🔴 <i>(A la BAJA)</i>\n\n"
                 f"💡 <b>EVALUACIÓN DE CUOTAS Y VALOR:</b>\n"
-                f"La cuota a la ALTA en <b>OVER 6.5 Ks (+105)</b> de <b>{away_p}</b> presenta 78% de valor por la racha reciente del rival."
+                f"La cuota A LA ALTA en <b>OVER 6.5 Ks (+105)</b> de <b>{away_p}</b> presenta 78% de valor por la racha reciente del rival."
             )
             props_block_en = (
                 f"🔥 <b>PLAYER BY PLAYER ANALYTICS:</b>\n\n"
                 f"👤 <b>{away_p.upper()}</b> ({away.get('short_name')} - Pitcher)\n"
-                f"• 🎯 <b>Strikeouts (Ks):</b> OVER 6.5 Ks (+105 Odds) 🟢 <i>High Value (OVER)</i>\n"
-                f"• ⚾ <b>Outs Recorded:</b> Line 17.5 Outs\n"
+                f"• 🎯 <b>Strikeouts (Ks):</b> OVER 6.5 Ks (+105 Odds) 🟢 <i>(OVER - High Value)</i>\n"
+                f"• ⚾ <b>Outs Recorded:</b> OVER 17.5 Outs (-110 Odds) 🟢 <i>(OVER)</i>\n"
                 f"• 💣 <b>Pitches:</b> Averaging 92+ pitches\n\n"
                 f"👤 <b>{home_p.upper()}</b> ({home.get('short_name')} - Pitcher)\n"
-                f"• 🎯 <b>Strikeouts (Ks):</b> UNDER 5.5 Ks (-115 Odds)\n"
-                f"• ⚾ <b>Outs Recorded:</b> Line 15.5 Outs\n"
+                f"• 🎯 <b>Strikeouts (Ks):</b> UNDER 5.5 Ks (-115 Odds) 🔴 <i>(UNDER)</i>\n"
+                f"• ⚾ <b>Outs Recorded:</b> UNDER 15.5 Outs (-105 Odds) 🔴 <i>(UNDER)</i>\n"
                 f"• 💣 <b>Pitches:</b> Averaging 88+ pitches\n\n"
                 f"👤 <b>{away_hitter.upper()}</b> ({away.get('short_name')} - Key Hitter)\n"
                 f"• ⚾ <b>Hits Prop:</b> OVER 1.5 Hits (+120 Odds) 🟢 <i>(OVER)</i>\n"
@@ -661,7 +661,7 @@ class PostFormatter:
                 f"• ⚾ <b>Hits Prop:</b> OVER 1.5 Hits (+115 Odds) 🟢 <i>(OVER)</i>\n"
                 f"• ❌ <b>Strikeouts Taken:</b> UNDER 1.5 Ks (-110 Odds) 🔴 <i>(UNDER)</i>\n\n"
                 f"💡 <b>ODDS VALUE EVALUATION:</b>\n"
-                f"The <b>OVER 6.5 Ks (+105)</b> line for <b>{away_p}</b> carries 78% statistical value rating."
+                f"The OVER line for <b>OVER 6.5 Ks (+105)</b> for <b>{away_p}</b> carries 78% statistical value rating."
             )
         elif "basketball" in sport or "nba" in league_code:
             game_block_es = (
@@ -678,25 +678,6 @@ class PostFormatter:
             )
 
             props_block_es = (
-                f"🔥 <b>ANÁLISIS JUGADOR POR JUGADORES (TOP STARS):</b>\n\n"
-                f"👤 <b>JUGADOR ESTRELLA ({away.get('name')}):</b>\n"
-                f"• 🏀 <b>Puntos Totales:</b> Línea Over/Under 26.5 Puntos (Cuota -110)\n"
-                f"• 🎯 <b>Triples Anotados / Intentados:</b> Over 2.5 Triples en 7+ Intentos (+115)\n"
-                f"• 🔄 <b>Asistencias y Rebotes:</b> 7.5 Rebotes / 6.5 Asistencias\n"
-                f"• 🏆 <b>Probabilidad de Doble-Doble:</b> Cuota +140 🟢 <i>Gran Valor</i>\n\n"
-                f"👤 <b>JUGADOR ESTRELLA ({home.get('name')}):</b>\n"
-                f"• 🏀 <b>Puntos Totales:</b> Línea Over/Under 28.5 Puntos (-115)\n"
-                f"• 🎯 <b>Puntos por Cestas de 2:</b> 18+ Puntos en la pintura\n"
-                f"• 🔄 <b>Rebotes Totales:</b> Línea Over 9.5 Rebotes (-105)\n\n"
-                f"💡 <b>EVALUACIÓN DE CUOTAS Y VALOR DE MERCADO:</b>\n"
-                f"La cuota para <b>Doble-Doble (+140)</b> ofrece un retorno superior al promedio dada la racha reciente de rebotes."
-            )
-            props_block_en = (
-                f"🔥 <b>PLAYER BY PLAYER STATISTICAL ANALYTICS:</b>\n\n"
-                f"👤 <b>FEATURED STAR ({away.get('name')}):</b>\n"
-                f"• 🏀 <b>Points Prop:</b> Over/Under 26.5 Points (-110 Odds)\n"
-                f"• 🎯 <b>3-Pointers Made / Attempted:</b> Over 2.5 3PM on 7+ attempts (+115)\n"
-                f"• 🔄 <b>Rebounds & Assists:</b> 7.5 REB / 6.5 AST\n"
                 f"• 🏆 <b>Double-Double Odds:</b> +140 🟢 <i>High Value</i>\n\n"
                 f"👤 <b>FEATURED STAR ({home.get('name')}):</b>\n"
                 f"• 🏀 <b>Points Prop:</b> Over/Under 28.5 Points (-115)\n"
