@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from flask import Flask, render_template, request, jsonify, redirect, make_response
 from espn_client import ESPNClient
-from config import ACTIVE_LEAGUES
+from config import ACTIVE_LEAGUES, TELEGRAM_CHANNEL_EN
 from formatter import PostFormatter, translate_text, format_datetime_et
 from telegram_publisher import TelegramPublisher
 
@@ -103,10 +103,16 @@ def api_test_railway_publish():
     msg_en_railway = f"🚨 [RAILWAY LIVE PRODUCTION TEST]\n\n{msg_en}"
     
     res_es, res_en = publisher.publish_bilingual(msg_es, msg_en_railway, image_url)
+    
+    # Debug telegram call directly
+    tg_res = publisher.publish_text(TELEGRAM_CHANNEL_EN, msg_en_railway)
+    
     return jsonify({
         "status": "success",
         "railway_container_execution": True,
         "telegram_published": res_en,
+        "direct_telegram_test": tg_res,
+        "channel_en": TELEGRAM_CHANNEL_EN,
         "message_sent": msg_en_railway
     })
 
