@@ -42,7 +42,7 @@ class GamePulseScheduler:
             sport = league["sport"]
             l_code = league["league"]
 
-            # Seed existing games (previews, starts, scoring plays, summaries) silently
+            # Seed existing games (previews, lineups, scoring plays) silently so past items are NOT published
             events = self.espn.get_scoreboard(sport, l_code)
             for ev in events:
                 event_id = str(ev["id"])
@@ -50,18 +50,32 @@ class GamePulseScheduler:
                 status_state = ev.get("status_state", "pre")
                 status_completed = ev.get("status_completed", False)
 
+                # Silently mark existing lineups and game starts as processed
+                self.db.mark_lineups_processed(event_id, sport, l_code, event_name)
+                self.db.mark_game_start_processed(event_id, sport, l_code, event_name)
+
                 if status_completed or status_state == "post" or "final" in ev.get("status_detail", "").lower():
                     self.db.mark_summary_processed(event_id, sport, l_code, event_name)
 
-                if status_state in ["in", "post"] or status_completed:
-                    self.db.mark_game_start_processed(event_id, sport, l_code, event_name)
-                    self.db.mark_lineups_processed(event_id, sport, l_code, event_name)
+                # Silently seed existing plays so old past plays before startup are NEVER published
+                summary_data = self.espn.get_game_summary(sport, l_code, event_id)
+                if summary_data:
+                    plays = summary_data.get("plays", []) or summary_data.get("scoringPlays", [])
+                    for p in plays:
+                        p_id = str(p.get("id", p.get("sequenceNumber", hash(p.get("text", "")))))
+                        p_text = str(p.get("text", "")).strip()
+                        if p_text:
+                            text_hash = hashlib.md5(p_text.lower().encode("utf-8")).hexdigest()[:12]
+                            play_id_key = f"{event_id}_play_{p_id}"
+                            play_text_key = f"{event_id}_text_{text_hash}"
+                            self.db.mark_scoring_play_processed(play_id_key, event_id, p_text)
+                            self.db.mark_scoring_play_processed(play_text_key, event_id, p_text)
 
             # Seed today's standings
             standing_key = f"{l_code}_{today_et_str}"
             self.db.mark_standing_processed(standing_key)
 
-        logger.info("=== Baseline Seeding Complete: Bot is ready to publish all news & live events ===")
+        logger.info("=== Baseline Seeding Complete: Bot is ready to publish NEW live events ONLY ===")
 
     def process_news(self):
         logger.info("=== Running Pillar 1: Flash Alerts, Injury Reports & Trade Alerts ===")
@@ -316,18 +330,8 @@ class GamePulseScheduler:
                         else:
                             self.publisher.publish_bilingual(msg_es, msg_en, image_url)
 
-                # Pillar 2B: Game Started & Live In-Game Tracker (FAST LOOKUP ONLY FOR LIVE GAMES)
+                # Pillar 2B: Continuous Minuto a Minuto Live Play Tracker (ONLY FOR LIVE GAMES)
                 if not status_completed and status_state != "post":
-                    # 1. Game Started Alert
-                    if not self.db.is_game_start_processed(event_id):
-                        self.db.mark_game_start_processed(event_id, sport, l_code, event_name)
-                        logger.info(f"[{l_code.upper()}] Live Game Started Alert: {event_name}")
-                        msg_es, msg_en, image_url = PostFormatter.format_game_start(ev, league)
-
-                        if self.dry_run:
-                            print(f"\n--- [DRY RUN - GAME START - ES] ---\n{msg_es}")
-                        else:
-                            self.publisher.publish_bilingual(msg_es, msg_en, image_url)
 
                     # 2. Continuous Minuto a Minuto Live Play Alerts (ALL SPORTS: MLB, NBA, NFL, NHL)
                     summary_data = self.espn.get_game_summary(sport, l_code, event_id)
