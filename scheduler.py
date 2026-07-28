@@ -319,51 +319,34 @@ class GamePulseScheduler:
                         else:
                             self.publisher.publish_bilingual(msg_es, msg_en, image_url)
 
-                    # 2. Live Run Alert (MLB) or In-Game Plays
+                    # 2. Continuous Minuto a Minuto Live Play Alerts (ALL SPORTS: MLB, NBA, NFL, NHL)
                     summary_data = self.espn.get_game_summary(sport, l_code, event_id)
-                    if summary_data and l_code == "mlb":
-                        plays = summary_data.get("plays", [])
+                    if summary_data:
+                        plays = summary_data.get("plays", []) or summary_data.get("scoringPlays", [])
                         scoring_plays = [
                             p for p in plays 
                             if p.get("scoring") or p.get("scoringPlay") or p.get("scoreValue", 0) > 0 
-                            or "scored" in str(p.get("text", "")).lower() 
-                            or "homered" in str(p.get("text", "")).lower() 
-                            or "grand slam" in str(p.get("text", "")).lower()
+                            or any(kw in str(p.get("text", "")).lower() for kw in ["scored", "homered", "grand slam", "touchdown", "td", "field goal", "goal", "three pointer", "dunk"])
                         ]
                         
                         for p in scoring_plays:
                             p_id = str(p.get("id", p.get("sequenceNumber", hash(p.get("text", "")))))
                             p_text = str(p.get("text", "")).strip()
-                            if not p_text or "nueva carrera" in p_text.lower():
+                            if not p_text:
                                 continue
                                 
                             text_hash = hashlib.md5(p_text.lower().encode("utf-8")).hexdigest()[:12]
-                            play_id_key = f"{event_id}_run_{p_id}"
+                            play_id_key = f"{event_id}_play_{p_id}"
                             play_text_key = f"{event_id}_text_{text_hash}"
                             
                             if not self.db.is_scoring_play_processed(play_id_key) and not self.db.is_scoring_play_processed(play_text_key):
                                 self.db.mark_scoring_play_processed(play_id_key, event_id, p_text)
                                 self.db.mark_scoring_play_processed(play_text_key, event_id, p_text)
-                                logger.info(f"[{l_code.upper()}] Live Run Alert Auto Publishing: {p_text}")
+                                logger.info(f"[{l_code.upper()}] Minuto a Minuto Live Play Alert: {p_text}")
                                 msg_es, msg_en, image_url = PostFormatter.format_mlb_run_alert(ev, p_text, league)
                                 
                                 if self.dry_run:
-                                    print(f"\n--- [DRY RUN - MLB RUN ALERT - ES] ---\n{msg_es}")
-                                else:
-                                    self.publisher.publish_bilingual(msg_es, msg_en, image_url)
-
-                    # 3. NBA / NFL / NHL Quarter Updates
-                    else:
-                        period = summary_data.get("header", {}).get("competitions", [{}])[0].get("status", {}).get("period", 0) if summary_data else 0
-                        if period > 0:
-                            quarter_key = f"{event_id}_q{period}"
-                            if not self.db.is_quarter_update_processed(quarter_key):
-                                self.db.mark_quarter_update_processed(quarter_key, event_id, period)
-                                logger.info(f"[{l_code.upper()}] Quarter/Period {period} Update: {event_name}")
-                                msg_es, msg_en, image_url = PostFormatter.format_quarter_update(ev, summary_data, league)
-
-                                if self.dry_run:
-                                    print(f"\n--- [DRY RUN - QUARTER UPDATE - ES] ---\n{msg_es}")
+                                    print(f"\n--- [DRY RUN - MINUTO A MINUTO - ES] ---\n{msg_es}")
                                 else:
                                     self.publisher.publish_bilingual(msg_es, msg_en, image_url)
 
