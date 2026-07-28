@@ -123,8 +123,13 @@ class TwitterPublisher:
         if not clean_tweet:
             return False
 
-        # Attempt to upload media if present
-        media_id = self.upload_media(image_url) if image_url else None
+        # Attempt to upload media if present (safely wrapped)
+        media_id = None
+        if image_url:
+            try:
+                media_id = self.upload_media(image_url)
+            except Exception as e:
+                logger.warning(f"Media upload failed, proceeding with text tweet: {e}")
 
         url = "https://api.twitter.com/2/tweets"
         header = self._generate_oauth_header("POST", url)
@@ -145,13 +150,17 @@ class TwitterPublisher:
         )
 
         try:
-            with urllib.request.urlopen(req, timeout=10) as resp:
+            with urllib.request.urlopen(req, timeout=12) as resp:
                 result = json.loads(resp.read().decode("utf-8"))
                 logger.info(f"Tweet with image successfully posted to Twitter (X): {clean_tweet[:50]}...")
                 return True
         except urllib.error.HTTPError as e:
             err_body = e.read().decode("utf-8")
             logger.error(f"Twitter API HTTP error {e.code}: {err_body}")
+            # Fallback retry without media if media attachment was rejected by Twitter API v2
+            if media_id and ("media" in err_body.lower() or "400" in str(e.code) or "403" in str(e.code)):
+                logger.info("Retrying Tweet text-only fallback without media...")
+                return self.publish_tweet(text, image_url=None)
             return False
         except Exception as e:
             logger.error(f"Failed to post Tweet: {e}")
