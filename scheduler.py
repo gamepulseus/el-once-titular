@@ -50,11 +50,12 @@ class GamePulseScheduler:
                 status_state = ev.get("status_state", "pre")
                 status_completed = ev.get("status_completed", False)
 
-                # Silently mark existing lineups and game starts as processed
+                # Silently mark lineups as processed so past lineups are not re-published
                 self.db.mark_lineups_processed(event_id, sport, l_code, event_name)
-                self.db.mark_game_start_processed(event_id, sport, l_code, event_name)
 
+                # ONLY mark game starts & summaries as processed if game is ALREADY completed or finished
                 if status_completed or status_state == "post" or "final" in ev.get("status_detail", "").lower():
+                    self.db.mark_game_start_processed(event_id, sport, l_code, event_name)
                     self.db.mark_summary_processed(event_id, sport, l_code, event_name)
 
                 # Silently seed existing plays so old past plays before startup are NEVER published
