@@ -105,7 +105,17 @@ def translate_text(text: str, target_lang: str) -> str:
             "fly out": "out con elevado",
             "line out": "out con línea",
             "strikeout": "ponche",
-            "walked": "base por bolas"
+            "walked": "base por bolas",
+            "points": "Puntos",
+            "rebounds": "Rebotes",
+            "assists": "Asistencias",
+            "passing yards": "Yardas por Pase",
+            "rushing yards": "Yardas por Tierra",
+            "receiving yards": "Yardas por Recepción",
+            "goals": "Goles",
+            "saves": "Atajadas",
+            "batting": "Bateo",
+            "pitching": "Pitcheo"
         }
         for k, v in replacements.items():
             translated = re.sub(r'\b' + re.escape(k) + r'\b', v, translated, flags=re.IGNORECASE)
@@ -1097,16 +1107,17 @@ class PostFormatter:
             decisions_block_es += "\n"
             decisions_block_en += "\n"
 
-        # Leaders balanced from both teams
+        # Top overall star performers with explicit stats (regardless of team)
         leaders = summary_data.get("leaders", []) if summary_data else []
         leaders_str_es = ""
         leaders_str_en = ""
         if leaders:
-            top_leaders = leaders[:4]
+            top_leaders = leaders[:6]
             for l in top_leaders:
                 cat_translated = translate_text(l['category'], 'Spanish')
-                leaders_str_es += f"• <b>{l['athlete']}</b> ({l['team']}): {cat_translated} - <code>{l['stats']}</code>\n"
-                leaders_str_en += f"• <b>{l['athlete']}</b> ({l['team']}): {l['category']} - <code>{l['stats']}</code>\n"
+                stats_val = str(l['stats']).strip()
+                leaders_str_es += f"• ⭐ <b>{l['athlete']}</b> ({l['team']}): <b>{cat_translated}</b> ➡️ <code>{stats_val}</code>\n"
+                leaders_str_en += f"• ⭐ <b>{l['athlete']}</b> ({l['team']}): <b>{l['category']}</b> ➡️ <code>{stats_val}</code>\n"
         else:
             pitchers = summary_data.get("pitchers", {}) if summary_data else {}
             home_p = pitchers.get("home", "TBD")
