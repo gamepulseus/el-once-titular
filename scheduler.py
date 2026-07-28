@@ -356,9 +356,11 @@ class GamePulseScheduler:
                         else:
                             self.publisher.publish_bilingual(msg_es, msg_en, image_url)
 
-                # Check if Game is Finished (Post-Game Summary)
+                # Define event states
+                is_truly_live = (status_state in ["in", "live"]) or (status_state != "pre" and status_state != "post")
                 is_finished = status_completed or status_state == "post" or ("final" in status_detail.lower())
 
+                # Check if Game is Finished (Post-Game Summary)
                 if is_finished:
                     if not self.db.is_summary_processed(event_id):
                         self.db.mark_summary_processed(event_id, sport, l_code, event_name)

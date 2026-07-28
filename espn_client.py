@@ -141,11 +141,19 @@ class ESPNClient:
                     if resp.status == 200:
                         content = resp.read().decode('utf-8')
                         return json.loads(content)
+            except urllib.error.HTTPError as e:
+                if e.code in [400, 404]:
+                    return None
+                if attempt < 2:
+                    time.sleep(0.5)
+                else:
+                    logger.warning(f"HTTP Error {e.code} fetching {url}")
+                    return None
             except Exception as e:
                 if attempt < 2:
                     time.sleep(0.5)
                 else:
-                    logger.error(f"Error fetching {url} after 3 attempts: {e}")
+                    logger.warning(f"Error fetching {url}: {e}")
                     return None
 
     # Pillar 1: Flash Alerts ⚡ (.../news)
