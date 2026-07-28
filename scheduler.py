@@ -70,13 +70,8 @@ class GamePulseScheduler:
                 summary_data = self.espn.get_game_summary(sport, l_code, event_id)
                 if summary_data:
                     plays = summary_data.get("plays", []) or summary_data.get("scoringPlays", [])
-                    # For live in-progress games across ALL sports, do NOT pre-seed ANY live plays so zero runs, goals, points, or touchdowns are EVER missed!
-                    if status_state in ["in", "live"]:
-                        plays_to_seed = []
-                    else:
-                        plays_to_seed = plays
-
-                    for p in plays_to_seed:
+                    # Silently seed ALL plays existing at startup time so past plays before bot restart are NEVER re-published
+                    for p in plays:
                         p_id = str(p.get("id", p.get("sequenceNumber", "")))
                         p_text = str(p.get("text", "")).strip()
                         if p_text:
