@@ -303,8 +303,18 @@ class GamePulseScheduler:
                                     time.sleep(1)
                                     self.publisher.publish_bilingual_poll(q_es, q_en, opt_es, opt_en)
 
-                # Lineups posts disabled per user directive: channels are 100% Stat of the Day & News focused
-                pass
+                # Feature: Official Lineups Alert with Odds
+                if not status_completed and not self.db.is_lineup_processed(event_id):
+                    summary_data = self.espn.get_game_summary(sport, l_code, event_id)
+                    if summary_data and "lineups" in summary_data and summary_data["lineups"]:
+                        self.db.mark_lineup_processed(event_id, sport, l_code, event_name)
+                        logger.info(f"[{l_code.upper()}] Official Lineups & Odds Alert: {event_name}")
+                        msg_es, msg_en, image_url = PostFormatter.format_lineups_alert(ev, summary_data, league)
+
+                        if self.dry_run:
+                            print(f"\n--- [DRY RUN - LINEUPS ALERT - ES] ---\n{msg_es}")
+                        else:
+                            self.publisher.publish_bilingual(msg_es, msg_en, image_url)
 
                 # Pillar 2B: Game Started & Live In-Game Tracker (FAST LOOKUP ONLY FOR LIVE GAMES)
                 if not status_completed and status_state == "in":

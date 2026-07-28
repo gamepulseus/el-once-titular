@@ -828,7 +828,7 @@ class PostFormatter:
 
         return msg_es, msg_en, image_url
 
-    # MLB Run Scored Real-Time Alert
+    # Minuto a Minuto Live Scoring Alert (ALL SPORTS)
     @staticmethod
     def format_mlb_run_alert(event: Dict[str, Any], play_text: str, league_info: Dict[str, Any]) -> Tuple[str, str, Optional[str]]:
         home = event.get("home_team", {})
@@ -841,26 +841,78 @@ class PostFormatter:
         play_text_es = translate_text(play_text, "Spanish")
         match_site_url = f"{SITE_BASE_URL}/partido/{event_id}?sport={sport}&league={league}"
 
+        # Determine which team likely scored based on play text or score
+        play_lower = play_text.lower()
+        away_name = away.get("name", "")
+        home_name = home.get("name", "")
+        away_short = away.get("short_name", "")
+        home_short = home.get("short_name", "")
+
+        away_scored = away_short.lower() in play_lower or away_name.lower() in play_lower
+        
+        home_score_str = f'"{home.get("score", 0)}"' if not away_scored else f'{home.get("score", 0)}'
+        away_score_str = f'"{away.get("score", 0)}"' if away_scored else f'{away.get("score", 0)}'
+        
+        home_tag = " ⚡ (¡SUMÓ DEPORTIVAMENTE!)" if not away_scored else ""
+        away_tag = " ⚡ (¡SUMÓ DEPORTIVAMENTE!)" if away_scored else ""
+
         msg_es = (
-            f"⚾ <b>¡CARRERA ANOTADA EN VIVO!</b> | MLB ⚾\n\n"
+            f"🚨 <b>¡ANOTACIÓN EN VIVO MINUTO A MINUTO!</b> | {league.upper()} ⚡\n\n"
             f"🔥 <b>Jugada:</b> {play_text_es}\n\n"
             f"📊 <b>MARCADOR EN VIVO:</b>\n"
-            f"🏠 <b>{home.get('name')}</b>: <b>{home.get('score', 0)}</b>\n"
-            f"🚀 <b>{away.get('name')}</b>: <b>{away.get('score', 0)}</b>\n"
-            f"📍 <b>Inning:</b> <code>{detail}</code>\n\n"
-            f"🔗 <a href='{match_site_url}'>Sigue el marcador en vivo en GamePulse</a>\n\n"
-            f"📲 <i>Sigue cada carrera al instante en @GamePulseES</i>"
+            f"🏠 <b>{home.get('name')}</b>: <b>{home_score_str}</b>{home_tag}\n"
+            f"🚀 <b>{away.get('name')}</b>: <b>{away_score_str}</b>{away_tag}\n"
+            f"📍 <b>Estado:</b> <code>{detail}</code>\n\n"
+            f"📲 <i>Sigue el minuto a minuto en vivo en @GamePulseES</i>"
         )
 
         msg_en = (
-            f"⚾ <b>LIVE RUN SCORED!</b> | MLB ⚾\n\n"
+            f"🚨 <b>LIVE SCORING PLAY MINUTE-BY-MINUTE!</b> | {league.upper()} ⚡\n\n"
             f"🔥 <b>Play:</b> {play_text}\n\n"
             f"📊 <b>LIVE SCORE:</b>\n"
-            f"🏠 <b>{home.get('name')}</b>: <b>{home.get('score', 0)}</b>\n"
-            f"🚀 <b>{away.get('name')}</b>: <b>{away.get('score', 0)}</b>\n"
+            f"🏠 <b>{home.get('name')}</b>: <b>{home_score_str}</b>{home_tag}\n"
+            f"🚀 <b>{away.get('name')}</b>: <b>{away_score_str}</b>{away_tag}\n"
             f"📍 <b>Status:</b> <code>{detail}</code>\n\n"
-            f"🔗 <a href='{match_site_url}'>Follow live boxscore on GamePulse</a>\n\n"
-            f"📲 <i>Follow every run live on @GamePulseUS</i>"
+            f"📲 <i>Follow minute-by-minute updates on @GamePulseUS</i>"
+        )
+
+        image_url = MatchupGraphics.generate_matchup_banner(home, away, event_id) or home.get("logo")
+        return msg_es, msg_en, image_url
+
+    # Official Confirmed Lineups Alert with Odds
+    @staticmethod
+    def format_lineups_alert(event: Dict[str, Any], summary_data: Dict[str, Any], league_info: Dict[str, Any]) -> Tuple[str, str, Optional[str]]:
+        emoji = league_info.get("emoji", "📋")
+        league_code = event.get("league", "").lower()
+        sport = event.get("sport", "baseball")
+        league_name_es = league_info.get("name_es", league_code.upper())
+        league_name_en = league_info.get("name_en", league_code.upper())
+
+        home = event.get("home_team", {})
+        away = event.get("away_team", {})
+        event_id = event.get("id", "lineups")
+
+        odds = summary_data.get("odds", {}) if summary_data else {}
+        odds_block_es = PostFormatter._format_odds_block(odds, home, away, "es")
+        odds_block_en = PostFormatter._format_odds_block(odds, home, away, "en")
+        
+        lineups_block_es = PostFormatter._format_lineups_block(summary_data, home.get('short_name'), away.get('short_name'), "es")
+        lineups_block_en = PostFormatter._format_lineups_block(summary_data, home.get('short_name'), away.get('short_name'), "en")
+
+        msg_es = (
+            f"📋 <b>¡ALINEACIONES CONFIRMADAS Y CUOTAS DE APUESTAS!</b> | {league_name_es} {emoji}\n\n"
+            f"🆚 <b>{away.get('name')} vs {home.get('name')}</b>\n\n"
+            f"{lineups_block_es}"
+            f"{odds_block_es}"
+            f"📲 <i>Sigue la cobertura oficial en @GamePulseES</i>"
+        )
+
+        msg_en = (
+            f"📋 <b>CONFIRMED LINEUPS & BETTING ODDS!</b> | {league_name_en} {emoji}\n\n"
+            f"🆚 <b>{away.get('name')} vs {home.get('name')}</b>\n\n"
+            f"{lineups_block_en}"
+            f"{odds_block_en}"
+            f"📲 <i>Follow official coverage on @GamePulseUS</i>"
         )
 
         image_url = MatchupGraphics.generate_matchup_banner(home, away, event_id) or home.get("logo")
