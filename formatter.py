@@ -593,6 +593,22 @@ class PostFormatter:
         match_site_url = f"{SITE_BASE_URL}/partido/{event_id}?sport={sport}&league={league_code}"
         image_url = MatchupGraphics.generate_matchup_banner(home, away, event_id) or home.get("logo")
 
+        leaders = summary_data.get("leaders", []) if summary_data else []
+        away_hitter = f"BATEADOR DESTACADO ({away.get('short_name')})"
+        home_hitter = f"BATEADOR DESTACADO ({home.get('short_name')})"
+
+        for l in leaders:
+            cat = str(l.get("category", "")).lower()
+            team_code = str(l.get("team", "")).upper()
+            away_code = str(away.get("short_name", away.get("abbreviation", ""))).upper()
+            home_code = str(home.get("short_name", home.get("abbreviation", ""))).upper()
+
+            if "bat" in cat or "bate" in cat:
+                if team_code == away_code or team_code in str(away.get("name", "")).upper():
+                    away_hitter = l.get("athlete", away_hitter)
+                elif team_code == home_code or team_code in str(home.get("name", "")).upper():
+                    home_hitter = l.get("athlete", home_hitter)
+
         if "mlb" in league_code or "baseball" in league_code:
             game_block_es = (
                 f"🏟️ <b>ANÁLISIS DEL PARTIDO Y LÍNEAS:</b>\n"
@@ -619,10 +635,12 @@ class PostFormatter:
                 f"• 🎯 <b>Ponches (Ks):</b> UNDER 5.5 Ks (Cuota -115)\n"
                 f"• ⚾ <b>Outs Conseguidos:</b> Línea 15.5 Outs\n"
                 f"• 💣 <b>Pitcheos:</b> Promedio 88 lanzamientos\n\n"
-                f"👤 <b>BATEADORES DESTACADOS</b>\n"
-                f"• ⚾ <b>Hits (Over 1.5):</b> Cuota +120 (A la ALTA)\n"
-                f"• 🚀 <b>Jonrones (Over 0.5):</b> Cuota +320 (A la ALTA)\n"
-                f"• ❌ <b>Ponches:</b> Under 1.5 Ks (A la BAJA)\n\n"
+                f"👤 <b>{away_hitter.upper()}</b> ({away.get('short_name')} - Bateador Clave)\n"
+                f"• ⚾ <b>Hits Conseguidos:</b> OVER 1.5 Hits (Cuota +120) 🟢 <i>(A la ALTA)</i>\n"
+                f"• 🚀 <b>Jonrones (HR):</b> OVER 0.5 HR (Cuota +320) 🟢 <i>(A la ALTA)</i>\n\n"
+                f"👤 <b>{home_hitter.upper()}</b> ({home.get('short_name')} - Bateador Clave)\n"
+                f"• ⚾ <b>Hits Conseguidos:</b> OVER 1.5 Hits (Cuota +115) 🟢 <i>(A la ALTA)</i>\n"
+                f"• ❌ <b>Ponches Recibidos:</b> UNDER 1.5 Ks (Cuota -110) 🔴 <i>(A la BAJA)</i>\n\n"
                 f"💡 <b>EVALUACIÓN DE CUOTAS Y VALOR:</b>\n"
                 f"La cuota a la ALTA en <b>OVER 6.5 Ks (+105)</b> de <b>{away_p}</b> presenta 78% de valor por la racha reciente del rival."
             )
@@ -636,10 +654,12 @@ class PostFormatter:
                 f"• 🎯 <b>Strikeouts (Ks):</b> UNDER 5.5 Ks (-115 Odds)\n"
                 f"• ⚾ <b>Outs Recorded:</b> Line 15.5 Outs\n"
                 f"• 💣 <b>Pitches:</b> Averaging 88+ pitches\n\n"
-                f"👤 <b>FEATURED HITTERS</b>\n"
-                f"• ⚾ <b>Hits (Over 1.5):</b> Value Line +120 (OVER)\n"
-                f"• 🚀 <b>Home Runs (Over 0.5):</b> High Odds +320 (OVER)\n"
-                f"• ❌ <b>Strikeouts Taken:</b> Under 1.5 Ks Line (UNDER)\n\n"
+                f"👤 <b>{away_hitter.upper()}</b> ({away.get('short_name')} - Key Hitter)\n"
+                f"• ⚾ <b>Hits Prop:</b> OVER 1.5 Hits (+120 Odds) 🟢 <i>(OVER)</i>\n"
+                f"• 🚀 <b>Home Runs (HR):</b> OVER 0.5 HR (+320 Odds) 🟢 <i>(OVER)</i>\n\n"
+                f"👤 <b>{home_hitter.upper()}</b> ({home.get('short_name')} - Key Hitter)\n"
+                f"• ⚾ <b>Hits Prop:</b> OVER 1.5 Hits (+115 Odds) 🟢 <i>(OVER)</i>\n"
+                f"• ❌ <b>Strikeouts Taken:</b> UNDER 1.5 Ks (-110 Odds) 🔴 <i>(UNDER)</i>\n\n"
                 f"💡 <b>ODDS VALUE EVALUATION:</b>\n"
                 f"The <b>OVER 6.5 Ks (+105)</b> line for <b>{away_p}</b> carries 78% statistical value rating."
             )
