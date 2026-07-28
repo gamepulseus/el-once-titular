@@ -70,10 +70,9 @@ class GamePulseScheduler:
                 summary_data = self.espn.get_game_summary(sport, l_code, event_id)
                 if summary_data:
                     plays = summary_data.get("plays", []) or summary_data.get("scoringPlays", [])
-                    # For live games, do NOT seed plays from the current inning/period so live runs/goals are NEVER missed!
+                    # For live in-progress games across ALL sports, do NOT pre-seed ANY live plays so zero runs, goals, points, or touchdowns are EVER missed!
                     if status_state in ["in", "live"]:
-                        curr_period_str = str(summary_data.get("period", "0"))
-                        plays_to_seed = [p for p in plays if str(p.get("period", "0")) != curr_period_str]
+                        plays_to_seed = []
                     else:
                         plays_to_seed = plays
 
