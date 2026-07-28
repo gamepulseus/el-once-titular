@@ -1,25 +1,17 @@
 import sys
-import threading
+import logging
+from scheduler import GamePulseScheduler
 
-# Reconfigure stdout/stderr to UTF-8 for Windows console emoji support
+# Reconfigure stdout/stderr to UTF-8
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8")
 
-import logging
-from scheduler import GamePulseScheduler
-from web_server import run_web_server
-
 def main():
     print("==================================================")
-    print("      ⚡ GamePulse Web Portal & Auto-Publisher ⚡   ")
-    print("      Apple Minimalist Web App: http://localhost:5000")
-    print("       Spanish 🇪🇸 & English 🇺🇸 Sports Channels     ")
+    print("      ⚡ GamePulse 24/7 Sports Auto-Publisher ⚡   ")
+    print("       Telegram @GamePulseUS & Twitter @GamePulseUS")
     print("==================================================")
-
-    # Start Flask Web Server in background thread
-    web_thread = threading.Thread(target=run_web_server, daemon=True)
-    web_thread.start()
 
     # Start GamePulse Scheduler loop
     scheduler = GamePulseScheduler(dry_run=False)
