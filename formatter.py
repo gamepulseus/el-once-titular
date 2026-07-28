@@ -857,16 +857,13 @@ class PostFormatter:
         
         home_score_str = f'"{home.get("score", 0)}"' if not away_scored else f'{home.get("score", 0)}'
         away_score_str = f'"{away.get("score", 0)}"' if away_scored else f'{away.get("score", 0)}'
-        
-        home_tag = " ⚡ (¡SUMÓ DEPORTIVAMENTE!)" if not away_scored else ""
-        away_tag = " ⚡ (¡SUMÓ DEPORTIVAMENTE!)" if away_scored else ""
 
         msg_es = (
             f"🚨 <b>¡ANOTACIÓN EN VIVO MINUTO A MINUTO!</b> | {league.upper()} ⚡\n\n"
             f"🔥 <b>Jugada:</b> {play_text_es}\n\n"
             f"📊 <b>MARCADOR EN VIVO:</b>\n"
-            f"🏠 <b>{home.get('name')}</b>: <b>{home_score_str}</b>{home_tag}\n"
-            f"🚀 <b>{away.get('name')}</b>: <b>{away_score_str}</b>{away_tag}\n"
+            f"🏠 <b>{home.get('name')}</b>: <b>{home_score_str}</b>\n"
+            f"🚀 <b>{away.get('name')}</b>: <b>{away_score_str}</b>\n"
             f"📍 <b>Estado:</b> <code>{detail}</code>\n\n"
             f"📲 <i>Sigue el minuto a minuto en vivo en @GamePulseES</i>"
         )
@@ -875,8 +872,8 @@ class PostFormatter:
             f"🚨 <b>LIVE SCORING PLAY MINUTE-BY-MINUTE!</b> | {league.upper()} ⚡\n\n"
             f"🔥 <b>Play:</b> {play_text}\n\n"
             f"📊 <b>LIVE SCORE:</b>\n"
-            f"🏠 <b>{home.get('name')}</b>: <b>{home_score_str}</b>{home_tag}\n"
-            f"🚀 <b>{away.get('name')}</b>: <b>{away_score_str}</b>{away_tag}\n"
+            f"🏠 <b>{home.get('name')}</b>: <b>{home_score_str}</b>\n"
+            f"🚀 <b>{away.get('name')}</b>: <b>{away_score_str}</b>\n"
             f"📍 <b>Status:</b> <code>{detail}</code>\n\n"
             f"📲 <i>Follow minute-by-minute updates on @GamePulseUS</i>"
         )
