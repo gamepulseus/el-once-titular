@@ -29,6 +29,8 @@ ACTIVE_LEAGUES = [
 
     # Fútbol Soccer (Top Ligas Mundiales)
     {"sport": "soccer", "league": "uefa.champions", "name": "UEFA Champions League", "name_en": "UEFA Champions League", "icon": "⚽"},
+    {"sport": "soccer", "league": "uefa.europa", "name": "UEFA Europa League", "name_en": "UEFA Europa League", "icon": "⚽"},
+    {"sport": "soccer", "league": "uefa.europa.conf", "name": "UEFA Conference League", "name_en": "UEFA Conference League", "icon": "⚽"},
     {"sport": "soccer", "league": "eng.1", "name": "Premier League Inglaterra", "name_en": "English Premier League", "icon": "⚽"},
     {"sport": "soccer", "league": "esp.1", "name": "LaLiga España", "name_en": "Spanish LaLiga", "icon": "⚽"},
     {"sport": "soccer", "league": "ita.1", "name": "Serie A Italia", "name_en": "Italian Serie A", "icon": "⚽"},
