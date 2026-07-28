@@ -1,4 +1,5 @@
 import json
+import time
 import urllib.request
 import urllib.parse
 import re
@@ -131,7 +132,9 @@ class ESPNClient:
 
     def _fetch_json(self, url: str) -> Optional[Dict[str, Any]]:
         try:
-            req = urllib.request.Request(url, headers=self.headers)
+            sep = "&" if "?" in url else "?"
+            live_url = f"{url}{sep}_t={int(time.time() * 1000)}"
+            req = urllib.request.Request(live_url, headers=self.headers)
             with urllib.request.urlopen(req, timeout=self.timeout) as resp:
                 if resp.status == 200:
                     content = resp.read().decode('utf-8')
