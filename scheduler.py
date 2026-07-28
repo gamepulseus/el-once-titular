@@ -99,7 +99,7 @@ class GamePulseScheduler:
                             self.publisher.publish_text(config.TELEGRAM_CHANNEL_ES, msg_es)
                             self.twitter.publish_tweet(msg_es)
 
-                # Kickoff / Game Started Alert
+                # 1. Kickoff / Game Started Alert (1H)
                 if status_short == "1H":
                     start_key = f"start_{f_id}"
                     if not self.db.is_game_start_processed(start_key):
@@ -112,7 +112,7 @@ class GamePulseScheduler:
                         self.publisher.publish_text(config.TELEGRAM_CHANNEL_ES, msg_es)
                         self.twitter.publish_tweet(msg_es)
 
-                # Halftime Alert
+                # 2. Halftime Alert (HT)
                 elif status_short == "HT":
                     ht_key = f"ht_{f_id}"
                     if not self.db.is_scoring_play_processed(ht_key):
@@ -125,7 +125,46 @@ class GamePulseScheduler:
                         self.publisher.publish_text(config.TELEGRAM_CHANNEL_ES, msg_es)
                         self.twitter.publish_tweet(msg_es)
 
-                # Final Score Alert
+                # 3. Second Half Started Alert (2H)
+                elif status_short == "2H":
+                    h2_key = f"h2_{f_id}"
+                    if not self.db.is_scoring_play_processed(h2_key):
+                        self.db.mark_scoring_play_processed(h2_key, f_id, "2H")
+                        msg_es = (
+                            f"⏩ <b>INICIO 2º TIEMPO | {league_hdr}</b>\n\n"
+                            f"<b>{home_name} {h_score} - {a_score} {away_name}</b> - ¡Arranca la segunda mitad!\n\n"
+                            f"📲 <i>Sigue https://t.me/ElOnceTitular</i>"
+                        )
+                        self.publisher.publish_text(config.TELEGRAM_CHANNEL_ES, msg_es)
+                        self.twitter.publish_tweet(msg_es)
+
+                # 4. Extra Time / Prórroga Alert (ET)
+                elif status_short == "ET":
+                    et_key = f"et_{f_id}"
+                    if not self.db.is_scoring_play_processed(et_key):
+                        self.db.mark_scoring_play_processed(et_key, f_id, "ET")
+                        msg_es = (
+                            f"⏳ <b>INICIO PRÓRROGA | {league_hdr}</b>\n\n"
+                            f"<b>{home_name} {h_score} - {a_score} {away_name}</b> - ¡Comienza la prórroga!\n\n"
+                            f"📲 <i>Sigue https://t.me/ElOnceTitular</i>"
+                        )
+                        self.publisher.publish_text(config.TELEGRAM_CHANNEL_ES, msg_es)
+                        self.twitter.publish_tweet(msg_es)
+
+                # 5. Penalty Shootout Alert (P)
+                elif status_short == "P":
+                    p_key = f"pen_{f_id}"
+                    if not self.db.is_scoring_play_processed(p_key):
+                        self.db.mark_scoring_play_processed(p_key, f_id, "P")
+                        msg_es = (
+                            f"🥅 <b>TANDA DE PENALES | {league_hdr}</b>\n\n"
+                            f"<b>{home_name} {h_score} - {a_score} {away_name}</b> - ¡Definición por penales!\n\n"
+                            f"📲 <i>Sigue https://t.me/ElOnceTitular</i>"
+                        )
+                        self.publisher.publish_text(config.TELEGRAM_CHANNEL_ES, msg_es)
+                        self.twitter.publish_tweet(msg_es)
+
+                # 6. Final Score Alert (FT / AET / PEN)
                 elif status_short in ["FT", "AET", "PEN"]:
                     ft_key = f"ft_{f_id}"
                     if not self.db.is_summary_processed(ft_key):
