@@ -142,12 +142,11 @@ class ESPNClient:
                         content = resp.read().decode('utf-8')
                         return json.loads(content)
             except urllib.error.HTTPError as e:
-                if e.code in [400, 404]:
+                if e.code in [400, 404, 500, 502, 503, 504]:
                     return None
                 if attempt < 2:
                     time.sleep(0.5)
                 else:
-                    logger.warning(f"HTTP Error {e.code} fetching {url}")
                     return None
             except Exception as e:
                 if attempt < 2:
