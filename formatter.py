@@ -84,7 +84,33 @@ def translate_text(text: str, target_lang: str) -> str:
             logger.warning(f"OpenAI translation failed: {e}")
 
     lang_code = "es" if "span" in target_lang.lower() else "en"
-    return free_google_translate(text, lang_code)
+    translated = free_google_translate(text, lang_code)
+    
+    if lang_code == "es":
+        replacements = {
+            "homered": "conectó jonrón",
+            "singled": "conectó sencillo",
+            "doubled": "conectó doble",
+            "tripled": "conectó triple",
+            "scored": "anotó",
+            "scores": "anota",
+            "to center": "al jardín central",
+            "to left": "al jardín izquierdo",
+            "to right": "al jardín derecho",
+            "to left center": "al jardín izquierdo-central",
+            "to right center": "al jardín derecho-central",
+            "infield single": "sencillo al cuadro",
+            "sacrifice fly": "elevado de sacrificio",
+            "grounded out": "out con roletazo",
+            "fly out": "out con elevado",
+            "line out": "out con línea",
+            "strikeout": "ponche",
+            "walked": "base por bolas"
+        }
+        for k, v in replacements.items():
+            translated = re.sub(r'\b' + re.escape(k) + r'\b', v, translated, flags=re.IGNORECASE)
+
+    return translated
 
 class PostFormatter:
 

@@ -155,16 +155,15 @@ class TelegramPublisher:
         else:
             logger.info("Spanish Channel ID not configured.")
 
-        # Brief delay to prevent Telegram server media caching rate limits between channels
-        time.sleep(1.5)
-
-        if target_en:
+        # If both targets point to the exact same channel, DO NOT send English version to Spanish channel!
+        if target_en and target_en != target_es:
+            time.sleep(1.5)
             if image_url:
                 res_en = self.publish_photo(target_en, image_url, msg_en)
             else:
                 res_en = self.publish_text(target_en, msg_en)
         else:
-            logger.info("English Channel ID not configured.")
+            logger.info("English Channel ID not configured or identical to Spanish channel.")
 
         return res_es, res_en
 
