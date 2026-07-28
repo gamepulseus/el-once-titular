@@ -1146,7 +1146,8 @@ class PostFormatter:
             home_status = ""
             home_status_es = ""
         else:
-            home_status = home_status_es = away_status = away_status_es = "🤝 EMPATE"
+            home_status = away_status = "🤝 DRAW"
+            home_status_es = away_status_es = "🤝 EMPATE"
 
         # Pitching decisions (W, L, SV)
         decisions = summary_data.get("decisions", {}) if summary_data else {}
