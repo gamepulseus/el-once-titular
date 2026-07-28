@@ -93,7 +93,7 @@ class GamePulseScheduler:
                             msg_es = (
                                 f"🟥 <b>TARJETA ROJA | {league_hdr}</b>\n\n"
                                 f"<b>{player}</b> {time_el}' ({team_ev}) - Expulsado.\n"
-                                f"<b>{home_name} vs {away_name}</b>\n\n"
+                                f"<b>{home_name} {h_score} - {a_score} {away_name}</b>\n\n"
                                 f"📲 <i>Sigue a El Once Titular</i>"
                             )
                             self.publisher.publish_text(config.TELEGRAM_CHANNEL_ES, msg_es)
