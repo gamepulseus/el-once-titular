@@ -141,29 +141,19 @@ class TelegramPublisher:
 
     def publish_bilingual(self, msg_es: str, msg_en: str, image_url: Optional[str] = None,
                           channel_es: Optional[str] = None, channel_en: Optional[str] = None) -> Tuple[bool, bool]:
-        target_es = channel_es or TELEGRAM_CHANNEL_ES
         target_en = channel_en or TELEGRAM_CHANNEL_EN
 
         res_es = False
         res_en = False
 
-        if target_es:
-            if image_url:
-                res_es = self.publish_photo(target_es, image_url, msg_es)
-            else:
-                res_es = self.publish_text(target_es, msg_es)
-        else:
-            logger.info("Spanish Channel ID not configured.")
-
-        # If both targets point to the exact same channel, DO NOT send English version to Spanish channel!
-        if target_en and target_en != target_es:
-            time.sleep(1.5)
+        # Publish ONLY to English Channel (@GamePulseUS)
+        if target_en:
             if image_url:
                 res_en = self.publish_photo(target_en, image_url, msg_en)
             else:
                 res_en = self.publish_text(target_en, msg_en)
         else:
-            logger.info("English Channel ID not configured or identical to Spanish channel.")
+            logger.info("English Channel ID not configured.")
 
         return res_es, res_en
 
