@@ -54,6 +54,7 @@ ACTIVE_LEAGUES = [
     {"sport": "soccer", "league": "arg.1", "name": "Liga Argentina", "name_en": "Argentine Liga Profesional", "icon": "⚽"},
     {"sport": "soccer", "league": "bra.1", "name": "Brasileirão Brasil", "name_en": "Brazilian Serie A", "icon": "⚽"},
     {"sport": "soccer", "league": "col.1", "name": "Liga BetPlay Colombia", "name_en": "Colombian Liga BetPlay", "icon": "⚽"},
+    {"sport": "soccer", "league": "ven.1", "name": "Liga FUTVE Venezuela", "name_en": "Venezuelan Liga FUTVE", "icon": "⚽"},
 
     # 4. Torneos de Selecciones Nacionales
     {"sport": "soccer", "league": "fifa.world", "name": "Copa Mundial FIFA", "name_en": "FIFA World Cup", "icon": "🏆"},
