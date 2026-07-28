@@ -313,8 +313,8 @@ class PostFormatter:
             header_es = f"🔄 <b>¡ALERTA DE TRASPASO Y FICHAJE!</b> | {league_name_es} 🤝"
             header_en = f"🔄 <b>TRADE & TRANSACTION ALERT</b> | {league_name_en} 🤝"
         else:
-            header_es = f"🚨 <b>¡ALERTA DE ÚLTIMA HORA!</b> | {league_name_es} {emoji}"
-            header_en = f"🚨 <b>BREAKING NEWS ALERT</b> | {league_name_en} {emoji}"
+            # STRICT UNDERDOG SPORTS RULE: Block all general news articles, opinion pieces, and fluff!
+            return None, None, None
 
         msg_es = (
             f"{header_es}\n\n"

@@ -101,6 +101,8 @@ class GamePulseScheduler:
                     continue
 
                 msg_es, msg_en, image_url = PostFormatter.format_news(item, league)
+                if not msg_es or not msg_en:
+                    continue  # Skip general news items (Underdog Sports rule: ONLY injuries and trades!)
                 
                 # Extract translated Spanish headline to check for Spanish duplicate stories
                 headline_es = ""
