@@ -70,18 +70,23 @@ class GamePulseScheduler:
                 summary_data = self.espn.get_game_summary(sport, l_code, event_id)
                 if summary_data:
                     plays = summary_data.get("plays", []) or summary_data.get("scoringPlays", [])
-                    # For live in-progress games, seed existing plays EXCEPT the 5 most recent plays so recent scoring plays are NEVER lost on container restart!
+                    current_period = summary_data.get("period", 9)
+                    
+                    # For live in-progress games, do NOT seed plays from the current inning/period so current plays are NEVER lost!
                     if status_state in ["in", "live"]:
-                        plays_to_seed = plays[:-5] if len(plays) > 5 else []
+                        plays_to_seed = [
+                            p for p in plays 
+                            if p.get("period", 0) < current_period
+                        ]
                     else:
                         plays_to_seed = plays
 
                     for p in plays_to_seed:
-                        p_id = str(p.get("id", p.get("sequenceNumber", hash(p.get("text", "")))))
+                        p_id = str(p.get("id", p.get("sequenceNumber", "")))
                         p_text = str(p.get("text", "")).strip()
                         if p_text:
                             text_hash = hashlib.md5(p_text.lower().encode("utf-8")).hexdigest()[:12]
-                            play_id_key = f"{event_id}_play_{p_id}"
+                            play_id_key = f"{event_id}_play_{p_id}" if p_id else f"{event_id}_text_{text_hash}"
                             play_text_key = f"{event_id}_text_{text_hash}"
                             self.db.mark_scoring_play_processed(play_id_key, event_id, p_text)
                             self.db.mark_scoring_play_processed(play_text_key, event_id, p_text)
