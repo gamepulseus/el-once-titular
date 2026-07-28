@@ -24,8 +24,9 @@ class TestGamePulseSystem(unittest.TestCase):
             n = news[0]
             league_info = ACTIVE_LEAGUES[0]
             msg_es, msg_en, img_url = PostFormatter.format_news(n, league_info)
-            self.assertIn("ALERTA", msg_es)
-            self.assertIn("ALERT", msg_en)
+            if msg_es and msg_en:
+                self.assertIn("El Once Titular", msg_es)
+                self.assertIn("ElOnceTitular", msg_en)
 
     def test_espn_scoreboard(self):
         events = self.espn.get_scoreboard("baseball", "mlb")

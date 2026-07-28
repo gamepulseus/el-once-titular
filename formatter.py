@@ -307,30 +307,26 @@ class PostFormatter:
         is_trade = bool(re.search(trade_pattern, full_text_lower, re.IGNORECASE)) and not is_injury
 
         if is_injury:
-            header_es = f"🚑 <b>¡ALERTA DE LESIÓN Y BAJA!</b> | {league_name_es} ⚕️"
-            header_en = f"🚑 <b>INJURY REPORT & OUT ALERT</b> | {league_name_en} ⚕️"
+            msg_es = (
+                f"🚑 <b>Reporte de Baja:</b> {headline_es}\n\n"
+                f"📲 <i>Sigue a El Once Titular</i>"
+            )
+            msg_en = (
+                f"🚑 <b>Status alert:</b> {headline_en}\n\n"
+                f"📲 <i>Follow @ElOnceTitular</i>"
+            )
         elif is_trade:
-            header_es = f"🔄 <b>¡ALERTA DE TRASPASO Y FICHAJE!</b> | {league_name_es} 🤝"
-            header_en = f"🔄 <b>TRADE & TRANSACTION ALERT</b> | {league_name_en} 🤝"
+            msg_es = (
+                f"🔄 <b>Fichaje Oficial:</b> {headline_es}\n\n"
+                f"📲 <i>Sigue a El Once Titular</i>"
+            )
+            msg_en = (
+                f"🔄 <b>Transfer alert:</b> {headline_en}\n\n"
+                f"📲 <i>Follow @ElOnceTitular</i>"
+            )
         else:
             # STRICT UNDERDOG SPORTS RULE: Block all general news articles, opinion pieces, and fluff!
             return None, None, None
-
-        msg_es = (
-            f"{header_es}\n\n"
-            f"📌 <b>{headline_es}</b>\n\n"
-            f"{desc_es}\n\n"
-            f"{time_line_es}"
-            f"📲 <i>Sigue a El Once Titular para las mejores alertas en vivo.</i>"
-        )
-
-        msg_en = (
-            f"{header_en}\n\n"
-            f"📌 <b>{headline_en}</b>\n\n"
-            f"{desc_en}\n\n"
-            f"{time_line_en}"
-            f"📲 <i>Follow @GamePulseUS for instant live updates.</i>"
-        )
 
         return msg_es, msg_en, image_url
 
@@ -1170,19 +1166,13 @@ class PostFormatter:
         event_id = scoreboard_ev.get("id", "summary")
 
         msg_es = (
-            f"📊 <b>RESULTADO FINAL POST-PARTIDO</b> | {league_name_es} {emoji}\n\n"
-            f"🏠 <b>{home.get('name')}</b>: <b>{home_score}</b> {home_status_es}\n"
-            f"🚀 <b>{away.get('name')}</b>: <b>{away_score}</b> {away_status_es}\n\n"
-            f"📍 <b>Estado:</b> Finalizado\n\n"
-            f"📲 <i>Sigue a El Once Titular para los resultados en vivo.</i>"
+            f"🏆 <b>Final:</b> {home.get('name')} {home_score}, {away.get('name')} {away_score}.\n\n"
+            f"📲 <i>Sigue a El Once Titular</i>"
         )
 
         msg_en = (
-            f"📊 <b>POST-GAME FINAL SCORE & RECAP</b> | {league_name_en} {emoji}\n\n"
-            f"🏠 <b>{home.get('name')}</b>: <b>{home_score}</b> {home_status}\n"
-            f"🚀 <b>{away.get('name')}</b>: <b>{away_score}</b> {away_status}\n\n"
-            f"📍 <b>Status:</b> Final\n\n"
-            f"📲 <i>Follow live sports analysis on @GamePulseUS</i>"
+            f"🏆 <b>Final:</b> {home.get('name')} {home_score}, {away.get('name')} {away_score}.\n\n"
+            f"📲 <i>Follow @ElOnceTitular</i>"
         )
 
         image_url = MatchupGraphics.generate_matchup_banner(home, away, event_id) or home.get("logo")
