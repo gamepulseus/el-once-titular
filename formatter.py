@@ -112,6 +112,28 @@ def translate_text(text: str, target_lang: str) -> str:
 
     return translated
 
+def translate_inning_status(status_detail: str) -> str:
+    if not status_detail:
+        return "En Vivo"
+    s = str(status_detail).strip()
+    s = re.sub(r'(\d+)(st|nd|rd|th)', r'\1ª', s, flags=re.IGNORECASE)
+    
+    replacements = [
+        (r'\bTop\b', "Parte Alta de la"),
+        (r'\bBot\b', "Parte Baja de la"),
+        (r'\bBottom\b', "Parte Baja de la"),
+        (r'\bMid\b', "Mitad de la"),
+        (r'\bMiddle\b', "Mitad de la"),
+        (r'\bEnd\b', "Final de la"),
+        (r'\bInning\b', "Entrada")
+    ]
+    for pattern, repl in replacements:
+        s = re.sub(pattern, repl, s, flags=re.IGNORECASE)
+    
+    if ("Parte Alta" in s or "Parte Baja" in s) and "Entrada" not in s:
+        s += " Entrada"
+    return s
+
 class PostFormatter:
 
     # Helper to format lines for both teams
@@ -862,16 +884,26 @@ class PostFormatter:
         league = event.get("league", "mlb")
 
         play_text_es = translate_text(play_text, "Spanish")
-        match_site_url = f"{SITE_BASE_URL}/partido/{event_id}?sport={sport}&league={league}"
+        detail_es = translate_inning_status(detail)
 
-        # Determine which team likely scored based on play text or score
+        # Determine which team scored based on MLB inning half (Top = Away, Bot = Home) or text
         play_lower = play_text.lower()
+        detail_lower = str(detail).lower()
+
         away_name = away.get("name", "")
         home_name = home.get("name", "")
         away_short = away.get("short_name", "")
         home_short = home.get("short_name", "")
 
-        away_scored = away_short.lower() in play_lower or away_name.lower() in play_lower
+        if "top" in detail_lower or "alta" in detail_lower:
+            away_scored = True
+        elif "bot" in detail_lower or "bottom" in detail_lower or "baja" in detail_lower:
+            away_scored = False
+        else:
+            away_scored = (
+                (away_short and away_short.lower() in play_lower) or 
+                (away_name and away_name.lower() in play_lower)
+            )
         
         home_score_str = f'"{home.get("score", 0)}"' if not away_scored else f'{home.get("score", 0)}'
         away_score_str = f'"{away.get("score", 0)}"' if away_scored else f'{away.get("score", 0)}'
@@ -882,7 +914,7 @@ class PostFormatter:
             f"📊 <b>MARCADOR EN VIVO:</b>\n"
             f"🏠 <b>{home.get('name')}</b>: <b>{home_score_str}</b>\n"
             f"🚀 <b>{away.get('name')}</b>: <b>{away_score_str}</b>\n"
-            f"📍 <b>Estado:</b> <code>{detail}</code>\n\n"
+            f"📍 <b>Estado:</b> <code>{detail_es}</code>\n\n"
             f"📲 <i>Sigue el minuto a minuto en vivo en @GamePulseES</i>"
         )
 
