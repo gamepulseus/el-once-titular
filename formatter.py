@@ -1167,34 +1167,13 @@ class PostFormatter:
             decisions_block_es += "\n"
             decisions_block_en += "\n"
 
-        # Top overall star performers with explicit stats (regardless of team)
-        leaders = summary_data.get("leaders", []) if summary_data else []
-        leaders_str_es = ""
-        leaders_str_en = ""
-        if leaders:
-            top_leaders = leaders[:6]
-            for l in top_leaders:
-                cat_translated = translate_text(l['category'], 'Spanish')
-                stats_val = str(l['stats']).strip()
-                leaders_str_es += f"• ⭐ <b>{l['athlete']}</b> ({l['team']}): <b>{cat_translated}</b> ➡️ <code>{stats_val}</code>\n"
-                leaders_str_en += f"• ⭐ <b>{l['athlete']}</b> ({l['team']}): <b>{l['category']}</b> ➡️ <code>{stats_val}</code>\n"
-        else:
-            pitchers = summary_data.get("pitchers", {}) if summary_data else {}
-            home_p = pitchers.get("home", "TBD")
-            away_p = pitchers.get("away", "TBD")
-            leaders_str_es = f"• 🏠 <b>{home.get('short_name')}:</b> {home_p}\n• 🚀 <b>{away.get('short_name')}:</b> {away_p}\n"
-            leaders_str_en = f"• 🏠 <b>{home.get('short_name')}:</b> {home_p}\n• 🚀 <b>{away.get('short_name')}:</b> {away_p}\n"
-
         event_id = scoreboard_ev.get("id", "summary")
-        match_site_url = f"{SITE_BASE_URL}/partido/{event_id}?sport={sport}&league={league_code}"
 
         msg_es = (
             f"📊 <b>RESULTADO FINAL POST-PARTIDO</b> | {league_name_es} {emoji}\n\n"
             f"🏠 <b>{home.get('name')}</b>: <b>{home_score}</b> {home_status_es}\n"
             f"🚀 <b>{away.get('name')}</b>: <b>{away_score}</b> {away_status_es}\n\n"
-            f"{decisions_block_es}"
-            f"🌟 <b>JUGADORES DESTACADOS (AMBOS EQUIPOS):</b>\n"
-            f"{leaders_str_es}\n"
+            f"📍 <b>Estado:</b> Finalizado\n\n"
             f"📲 <i>Sigue el análisis deportivo en vivo en @GamePulseES</i>"
         )
 
@@ -1202,9 +1181,7 @@ class PostFormatter:
             f"📊 <b>POST-GAME FINAL SCORE & RECAP</b> | {league_name_en} {emoji}\n\n"
             f"🏠 <b>{home.get('name')}</b>: <b>{home_score}</b> {home_status}\n"
             f"🚀 <b>{away.get('name')}</b>: <b>{away_score}</b> {away_status}\n\n"
-            f"{decisions_block_en}"
-            f"🌟 <b>STAR PERFORMERS (BOTH TEAMS):</b>\n"
-            f"{leaders_str_en}\n"
+            f"📍 <b>Status:</b> Final\n\n"
             f"📲 <i>Follow live sports analysis on @GamePulseUS</i>"
         )
 

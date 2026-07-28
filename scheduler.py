@@ -316,29 +316,6 @@ class GamePulseScheduler:
                 is_truly_live = (status_state in ["in", "live"]) or (status_state != "pre" and status_state != "post")
                 is_finished = status_completed or status_state == "post" or ("final" in status_detail.lower())
 
-                # Feature: Official Confirmed Lineups Alert strictly 15 minutes before game start
-                if status_state == "pre" and not self.db.is_lineup_processed(event_id):
-                    date_utc = ev.get("date", "")
-                    if date_utc:
-                        try:
-                            game_dt = datetime.fromisoformat(date_utc.replace("Z", "+00:00")).astimezone(ET_ZONE)
-                            now_dt = datetime.now(ET_ZONE)
-                            mins_until_game = (game_dt - now_dt).total_seconds() / 60.0
-
-                            # Strictly 15 minutes or less prior to game start (0 to 15 mins)
-                            if 0.0 <= mins_until_game <= 15.0:
-                                summary_data = self.espn.get_game_summary(sport, l_code, event_id)
-                                self.db.mark_lineup_processed(event_id, sport, l_code, event_name)
-                                logger.info(f"[{l_code.upper()}] Official Confirmed Lineups Alert (15m prior to start): {event_name}")
-                                msg_es, msg_en, image_url = PostFormatter.format_lineups_alert(ev, summary_data, league)
-
-                                if self.dry_run:
-                                    print(f"\n--- [DRY RUN - LINEUPS (15m BEFORE) - EN] ---\n{msg_en}")
-                                else:
-                                    self.publisher.publish_bilingual(msg_es, msg_en, image_url)
-                        except Exception as e:
-                            logger.warning(f"Error checking 15m lineup alert for {event_name}: {e}")
-
                 # Check if Game is Finished (Post-Game Summary)
                 if is_finished:
                     if not self.db.is_summary_processed(event_id):
