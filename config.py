@@ -27,7 +27,7 @@ DB_PATH = os.getenv("DB_PATH", "gamepulse.db")
 
 # Interval Speeds (Seconds)
 NEWS_CHECK_INTERVAL = 60
-SCOREBOARD_CHECK_INTERVAL = 10
+SCOREBOARD_CHECK_INTERVAL = 3
 
 # Base URL for Web Site
 SITE_BASE_URL = os.getenv("SITE_BASE_URL", "https://gamepulse.up.railway.app")

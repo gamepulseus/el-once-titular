@@ -150,14 +150,20 @@ class PostFormatter:
         home_players = []
         for p in home_l[:9]:
             if isinstance(p, dict):
-                home_players.append(p.get("name", ""))
+                p_name = p.get("name", p.get("displayName", ""))
+                p_pos = p.get("position", p.get("pos", p.get("abbreviation", "")))
+                pos_str = f" ({p_pos})" if p_pos else ""
+                home_players.append(f"{p_name}{pos_str}")
             else:
                 home_players.append(str(p))
 
         away_players = []
         for p in away_l[:9]:
             if isinstance(p, dict):
-                away_players.append(p.get("name", ""))
+                p_name = p.get("name", p.get("displayName", ""))
+                p_pos = p.get("position", p.get("pos", p.get("abbreviation", "")))
+                pos_str = f" ({p_pos})" if p_pos else ""
+                away_players.append(f"{p_name}{pos_str}")
             else:
                 away_players.append(str(p))
 
