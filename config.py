@@ -4,9 +4,14 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Telegram Credentials
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "8850309639:AAHLec9jo29DuEw7o8YB7O7rdTqt_zHQgvU")
-TELEGRAM_CHANNEL_ES = os.getenv("TELEGRAM_CHANNEL_ES", "@GamePulseES")
-TELEGRAM_CHANNEL_EN = os.getenv("TELEGRAM_CHANNEL_EN", "@GamePulseUS")
+_bot_tok = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
+TELEGRAM_BOT_TOKEN = _bot_tok if _bot_tok else "8850309639:AAHLec9jo29DuEw7o8YB7O7rdTqt_zHQgvU"
+
+_chan_es = os.getenv("TELEGRAM_CHANNEL_ES", "").strip()
+TELEGRAM_CHANNEL_ES = _chan_es if _chan_es else "@GamePulseES"
+
+_chan_en = os.getenv("TELEGRAM_CHANNEL_EN", "").strip()
+TELEGRAM_CHANNEL_EN = _chan_en if _chan_en else "@GamePulseUS"
 
 # AI & Base URLs
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
