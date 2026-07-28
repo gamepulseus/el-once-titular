@@ -26,8 +26,8 @@ TWITTER_ACCESS_TOKEN = _tw_tok if _tw_tok else "2081943886545539072-L0ABYruAV4mE
 _tw_asec = os.getenv("TWITTER_ACCESS_SECRET", "").strip()
 TWITTER_ACCESS_SECRET = _tw_asec if _tw_asec else "tpu6lB53BeQgRtneeiSYxMtcePB1iHbpjq5aHQRwVzj3y"
 
-# API-Football (api-sports.io / dashboard.api-football.com) Key
-API_FOOTBALL_KEY = os.getenv("API_FOOTBALL_KEY", "")
+# API-Football (api-sports.io / dashboard.api-football.com) PRO Key (EL ONCE TITULAR)
+API_FOOTBALL_KEY = os.getenv("API_FOOTBALL_KEY", "").strip() or "cbb0f106154c72d158f3de7d4db9f27b"
 
 # Active Leagues Matrix (STRICTLY SOCCER / FÚTBOL LEAGUES FOR 'EL ONCE TITULAR')
 ACTIVE_LEAGUES = [
