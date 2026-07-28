@@ -864,22 +864,34 @@ class PostFormatter:
         event_id = event.get("id", "start")
         image_url = MatchupGraphics.generate_matchup_banner(home, away, event_id) or home.get("logo")
 
-        if "mlb" in league_code or "baseball" in sport.lower():
+        if "mlb" in league_code or "baseball" in sport:
             start_term_es = "¡PLAY BALL!"
             start_term_en = "PLAY BALL!"
             start_sub_es = "⚡ ¡EL PARTIDO DE BÉISBOL HA COMENZADO EN VIVO!"
-        elif "nfl" in league_code or "football" in sport.lower():
+        elif "nfl" in league_code or "football" in sport:
             start_term_es = "¡KICKOFF!"
             start_term_en = "KICKOFF!"
             start_sub_es = "⚡ ¡EL PARTIDO DE FÚTBOL AMERICANO HA COMENZADO EN VIVO!"
-        elif "nba" in league_code or "basketball" in sport.lower():
+        elif "nba" in league_code or "basketball" in sport:
             start_term_es = "¡TIP-OFF!"
             start_term_en = "TIP-OFF!"
             start_sub_es = "⚡ ¡EL PARTIDO DE BALONCESTO HA COMENZADO EN VIVO!"
-        elif "nhl" in league_code or "hockey" in sport.lower():
+        elif "nhl" in league_code or "hockey" in sport:
             start_term_es = "¡PUCK DROP!"
             start_term_en = "PUCK DROP!"
             start_sub_es = "⚡ ¡EL PARTIDO DE HOCKEY HA COMENZADO EN VIVO!"
+        elif "soccer" in sport or "eng.1" in league_code or "esp.1" in league_code or "champions" in league_code:
+            start_term_es = "¡PITAZO INICIAL!"
+            start_term_en = "KICK-OFF!"
+            start_sub_es = "⚡ ¡EL PARTIDO DE FÚTBOL HA COMENZADO EN VIVO!"
+        elif "tennis" in sport:
+            start_term_es = "¡PRIMER SERVICIO!"
+            start_term_en = "FIRST SERVE!"
+            start_sub_es = "⚡ ¡EL PARTIDO DE TENIS HA COMENZADO EN VIVO!"
+        elif "racing" in sport or "f1" in league_code:
+            start_term_es = "¡LUCES FUERA! ¡ARRANCAN!"
+            start_term_en = "LIGHTS OUT AND AWAY WE GO!"
+            start_sub_es = "⚡ ¡LA CARRERA HA COMENZADO EN VIVO!"
         else:
             start_term_es = "¡PARTIDO EN VIVO!"
             start_term_en = "GAME LIVE!"
@@ -943,6 +955,11 @@ class PostFormatter:
             header_en = f"🚨 <b>LIVE RUN SCORING ALERT!</b> | {league} ⚾"
             play_lbl_es = "🔥 <b>Jugada de la Carrera:</b>"
             play_lbl_en = "🔥 <b>Scoring Play:</b>"
+        elif "soccer" in sport or "eng.1" in league.lower() or "esp.1" in league.lower():
+            header_es = f"🚨 <b>¡GOL EN VIVO MINUTO A MINUTO!</b> | {league} ⚽"
+            header_en = f"🚨 <b>LIVE GOAL SCORING ALERT!</b> | {league} ⚽"
+            play_lbl_es = "🔥 <b>Gol Anotado:</b>"
+            play_lbl_en = "🔥 <b>Goal Scored:</b>"
         elif "nba" in league.lower() or "basketball" in sport:
             header_es = f"🚨 <b>¡CANASTA EN VIVO MINUTO A MINUTO!</b> | {league} 🏀"
             header_en = f"🚨 <b>LIVE BASKET SCORING ALERT!</b> | {league} 🏀"
@@ -958,6 +975,11 @@ class PostFormatter:
             header_en = f"🚨 <b>LIVE GOAL SCORING ALERT!</b> | {league} 🏒"
             play_lbl_es = "🔥 <b>Gol Anotado:</b>"
             play_lbl_en = "🔥 <b>Goal Scored:</b>"
+        elif "tennis" in sport:
+            header_es = f"🚨 <b>¡PUNTO EN VIVO!</b> | {league} 🎾"
+            header_en = f"🚨 <b>LIVE POINT ALERT!</b> | {league} 🎾"
+            play_lbl_es = "🔥 <b>Punto Ganado:</b>"
+            play_lbl_en = "🔥 <b>Point Won:</b>"
         else:
             header_es = f"🚨 <b>¡ANOTACIÓN EN VIVO MINUTO A MINUTO!</b> | {league} ⚡"
             header_en = f"🚨 <b>LIVE SCORING PLAY MINUTE-BY-MINUTE!</b> | {league} ⚡"
