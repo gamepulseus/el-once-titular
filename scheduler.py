@@ -99,8 +99,21 @@ class GamePulseScheduler:
                             self.publisher.publish_text(config.TELEGRAM_CHANNEL_ES, msg_es)
                             self.twitter.publish_tweet(msg_es)
 
+                # Kickoff / Game Started Alert
+                if status_short == "1H":
+                    start_key = f"start_{f_id}"
+                    if not self.db.is_game_start_processed(start_key):
+                        self.db.mark_game_start_processed(start_key, "soccer", "global", f"{home_name} vs {away_name}")
+                        msg_es = (
+                            f"🚀 <b>INICIO DE PARTIDO | {league_hdr}</b>\n\n"
+                            f"<b>{home_name} vs {away_name}</b> - ¡Comienza el encuentro!\n\n"
+                            f"📲 <i>Sigue https://t.me/ElOnceTitular</i>"
+                        )
+                        self.publisher.publish_text(config.TELEGRAM_CHANNEL_ES, msg_es)
+                        self.twitter.publish_tweet(msg_es)
+
                 # Halftime Alert
-                if status_short == "HT":
+                elif status_short == "HT":
                     ht_key = f"ht_{f_id}"
                     if not self.db.is_scoring_play_processed(ht_key):
                         self.db.mark_scoring_play_processed(ht_key, f_id, "HT")
