@@ -2,7 +2,7 @@ import sqlite3
 import logging
 import re
 from pathlib import Path
-from typing import Union, Optional
+from typing import Union, Optional, Any
 
 logger = logging.getLogger("GamePulse.Database")
 
