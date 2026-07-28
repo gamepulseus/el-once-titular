@@ -349,11 +349,13 @@ class GamePulseScheduler:
                             self.publisher.publish_bilingual(msg_es, msg_en, image_url)
 
                 # Pillar 2B: Continuous Minuto a Minuto Live Play Tracker (ONLY FOR LIVE GAMES)
-                if not status_completed and status_state != "post":
-                    # 1. Game Started Alert (ONCE when game begins live)
+                is_truly_live = (status_state in ["in", "live"]) or (status_state != "pre" and status_state != "post")
+                
+                if not status_completed and is_truly_live:
+                    # 1. Game Started Alert (STRICTLY ONCE when game TRULY begins live on field)
                     if not self.db.is_game_start_processed(event_id):
                         self.db.mark_game_start_processed(event_id, sport, l_code, event_name)
-                        logger.info(f"[{l_code.upper()}] Live Game Started Alert: {event_name}")
+                        logger.info(f"[{l_code.upper()}] Live Game Started Alert (TRULY LIVE): {event_name}")
                         msg_es, msg_en, image_url = PostFormatter.format_game_start(ev, league)
 
                         if self.dry_run:
