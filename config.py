@@ -26,15 +26,11 @@ TWITTER_ACCESS_TOKEN = _tw_tok if _tw_tok else "2081943886545539072-L0ABYruAV4mE
 _tw_asec = os.getenv("TWITTER_ACCESS_SECRET", "").strip()
 TWITTER_ACCESS_SECRET = _tw_asec if _tw_asec else "tpu6lB53BeQgRtneeiSYxMtcePB1iHbpjq5aHQRwVzj3y"
 
-# Active Leagues Matrix (STRICTLY TIER-1 TOP MAJOR LEAGUES ONLY)
+# API-Football (api-sports.io / dashboard.api-football.com) Key
+API_FOOTBALL_KEY = os.getenv("API_FOOTBALL_KEY", "")
+
+# Active Leagues Matrix (STRICTLY SOCCER / FÚTBOL LEAGUES FOR 'EL ONCE TITULAR')
 ACTIVE_LEAGUES = [
-    # Béisbol (Baseball)
-    {"sport": "baseball", "league": "mlb", "name": "MLB Béisbol", "name_en": "MLB Baseball", "icon": "⚾"},
-
-    # Baloncesto (Basketball)
-    {"sport": "basketball", "league": "nba", "name": "NBA Baloncesto", "name_en": "NBA Basketball", "icon": "🏀"},
-
-    # Fútbol Soccer (Top Ligas Mundiales)
     {"sport": "soccer", "league": "uefa.champions", "name": "UEFA Champions League", "name_en": "UEFA Champions League", "icon": "⚽"},
     {"sport": "soccer", "league": "uefa.europa", "name": "UEFA Europa League", "name_en": "UEFA Europa League", "icon": "⚽"},
     {"sport": "soccer", "league": "uefa.europa.conf", "name": "UEFA Conference League", "name_en": "UEFA Conference League", "icon": "⚽"},
@@ -44,16 +40,6 @@ ACTIVE_LEAGUES = [
     {"sport": "soccer", "league": "usa.1", "name": "MLS Fútbol EE.UU.", "name_en": "MLS Soccer", "icon": "⚽"},
     {"sport": "soccer", "league": "conmebol.libertadores", "name": "Copa Libertadores", "name_en": "Copa Libertadores", "icon": "⚽"},
     {"sport": "soccer", "league": "mex.1", "name": "Liga MX México", "name_en": "Liga MX Mexico", "icon": "⚽"},
-
-    # Fútbol Americano (American Football)
-    {"sport": "football", "league": "nfl", "name": "NFL Fútbol Americano", "name_en": "NFL Football", "icon": "🏈"},
-
-    # Hockey sobre Hielo (Hockey)
-    {"sport": "hockey", "league": "nhl", "name": "NHL Hockey", "name_en": "NHL Hockey", "icon": "🏒"},
-
-    # Automovilismo & Combate (Racing & MMA)
-    {"sport": "racing", "league": "f1", "name": "Fórmula 1", "name_en": "Formula 1", "icon": "🏎️"},
-    {"sport": "mma", "league": "ufc", "name": "UFC Artes Marciales Mixtas", "name_en": "UFC MMA", "icon": "🥊"},
 ]
 
 # Database Path
