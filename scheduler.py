@@ -70,7 +70,13 @@ class GamePulseScheduler:
                 summary_data = self.espn.get_game_summary(sport, l_code, event_id)
                 if summary_data:
                     plays = summary_data.get("plays", []) or summary_data.get("scoringPlays", [])
-                    for p in plays:
+                    # For live in-progress games, seed existing plays EXCEPT the 5 most recent plays so recent scoring plays are NEVER lost on container restart!
+                    if status_state in ["in", "live"]:
+                        plays_to_seed = plays[:-5] if len(plays) > 5 else []
+                    else:
+                        plays_to_seed = plays
+
+                    for p in plays_to_seed:
                         p_id = str(p.get("id", p.get("sequenceNumber", hash(p.get("text", "")))))
                         p_text = str(p.get("text", "")).strip()
                         if p_text:
