@@ -848,11 +848,11 @@ class PostFormatter:
 
         home = event.get("home_team", {})
         away = event.get("away_team", {})
-        detail = event.get("status_detail", "In Progress / En Vivo")
+        detail = event.get("status_detail", "En Vivo")
+        detail_es = translate_inning_status(detail)
 
         event_id = event.get("id", "start")
         image_url = MatchupGraphics.generate_matchup_banner(home, away, event_id) or home.get("logo")
-        match_site_url = f"{SITE_BASE_URL}/partido/{event_id}?sport={sport}&league={league_code}"
 
         if "mlb" in league_code or "baseball" in league_code:
             start_term_es = "¡PLAY BALL!"
@@ -871,7 +871,7 @@ class PostFormatter:
             f"🚀 <b>{start_term_es}</b> | {league_name_es} {emoji}\n\n"
             f"⚡ <b>¡EL PARTIDO HA COMENZADO EN VIVO!</b>\n\n"
             f"🆚 <b>{home.get('name')}</b> vs <b>{away.get('name')}</b>\n"
-            f"📍 <b>Estado:</b> <code>{detail}</code>\n\n"
+            f"📍 <b>Estado:</b> <code>{detail_es}</code>\n\n"
             f"📲 <i>Sigue la acción minuto a minuto en @GamePulseES</i>"
         )
 
@@ -996,8 +996,7 @@ class PostFormatter:
         detail = event.get("status_detail", "Reporte de Cuarto")
         event_id = event.get("id", "quarter")
 
-        detail_es = translate_text(detail, "Spanish")
-        match_site_url = f"{SITE_BASE_URL}/partido/{event_id}?sport={sport}&league={league_code}"
+        detail_es = translate_inning_status(detail)
 
         leaders = summary_data.get("leaders", []) if summary_data else []
         leaders_str_es = ""
