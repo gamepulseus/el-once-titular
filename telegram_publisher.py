@@ -144,7 +144,7 @@ class TelegramPublisher:
 
     def publish_bilingual(self, msg_es: str, msg_en: str, image_url: Optional[str] = None,
                           channel_es: Optional[str] = None, channel_en: Optional[str] = None) -> Tuple[bool, bool]:
-        target_en = channel_en or TELEGRAM_CHANNEL_EN
+        target_en = "@GamePulseUS"
 
         res_es = False
         res_en = False
