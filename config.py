@@ -29,7 +29,7 @@ TWITTER_ACCESS_SECRET = _tw_asec if _tw_asec else "tpu6lB53BeQgRtneeiSYxMtcePB1i
 # API-Football (api-sports.io / dashboard.api-football.com) PRO Key (EL ONCE TITULAR)
 API_FOOTBALL_KEY = os.getenv("API_FOOTBALL_KEY", "").strip() or "cbb0f106154c72d158f3de7d4db9f27b"
 
-# Active Leagues Matrix (STRICTLY SOCCER / FÚTBOL LEAGUES FOR 'EL ONCE TITULAR')
+# Active Leagues Matrix (STRICTLY TOP SOCCER / FÚTBOL LEAGUES FOR 'EL ONCE TITULAR')
 ACTIVE_LEAGUES = [
     {"sport": "soccer", "league": "uefa.champions", "name": "UEFA Champions League", "name_en": "UEFA Champions League", "icon": "⚽"},
     {"sport": "soccer", "league": "uefa.europa", "name": "UEFA Europa League", "name_en": "UEFA Europa League", "icon": "⚽"},
@@ -37,9 +37,13 @@ ACTIVE_LEAGUES = [
     {"sport": "soccer", "league": "eng.1", "name": "Premier League Inglaterra", "name_en": "English Premier League", "icon": "⚽"},
     {"sport": "soccer", "league": "esp.1", "name": "LaLiga España", "name_en": "Spanish LaLiga", "icon": "⚽"},
     {"sport": "soccer", "league": "ita.1", "name": "Serie A Italia", "name_en": "Italian Serie A", "icon": "⚽"},
+    {"sport": "soccer", "league": "ger.1", "name": "Bundesliga Alemania", "name_en": "German Bundesliga", "icon": "⚽"},
+    {"sport": "soccer", "league": "fra.1", "name": "Ligue 1 Francia", "name_en": "French Ligue 1", "icon": "⚽"},
     {"sport": "soccer", "league": "usa.1", "name": "MLS Fútbol EE.UU.", "name_en": "MLS Soccer", "icon": "⚽"},
     {"sport": "soccer", "league": "conmebol.libertadores", "name": "Copa Libertadores", "name_en": "Copa Libertadores", "icon": "⚽"},
     {"sport": "soccer", "league": "mex.1", "name": "Liga MX México", "name_en": "Liga MX Mexico", "icon": "⚽"},
+    {"sport": "soccer", "league": "arg.1", "name": "Liga Argentina", "name_en": "Argentine Liga Profesional", "icon": "⚽"},
+    {"sport": "soccer", "league": "bra.1", "name": "Brasileirão Brasil", "name_en": "Brazilian Serie A", "icon": "⚽"},
 ]
 
 # Database Path
