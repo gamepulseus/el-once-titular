@@ -210,21 +210,13 @@ class PostFormatter:
 
     @staticmethod
     def _format_lineups_block(summary_data: Optional[Dict[str, Any]], home_name: str, away_name: str, lang: str = "es") -> str:
-        if not summary_data or "lineups" not in summary_data:
-            if lang == "es":
-                return "📋 <b>ALINEACIONES:</b> Confirmación en proceso por los equipos.\n\n"
-            else:
-                return "📋 <b>LINEUPS:</b> Official confirmation in progress.\n\n"
+        pitchers = summary_data.get("pitchers", {}) if summary_data else {}
+        home_p = pitchers.get("home", "TBD")
+        away_p = pitchers.get("away", "TBD")
 
-        lineups = summary_data.get("lineups", {})
+        lineups = summary_data.get("lineups", {}) if summary_data else {}
         home_l = lineups.get("home", [])
         away_l = lineups.get("away", [])
-
-        if not home_l and not away_l:
-            if lang == "es":
-                return "📋 <b>ALINEACIONES:</b> Por anunciar antes del inicio.\n\n"
-            else:
-                return "📋 <b>LINEUPS:</b> To be announced prior to kickoff/tip-off.\n\n"
 
         home_players = []
         for p in home_l[:9]:
@@ -246,17 +238,22 @@ class PostFormatter:
             else:
                 away_players.append(str(p))
 
-        home_str = ", ".join(home_players) if home_players else "Por Anunciar / TBD"
-        away_str = ", ".join(away_players) if away_players else "Por Anunciar / TBD"
+        home_str = ", ".join(home_players) if home_players else "Official Starters Pending / TBD"
+        away_str = ", ".join(away_players) if away_players else "Official Starters Pending / TBD"
+
+        pitcher_block_es = f"⚾ <b>PITCHERS PROBABLES INICIALES:</b>\n• 🏠 <b>{home_name}:</b> {home_p}\n• 🚀 <b>{away_name}:</b> {away_p}\n\n" if (home_p != "TBD" or away_p != "TBD") else ""
+        pitcher_block_en = f"⚾ <b>STARTING PITCHERS:</b>\n• 🏠 <b>{home_name}:</b> {home_p}\n• 🚀 <b>{away_name}:</b> {away_p}\n\n" if (home_p != "TBD" or away_p != "TBD") else ""
 
         if lang == "es":
             return (
+                f"{pitcher_block_es}"
                 f"📋 <b>ALINEACIONES CONFIRMADAS:</b>\n"
                 f"• 🏠 <b>{home_name}:</b> {home_str}\n"
                 f"• 🚀 <b>{away_name}:</b> {away_str}\n\n"
             )
         else:
             return (
+                f"{pitcher_block_en}"
                 f"📋 <b>CONFIRMED LINEUPS:</b>\n"
                 f"• 🏠 <b>{home_name}:</b> {home_str}\n"
                 f"• 🚀 <b>{away_name}:</b> {away_str}\n\n"

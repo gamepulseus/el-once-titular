@@ -70,7 +70,14 @@ class GamePulseScheduler:
                 summary_data = self.espn.get_game_summary(sport, l_code, event_id)
                 if summary_data:
                     plays = summary_data.get("plays", []) or summary_data.get("scoringPlays", [])
-                    for p in plays:
+                    # For live games, do NOT seed plays from the current inning/period so live runs/goals are NEVER missed!
+                    if status_state in ["in", "live"]:
+                        curr_period_str = str(summary_data.get("period", "0"))
+                        plays_to_seed = [p for p in plays if str(p.get("period", "0")) != curr_period_str]
+                    else:
+                        plays_to_seed = plays
+
+                    for p in plays_to_seed:
                         p_id = str(p.get("id", p.get("sequenceNumber", "")))
                         p_text = str(p.get("text", "")).strip()
                         if p_text:
