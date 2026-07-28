@@ -371,21 +371,22 @@ class GamePulseScheduler:
                         else:
                             self.publisher.publish_bilingual(msg_es, msg_en, image_url)
 
-                    # 2. Halftime / End of Period & Quarter Updates (ONCE per halftime/period)
-                    det_lower = status_detail.lower()
-                    if any(term in det_lower for term in ["half", "descanso", "end of", "end 1", "end 2", "end 3", "end 4"]):
-                        detail_clean = re.sub(r'[^a-zA-Z0-9]', '', det_lower)
-                        quarter_key = f"{event_id}_quarter_{detail_clean}"
-                        if not self.db.is_quarter_update_processed(quarter_key):
-                            self.db.mark_quarter_update_processed(quarter_key)
-                            logger.info(f"[{l_code.upper()}] Halftime / Period Alert: {event_name} ({status_detail})")
-                            summary_data = self.espn.get_game_summary(sport, l_code, event_id)
-                            msg_es, msg_en, image_url = PostFormatter.format_quarter_update(ev, summary_data, league)
+                    # 2. Halftime / End of Period & Quarter Updates (ONLY FOR NBA, NFL, NHL - EXCLUDING MLB BASEBALL)
+                    if l_code != "mlb" and sport != "baseball":
+                        det_lower = status_detail.lower()
+                        if any(term in det_lower for term in ["half", "descanso", "end of 1", "end of 2", "end of 3", "end 1", "end 2", "end 3"]):
+                            detail_clean = re.sub(r'[^a-zA-Z0-9]', '', det_lower)
+                            quarter_key = f"{event_id}_quarter_{detail_clean}"
+                            if not self.db.is_quarter_update_processed(quarter_key):
+                                self.db.mark_quarter_update_processed(quarter_key)
+                                logger.info(f"[{l_code.upper()}] Halftime / Period Alert: {event_name} ({status_detail})")
+                                summary_data = self.espn.get_game_summary(sport, l_code, event_id)
+                                msg_es, msg_en, image_url = PostFormatter.format_quarter_update(ev, summary_data, league)
 
-                            if self.dry_run:
-                                print(f"\n--- [DRY RUN - HALFTIME/PERIOD - ES] ---\n{msg_es}")
-                            else:
-                                self.publisher.publish_bilingual(msg_es, msg_en, image_url)
+                                if self.dry_run:
+                                    print(f"\n--- [DRY RUN - HALFTIME/PERIOD - ES] ---\n{msg_es}")
+                                else:
+                                    self.publisher.publish_bilingual(msg_es, msg_en, image_url)
 
                     # 3. Continuous Minuto a Minuto Live Play Alerts (ALL SPORTS: MLB, NBA, NFL, NHL)
                     summary_data = self.espn.get_game_summary(sport, l_code, event_id)
