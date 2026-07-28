@@ -54,9 +54,12 @@ class GamePulseScheduler:
                 # Silently mark lineups as processed so past lineups are not re-published
                 self.db.mark_lineups_processed(event_id, sport, l_code, event_name)
 
-                # If game is ALREADY in-progress ("in"/"live") or completed ("post"), SILENTLY mark game start as processed
+                # If game is ALREADY in-progress ("in"/"live") or completed ("post"), SILENTLY mark game start & summary as processed
                 if status_state in ["in", "live", "post"] or status_completed or "final" in status_detail.lower():
                     self.db.mark_game_start_processed(event_id, sport, l_code, event_name)
+                    
+                if status_completed or status_state == "post" or "final" in status_detail.lower():
+                    self.db.mark_summary_processed(event_id, sport, l_code, event_name)
 
                 # Silently seed existing quarter/halftime updates and plays so old past items before startup are NEVER published
                 if status_detail:
@@ -67,25 +70,7 @@ class GamePulseScheduler:
                 summary_data = self.espn.get_game_summary(sport, l_code, event_id)
                 if summary_data:
                     plays = summary_data.get("plays", []) or summary_data.get("scoringPlays", [])
-                    
-                    def _safe_int(v, default=0):
-                        try:
-                            return int(v)
-                        except (ValueError, TypeError):
-                            return default
-
-                    curr_p = _safe_int(summary_data.get("period", 9), 9)
-                    
-                    # For live in-progress games, do NOT seed plays from the current inning/period so current plays are NEVER lost!
-                    if status_state in ["in", "live"]:
-                        plays_to_seed = [
-                            p for p in plays 
-                            if _safe_int(p.get("period", 0), 0) < curr_p
-                        ]
-                    else:
-                        plays_to_seed = plays
-
-                    for p in plays_to_seed:
+                    for p in plays:
                         p_id = str(p.get("id", p.get("sequenceNumber", "")))
                         p_text = str(p.get("text", "")).strip()
                         if p_text:
