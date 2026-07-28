@@ -1,5 +1,6 @@
 import json
 import logging
+import hashlib
 import re
 from typing import Dict, Any, Tuple, Optional, List
 import urllib.request

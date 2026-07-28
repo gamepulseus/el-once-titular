@@ -262,6 +262,12 @@ class DatabaseManager:
             conn.commit()
 
     # Lineups Methods
+    def is_lineup_processed(self, event_id: str) -> bool:
+        return self.is_lineups_processed(event_id)
+
+    def mark_lineup_processed(self, event_id: str, sport: str, league: str, event_name: str):
+        return self.mark_lineups_processed(event_id, sport, league, event_name)
+
     def is_lineups_processed(self, event_id: str) -> bool:
         clean_id = str(event_id).strip()
         if clean_id in self._sent_lineups:
