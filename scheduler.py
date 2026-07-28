@@ -10,6 +10,8 @@ from espn_client import ESPNClient
 from formatter import PostFormatter
 from telegram_publisher import TelegramPublisher
 
+from api_football_client import APIFootballClient
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
@@ -22,6 +24,7 @@ class GamePulseScheduler:
     def __init__(self, dry_run: bool = False):
         self.db = DatabaseManager(config.DB_PATH)
         self.espn = ESPNClient()
+        self.api_football = APIFootballClient()
         self.publisher = TelegramPublisher()
         self.dry_run = dry_run
 
