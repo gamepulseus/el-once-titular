@@ -309,7 +309,7 @@ class PostFormatter:
         if is_injury:
             msg_es = (
                 f"🚑 <b>Reporte de Baja:</b> {headline_es}\n\n"
-                f"📲 <i>Sigue a El Once Titular</i>"
+                f"📲 <i>Sigue https://t.me/ElOnceTitular</i>"
             )
             msg_en = (
                 f"🚑 <b>Status alert:</b> {headline_en}\n\n"
@@ -318,7 +318,7 @@ class PostFormatter:
         elif is_trade:
             msg_es = (
                 f"🔄 <b>Fichaje Oficial:</b> {headline_es}\n\n"
-                f"📲 <i>Sigue a El Once Titular</i>"
+                f"📲 <i>Sigue https://t.me/ElOnceTitular</i>"
             )
             msg_en = (
                 f"🔄 <b>Transfer alert:</b> {headline_en}\n\n"
@@ -1167,7 +1167,7 @@ class PostFormatter:
 
         msg_es = (
             f"🏆 <b>Final:</b> {home.get('name')} {home_score}, {away.get('name')} {away_score}.\n\n"
-            f"📲 <i>Sigue a El Once Titular</i>"
+            f"📲 <i>Sigue https://t.me/ElOnceTitular</i>"
         )
 
         msg_en = (

@@ -84,7 +84,7 @@ class GamePulseScheduler:
                                 f"⚽ <b>GOL | {league_hdr}</b>\n\n"
                                 f"<b>{player}</b> {time_el}' ({team_ev})\n"
                                 f"<b>{home_name} {h_score} - {a_score} {away_name}</b>\n\n"
-                                f"📲 <i>Sigue a El Once Titular</i>"
+                                f"📲 <i>Sigue https://t.me/ElOnceTitular</i>"
                             )
                             self.publisher.publish_text(config.TELEGRAM_CHANNEL_ES, msg_es)
                             self.twitter.publish_tweet(msg_es)
@@ -94,7 +94,7 @@ class GamePulseScheduler:
                                 f"🟥 <b>TARJETA ROJA | {league_hdr}</b>\n\n"
                                 f"<b>{player}</b> {time_el}' ({team_ev}) - Expulsado.\n"
                                 f"<b>{home_name} {h_score} - {a_score} {away_name}</b>\n\n"
-                                f"📲 <i>Sigue a El Once Titular</i>"
+                                f"📲 <i>Sigue https://t.me/ElOnceTitular</i>"
                             )
                             self.publisher.publish_text(config.TELEGRAM_CHANNEL_ES, msg_es)
                             self.twitter.publish_tweet(msg_es)
@@ -107,7 +107,7 @@ class GamePulseScheduler:
                         msg_es = (
                             f"⏱️ <b>ENTRETIEMPO | {league_hdr}</b>\n\n"
                             f"<b>{home_name} {h_score} - {a_score} {away_name}</b>\n\n"
-                            f"📲 <i>Sigue a El Once Titular</i>"
+                            f"📲 <i>Sigue https://t.me/ElOnceTitular</i>"
                         )
                         self.publisher.publish_text(config.TELEGRAM_CHANNEL_ES, msg_es)
                         self.twitter.publish_tweet(msg_es)
@@ -120,7 +120,7 @@ class GamePulseScheduler:
                         msg_es = (
                             f"🏆 <b>RESULTADO FINAL | {league_hdr}</b>\n\n"
                             f"<b>{home_name} {h_score} - {a_score} {away_name}</b>\n\n"
-                            f"📲 <i>Sigue a El Once Titular</i>"
+                            f"📲 <i>Sigue https://t.me/ElOnceTitular</i>"
                         )
                         self.publisher.publish_text(config.TELEGRAM_CHANNEL_ES, msg_es)
                         self.twitter.publish_tweet(msg_es)
