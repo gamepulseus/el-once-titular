@@ -157,7 +157,7 @@ class TelegramPublisher:
             try:
                 from twitter_publisher import TwitterPublisher
                 tw = TwitterPublisher()
-                tw.publish_tweet(msg_en)
+                tw.publish_tweet(msg_en, image_url)
             except Exception as e:
                 logger.error(f"Error auto-posting to Twitter: {e}")
         else:

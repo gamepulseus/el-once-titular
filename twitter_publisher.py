@@ -39,7 +39,7 @@ class TwitterPublisher:
             clean = clean[:272] + "..."
         return clean
 
-    def _generate_oauth_header(self, method: str, url: str) -> str:
+    def _generate_oauth_header(self, method: str, url: str, extra_params: Optional[dict] = None) -> str:
         """Generates standard OAuth 1.0a Authorization header without external dependencies."""
         oauth_params = {
             "oauth_consumer_key": self.api_key,
@@ -50,26 +50,71 @@ class TwitterPublisher:
             "oauth_version": "1.0"
         }
 
-        # Parameter string
-        param_pairs = sorted([(k, v) for k, v in oauth_params.items()])
+        all_params = oauth_params.copy()
+        if extra_params:
+            all_params.update(extra_params)
+
+        param_pairs = sorted([(k, str(v)) for k, v in all_params.items()])
         param_str = "&".join([f"{urllib.parse.quote(k, safe='')}={urllib.parse.quote(v, safe='')}" for k, v in param_pairs])
 
-        # Base string
         base_str = f"{method.upper()}&{urllib.parse.quote(url, safe='')}&{urllib.parse.quote(param_str, safe='')}"
-
-        # Signing key
         signing_key = f"{urllib.parse.quote(self.api_secret, safe='')}&{urllib.parse.quote(self.access_secret, safe='')}".encode("utf-8")
 
-        # Signature
         hashed = hmac.new(signing_key, base_str.encode("utf-8"), hashlib.sha1)
         signature = base64.b64encode(hashed.digest()).decode("utf-8")
 
         oauth_params["oauth_signature"] = signature
-
         header_parts = [f'{urllib.parse.quote(k, safe="")}="{urllib.parse.quote(v, safe="")}"' for k, v in sorted(oauth_params.items())]
         return "OAuth " + ", ".join(header_parts)
 
-    def publish_tweet(self, text: str) -> bool:
+    def upload_media(self, image_url_or_path: str) -> Optional[str]:
+        """Uploads image bytes to Twitter media/upload.json and returns media_id_string."""
+        if not self.is_configured() or not image_url_or_path:
+            return None
+
+        try:
+            # Get image bytes from URL or file
+            if image_url_or_path.startswith("http://") or image_url_or_path.startswith("https://"):
+                req = urllib.request.Request(image_url_or_path, headers={"User-Agent": "Mozilla/5.0"})
+                with urllib.request.urlopen(req, timeout=10) as resp:
+                    img_data = resp.read()
+            else:
+                with open(image_url_or_path, "rb") as f:
+                    img_data = f.read()
+
+            upload_url = "https://upload.twitter.com/1.1/media/upload.json"
+            boundary = f"----WebKitFormBoundary{secrets.token_hex(8)}"
+            
+            body = bytearray()
+            body.extend(f"--{boundary}\r\n".encode("utf-8"))
+            body.extend(b'Content-Disposition: form-data; name="media"; filename="banner.png"\r\n')
+            body.extend(b'Content-Type: image/png\r\n\r\n')
+            body.extend(img_data)
+            body.extend(b'\r\n')
+            body.extend(f"--{boundary}--\r\n".encode("utf-8"))
+
+            header = self._generate_oauth_header("POST", upload_url)
+            req = urllib.request.Request(
+                upload_url,
+                data=bytes(body),
+                headers={
+                    "Authorization": header,
+                    "Content-Type": f"multipart/form-data; boundary={boundary}"
+                },
+                method="POST"
+            )
+
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                res_data = json.loads(resp.read().decode("utf-8"))
+                media_id = res_data.get("media_id_string")
+                if media_id:
+                    logger.info(f"Successfully uploaded media to Twitter. Media ID: {media_id}")
+                    return str(media_id)
+        except Exception as e:
+            logger.error(f"Failed to upload media to Twitter: {e}")
+            return None
+
+    def publish_tweet(self, text: str, image_url: Optional[str] = None) -> bool:
         if not self.is_configured():
             logger.warning("Twitter API keys not configured. Skipping tweet.")
             return False
@@ -78,13 +123,20 @@ class TwitterPublisher:
         if not clean_tweet:
             return False
 
+        # Attempt to upload media if present
+        media_id = self.upload_media(image_url) if image_url else None
+
         url = "https://api.twitter.com/2/tweets"
         header = self._generate_oauth_header("POST", url)
 
-        payload = json.dumps({"text": clean_tweet}).encode("utf-8")
+        payload = {"text": clean_tweet}
+        if media_id:
+            payload["media"] = {"media_ids": [media_id]}
+
+        encoded_payload = json.dumps(payload).encode("utf-8")
         req = urllib.request.Request(
             url,
-            data=payload,
+            data=encoded_payload,
             headers={
                 "Authorization": header,
                 "Content-Type": "application/json"
@@ -95,7 +147,7 @@ class TwitterPublisher:
         try:
             with urllib.request.urlopen(req, timeout=10) as resp:
                 result = json.loads(resp.read().decode("utf-8"))
-                logger.info(f"Tweet successfully posted to Twitter (X): {clean_tweet[:50]}...")
+                logger.info(f"Tweet with image successfully posted to Twitter (X): {clean_tweet[:50]}...")
                 return True
         except urllib.error.HTTPError as e:
             err_body = e.read().decode("utf-8")
