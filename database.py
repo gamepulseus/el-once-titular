@@ -137,6 +137,14 @@ class DatabaseManager:
                 )
             """)
 
+            # Processed Stat of Day
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS processed_stat_of_day (
+                    stat_key TEXT PRIMARY KEY,
+                    processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+
             conn.commit()
             logger.info("SQLite database initialized successfully.")
 
@@ -379,7 +387,7 @@ class DatabaseManager:
             if res: self._sent_quarter_updates.add(clean_key)
             return res
 
-    def mark_quarter_update_processed(self, quarter_key: str, event_id: str, period: int):
+    def mark_quarter_update_processed(self, quarter_key: str, event_id: str = "", period: Any = 1):
         clean_key = str(quarter_key).strip()
         self._sent_quarter_updates.add(clean_key)
         with self._get_connection() as conn:
@@ -387,7 +395,7 @@ class DatabaseManager:
             cursor.execute("""
                 INSERT OR IGNORE INTO processed_quarter_updates (quarter_key, event_id, period)
                 VALUES (?, ?, ?)
-            """, (clean_key, str(event_id), period))
+            """, (clean_key, str(event_id), str(period)))
             conn.commit()
 
     # Summaries Methods
