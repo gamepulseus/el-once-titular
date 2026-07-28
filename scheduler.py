@@ -62,6 +62,10 @@ class GamePulseScheduler:
 
                 # If game is ALREADY in-progress ("in"/"live") or completed ("post"), SILENTLY mark game start & summary as processed
                 # Live Goal & Red Card Event Tracking
+                league_name = fix.get("league", {}).get("name", "Fútbol")
+                country_name = fix.get("league", {}).get("country", "")
+                league_hdr = f"{league_name} ({country_name})" if country_name else league_name
+
                 events = self.api_football.get_fixture_events(int(f_id))
                 for idx, ev in enumerate(events):
                     ev_type = ev.get("type")
@@ -76,12 +80,22 @@ class GamePulseScheduler:
                         self.db.mark_scoring_play_processed(event_key, f_id, f"{ev_type}_{time_el}")
 
                         if ev_type == "Goal" and player:
-                            msg_es = f"⚽ <b>Gol:</b> {player} ({team_ev}) al min {time_el}'. ({home_name} {h_score} - {a_score} {away_name})\n\n📲 <i>Sigue a El Once Titular</i>"
+                            msg_es = (
+                                f"⚽ <b>GOL | {league_hdr}</b>\n\n"
+                                f"<b>{player}</b> {time_el}' ({team_ev})\n"
+                                f"<b>{home_name} {h_score} - {a_score} {away_name}</b>\n\n"
+                                f"📲 <i>Sigue a El Once Titular</i>"
+                            )
                             self.publisher.publish_text(config.TELEGRAM_CHANNEL_ES, msg_es)
                             self.twitter.publish_tweet(msg_es)
 
                         elif ev_type == "Card" and "Red" in str(ev_detail) and player:
-                            msg_es = f"🟥 <b>Tarjeta Roja:</b> {player} ({team_ev}) expulsado al min {time_el}'.\n\n📲 <i>Sigue a El Once Titular</i>"
+                            msg_es = (
+                                f"🟥 <b>TARJETA ROJA | {league_hdr}</b>\n\n"
+                                f"<b>{player}</b> {time_el}' ({team_ev}) - Expulsado.\n"
+                                f"<b>{home_name} vs {away_name}</b>\n\n"
+                                f"📲 <i>Sigue a El Once Titular</i>"
+                            )
                             self.publisher.publish_text(config.TELEGRAM_CHANNEL_ES, msg_es)
                             self.twitter.publish_tweet(msg_es)
 
@@ -90,7 +104,11 @@ class GamePulseScheduler:
                     ht_key = f"ht_{f_id}"
                     if not self.db.is_scoring_play_processed(ht_key):
                         self.db.mark_scoring_play_processed(ht_key, f_id, "HT")
-                        msg_es = f"⏱️ <b>Entretiempo:</b> {home_name} {h_score}, {away_name} {a_score}.\n\n📲 <i>Sigue a El Once Titular</i>"
+                        msg_es = (
+                            f"⏱️ <b>ENTRETIEMPO | {league_hdr}</b>\n\n"
+                            f"<b>{home_name} {h_score} - {a_score} {away_name}</b>\n\n"
+                            f"📲 <i>Sigue a El Once Titular</i>"
+                        )
                         self.publisher.publish_text(config.TELEGRAM_CHANNEL_ES, msg_es)
                         self.twitter.publish_tweet(msg_es)
 
@@ -99,7 +117,11 @@ class GamePulseScheduler:
                     ft_key = f"ft_{f_id}"
                     if not self.db.is_summary_processed(ft_key):
                         self.db.mark_summary_processed(ft_key, "soccer", "global", f"{home_name} vs {away_name}")
-                        msg_es = f"🏆 <b>Final:</b> {home_name} {h_score}, {away_name} {a_score}.\n\n📲 <i>Sigue a El Once Titular</i>"
+                        msg_es = (
+                            f"🏆 <b>RESULTADO FINAL | {league_hdr}</b>\n\n"
+                            f"<b>{home_name} {h_score} - {a_score} {away_name}</b>\n\n"
+                            f"📲 <i>Sigue a El Once Titular</i>"
+                        )
                         self.publisher.publish_text(config.TELEGRAM_CHANNEL_ES, msg_es)
                         self.twitter.publish_tweet(msg_es)
                 if status_completed or status_state == "post" or "final" in status_detail.lower():
