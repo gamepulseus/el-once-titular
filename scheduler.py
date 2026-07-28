@@ -349,8 +349,34 @@ class GamePulseScheduler:
 
                 # Pillar 2B: Continuous Minuto a Minuto Live Play Tracker (ONLY FOR LIVE GAMES)
                 if not status_completed and status_state != "post":
+                    # 1. Game Started Alert (ONCE when game begins live)
+                    if not self.db.is_game_start_processed(event_id):
+                        self.db.mark_game_start_processed(event_id, sport, l_code, event_name)
+                        logger.info(f"[{l_code.upper()}] Live Game Started Alert: {event_name}")
+                        msg_es, msg_en, image_url = PostFormatter.format_game_start(ev, league)
 
-                    # 2. Continuous Minuto a Minuto Live Play Alerts (ALL SPORTS: MLB, NBA, NFL, NHL)
+                        if self.dry_run:
+                            print(f"\n--- [DRY RUN - GAME START - ES] ---\n{msg_es}")
+                        else:
+                            self.publisher.publish_bilingual(msg_es, msg_en, image_url)
+
+                    # 2. Halftime / End of Period & Quarter Updates (ONCE per halftime/period)
+                    det_lower = status_detail.lower()
+                    if any(term in det_lower for term in ["half", "descanso", "end of", "end 1", "end 2", "end 3", "end 4"]):
+                        detail_clean = re.sub(r'[^a-zA-Z0-9]', '', det_lower)
+                        quarter_key = f"{event_id}_quarter_{detail_clean}"
+                        if not self.db.is_quarter_update_processed(quarter_key):
+                            self.db.mark_quarter_update_processed(quarter_key)
+                            logger.info(f"[{l_code.upper()}] Halftime / Period Alert: {event_name} ({status_detail})")
+                            summary_data = self.espn.get_game_summary(sport, l_code, event_id)
+                            msg_es, msg_en, image_url = PostFormatter.format_quarter_update(ev, summary_data, league)
+
+                            if self.dry_run:
+                                print(f"\n--- [DRY RUN - HALFTIME/PERIOD - ES] ---\n{msg_es}")
+                            else:
+                                self.publisher.publish_bilingual(msg_es, msg_en, image_url)
+
+                    # 3. Continuous Minuto a Minuto Live Play Alerts (ALL SPORTS: MLB, NBA, NFL, NHL)
                     summary_data = self.espn.get_game_summary(sport, l_code, event_id)
                     if summary_data:
                         plays = summary_data.get("plays", []) or summary_data.get("scoringPlays", [])

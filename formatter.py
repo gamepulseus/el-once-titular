@@ -116,16 +116,28 @@ def translate_inning_status(status_detail: str) -> str:
     if not status_detail:
         return "En Vivo"
     s = str(status_detail).strip()
+    
+    # Check for halftime / descanso
+    if "halftime" in s.lower() or "half" in s.lower():
+        return "Entretiempo / Descanso"
+    
     s = re.sub(r'(\d+)(st|nd|rd|th)', r'\1ª', s, flags=re.IGNORECASE)
     
     replacements = [
+        (r'\bEnd of 1ª\b', "Final del 1er Cuarto"),
+        (r'\bEnd of 2ª\b', "Final del 2º Cuarto (Entretiempo)"),
+        (r'\bEnd of 3ª\b', "Final del 3er Cuarto"),
+        (r'\bEnd of 4ª\b', "Final del 4º Cuarto"),
+        (r'\bEnd of\b', "Final de la"),
         (r'\bTop\b', "Parte Alta de la"),
         (r'\bBot\b', "Parte Baja de la"),
         (r'\bBottom\b', "Parte Baja de la"),
         (r'\bMid\b', "Mitad de la"),
         (r'\bMiddle\b', "Mitad de la"),
         (r'\bEnd\b', "Final de la"),
-        (r'\bInning\b', "Entrada")
+        (r'\bInning\b', "Entrada"),
+        (r'\bPeriod\b', "Periodo"),
+        (r'\bQuarter\b', "Cuarto")
     ]
     for pattern, repl in replacements:
         s = re.sub(pattern, repl, s, flags=re.IGNORECASE)
