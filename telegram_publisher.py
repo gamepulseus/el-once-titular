@@ -110,7 +110,10 @@ class TelegramPublisher:
                 "parse_mode": "HTML"
             }
             res = self._post("sendPhoto", data)
-            return res.get("ok", False)
+            if res.get("ok", False):
+                return True
+            logger.warning(f"sendPhoto failed: {res.get('description')}. Falling back to publish_text.")
+            return self.publish_text(chat_id, caption)
 
         # If caption exceeds 1024 characters: send photo with top header, then send complete untruncated text!
         header_lines = caption.strip().split("\n")
