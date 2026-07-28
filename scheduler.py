@@ -320,52 +320,7 @@ class GamePulseScheduler:
                         except Exception as e:
                             logger.warning(f"Error parsing preview date {date_utc}: {e}")
 
-                    # Require strictly 2 to 3 hours before game start and NOT already processed
-                    if 0.0 <= hours_until_game <= 3.0 and not self.db.is_preview_processed(event_id):
-                        summary_data = self.espn.get_game_summary(sport, l_code, event_id)
-                        pitchers = summary_data.get("pitchers", {}) if summary_data else {}
-                        has_pitchers = pitchers.get("home", "TBD") != "Por Anunciar / TBD" or pitchers.get("away", "TBD") != "Por Anunciar / TBD"
-                        odds = summary_data.get("odds", {}) if summary_data else {}
-                        has_odds = bool(odds.get("over_under") or odds.get("spread") or odds.get("home_moneyline"))
 
-                        # Publish preview ONCE when pitchers/odds are available OR <= 2 hours from start
-                        if (has_pitchers and has_odds) or hours_until_game <= 2.0:
-                            self.db.mark_preview_processed(event_id, sport, l_code, event_name)
-                            logger.info(f"[{l_code.upper()}] Pre-Game Analysis & Poll (ONCE): {event_name}")
-                            msg_es, msg_en, image_url = PostFormatter.format_preview(ev, league, summary_data)
-                            q_es, q_en, opt_es, opt_en = PostFormatter.format_preview_poll(ev, league)
-
-                            # Dedicated Poll Key per matchup per day to guarantee POLL is sent ONLY ONCE
-                            home_name = ev.get("home_team", {}).get("name", "")
-                            away_name = ev.get("away_team", {}).get("name", "")
-                            h_clean = re.sub(r'[^a-zA-Z0-9]', '', home_name.lower())
-                            a_clean = re.sub(r'[^a-zA-Z0-9]', '', away_name.lower())
-                            teams_sorted = "_".join(sorted([h_clean, a_clean]))
-                            today_str = datetime.now(ET_ZONE).strftime("%Y-%m-%d")
-                            poll_key = f"poll_{l_code}_{teams_sorted}_{today_str}"
-
-                            if self.dry_run:
-                                print(f"\n--- [DRY RUN - PREVIEW - ES] ---\n{msg_es}")
-                                print(f"--- [DRY RUN - POLL - ES] --- Question: {q_es}")
-                            else:
-                                self.publisher.publish_bilingual(msg_es, msg_en, image_url)
-                                if not self.db.is_poll_processed(poll_key):
-                                    self.db.mark_poll_processed(poll_key)
-                                    time.sleep(1)
-                                    self.publisher.publish_bilingual_poll(q_es, q_en, opt_es, opt_en)
-
-                # Feature: Official Lineups Alert with Odds
-                if not status_completed and not self.db.is_lineup_processed(event_id):
-                    summary_data = self.espn.get_game_summary(sport, l_code, event_id)
-                    if summary_data and "lineups" in summary_data and summary_data["lineups"]:
-                        self.db.mark_lineup_processed(event_id, sport, l_code, event_name)
-                        logger.info(f"[{l_code.upper()}] Official Lineups & Odds Alert: {event_name}")
-                        msg_es, msg_en, image_url = PostFormatter.format_lineups_alert(ev, summary_data, league)
-
-                        if self.dry_run:
-                            print(f"\n--- [DRY RUN - LINEUPS ALERT - ES] ---\n{msg_es}")
-                        else:
-                            self.publisher.publish_bilingual(msg_es, msg_en, image_url)
 
                 # Define event states
                 is_truly_live = (status_state in ["in", "live"]) or (status_state != "pre" and status_state != "post")
