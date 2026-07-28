@@ -17,6 +17,8 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
 )
 logger = logging.getLogger("GamePulse.Scheduler")
+from twitter_publisher import TwitterPublisher
+
 ET_ZONE = ZoneInfo("America/New_York")
 
 class GamePulseScheduler:
@@ -26,6 +28,7 @@ class GamePulseScheduler:
         self.espn = ESPNClient()
         self.api_football = APIFootballClient()
         self.publisher = TelegramPublisher()
+        self.twitter = TwitterPublisher()
         self.dry_run = dry_run
 
     def warmup_baseline(self):
@@ -58,9 +61,47 @@ class GamePulseScheduler:
                 self.db.mark_lineups_processed(event_id, sport, l_code, event_name)
 
                 # If game is ALREADY in-progress ("in"/"live") or completed ("post"), SILENTLY mark game start & summary as processed
-                if status_state in ["in", "live", "post"] or status_completed or "final" in status_detail.lower():
-                    self.db.mark_game_start_processed(event_id, sport, l_code, event_name)
-                    
+                # Live Goal & Red Card Event Tracking
+                events = self.api_football.get_fixture_events(int(f_id))
+                for idx, ev in enumerate(events):
+                    ev_type = ev.get("type")
+                    ev_detail = ev.get("detail", "")
+                    player = ev.get("player", {}).get("name", "")
+                    team_ev = ev.get("team", {}).get("name", "")
+                    time_el = ev.get("time", {}).get("elapsed", 0)
+
+                    event_key = f"ev_{f_id}_{idx}_{time_el}_{ev_type}"
+
+                    if not self.db.is_scoring_play_processed(event_key):
+                        self.db.mark_scoring_play_processed(event_key, f_id, f"{ev_type}_{time_el}")
+
+                        if ev_type == "Goal" and player:
+                            msg_es = f"⚽ <b>Gol:</b> {player} ({team_ev}) al min {time_el}'. ({home_name} {h_score} - {a_score} {away_name})\n\n📲 <i>Sigue a El Once Titular</i>"
+                            self.publisher.publish_text(config.TELEGRAM_CHANNEL_ES, msg_es)
+                            self.twitter.publish_tweet(msg_es)
+
+                        elif ev_type == "Card" and "Red" in str(ev_detail) and player:
+                            msg_es = f"🟥 <b>Tarjeta Roja:</b> {player} ({team_ev}) expulsado al min {time_el}'.\n\n📲 <i>Sigue a El Once Titular</i>"
+                            self.publisher.publish_text(config.TELEGRAM_CHANNEL_ES, msg_es)
+                            self.twitter.publish_tweet(msg_es)
+
+                # Halftime Alert
+                if status_short == "HT":
+                    ht_key = f"ht_{f_id}"
+                    if not self.db.is_scoring_play_processed(ht_key):
+                        self.db.mark_scoring_play_processed(ht_key, f_id, "HT")
+                        msg_es = f"⏱️ <b>Entretiempo:</b> {home_name} {h_score}, {away_name} {a_score}.\n\n📲 <i>Sigue a El Once Titular</i>"
+                        self.publisher.publish_text(config.TELEGRAM_CHANNEL_ES, msg_es)
+                        self.twitter.publish_tweet(msg_es)
+
+                # Final Score Alert
+                elif status_short in ["FT", "AET", "PEN"]:
+                    ft_key = f"ft_{f_id}"
+                    if not self.db.is_summary_processed(ft_key):
+                        self.db.mark_summary_processed(ft_key, "soccer", "global", f"{home_name} vs {away_name}")
+                        msg_es = f"🏆 <b>Final:</b> {home_name} {h_score}, {away_name} {a_score}.\n\n📲 <i>Sigue a El Once Titular</i>"
+                        self.publisher.publish_text(config.TELEGRAM_CHANNEL_ES, msg_es)
+                        self.twitter.publish_tweet(msg_es)
                 if status_completed or status_state == "post" or "final" in status_detail.lower():
                     self.db.mark_summary_processed(event_id, sport, l_code, event_name)
 
@@ -416,26 +457,25 @@ class GamePulseScheduler:
 
         last_news_check = 0
         last_scoreboard_check = 0
-        last_standings_check = 0
-        last_schedule_check = 0
 
         while True:
             now = time.time()
 
-            # 1. Scan Breaking News, Injuries, Trades & Roster Transactions (Underdog Style)
+            # 1. Scan API-Football Global Worldwide Matches (1,000+ Leagues)
+            if now - last_scoreboard_check >= config.SCOREBOARD_CHECK_INTERVAL:
+                try:
+                    self.process_api_football_global()
+                    self.process_scoreboard()
+                except Exception as e:
+                    logger.error(f"Error in process_scoreboard: {e}")
+                last_scoreboard_check = now
+
+            # 2. Scan Breaking News, Injuries, Trades & Roster Transactions
             if now - last_news_check >= config.NEWS_CHECK_INTERVAL:
                 try:
                     self.process_news()
                 except Exception as e:
                     logger.error(f"Error in process_news: {e}")
                 last_news_check = now
-
-            # 2. Scan Lineups, Halftimes, and Final Scores
-            if now - last_scoreboard_check >= config.SCOREBOARD_CHECK_INTERVAL:
-                try:
-                    self.process_scoreboard()
-                except Exception as e:
-                    logger.error(f"Error in process_scoreboard: {e}")
-                last_scoreboard_check = now
 
             time.sleep(1)
