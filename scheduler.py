@@ -269,6 +269,23 @@ class GamePulseScheduler:
                 status_completed = ev.get("status_completed", False)
                 summary_data = None  # EXPLICITLY RESET TO PREVENT VARIABLE LEAKAGE ACROSS GAMES!
 
+                # STRICT TODAY DATE CHECK: Skip future off-season schedule games (e.g. August 29th NCAA games)
+                date_utc = ev.get("date", "")
+                if date_utc:
+                    try:
+                        clean_str = date_utc.replace("Z", "+00:00")
+                        dt_utc = datetime.fromisoformat(clean_str)
+                        dt_et = dt_utc.astimezone(ET_ZONE)
+                        today_et = datetime.now(ET_ZONE)
+                        ev_date_et = dt_et.strftime("%Y-%m-%d")
+                        today_str = today_et.strftime("%Y-%m-%d")
+
+                        diff_days = abs((dt_et.date() - today_et.date()).days)
+                        if diff_days >= 1 and ev_date_et != today_str:
+                            continue  # Skip non-today games scheduled for future months!
+                    except Exception as e:
+                        logger.warning(f"Error parsing date {date_utc}: {e}")
+
                 # Pillar 2A: Pre-Game Preview & Betting Lines (Strictly ONCE per game, 2 to 3 hours before start with complete data)
                 if not status_completed and status_state == "pre":
                     date_utc = ev.get("date", "")
