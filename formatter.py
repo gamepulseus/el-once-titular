@@ -321,7 +321,7 @@ class PostFormatter:
             f"📌 <b>{headline_es}</b>\n\n"
             f"{desc_es}\n\n"
             f"{time_line_es}"
-            f"📲 <i>Sigue a @GamePulseES para las mejores alertas en vivo.</i>"
+            f"📲 <i>Sigue a El Once Titular para las mejores alertas en vivo.</i>"
         )
 
         msg_en = (
@@ -1174,7 +1174,7 @@ class PostFormatter:
             f"🏠 <b>{home.get('name')}</b>: <b>{home_score}</b> {home_status_es}\n"
             f"🚀 <b>{away.get('name')}</b>: <b>{away_score}</b> {away_status_es}\n\n"
             f"📍 <b>Estado:</b> Finalizado\n\n"
-            f"📲 <i>Sigue el análisis deportivo en vivo en @GamePulseES</i>"
+            f"📲 <i>Sigue a El Once Titular para los resultados en vivo.</i>"
         )
 
         msg_en = (
