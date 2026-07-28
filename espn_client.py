@@ -131,17 +131,22 @@ class ESPNClient:
         }
 
     def _fetch_json(self, url: str) -> Optional[Dict[str, Any]]:
-        try:
-            sep = "&" if "?" in url else "?"
-            live_url = f"{url}{sep}_t={int(time.time() * 1000)}"
-            req = urllib.request.Request(live_url, headers=self.headers)
-            with urllib.request.urlopen(req, timeout=self.timeout) as resp:
-                if resp.status == 200:
-                    content = resp.read().decode('utf-8')
-                    return json.loads(content)
-        except Exception as e:
-            logger.error(f"Error fetching {url}: {e}")
-            return None
+        sep = "&" if "?" in url else "?"
+        live_url = f"{url}{sep}_t={int(time.time() * 1000)}"
+        
+        for attempt in range(3):
+            try:
+                req = urllib.request.Request(live_url, headers=self.headers)
+                with urllib.request.urlopen(req, timeout=self.timeout) as resp:
+                    if resp.status == 200:
+                        content = resp.read().decode('utf-8')
+                        return json.loads(content)
+            except Exception as e:
+                if attempt < 2:
+                    time.sleep(0.5)
+                else:
+                    logger.error(f"Error fetching {url} after 3 attempts: {e}")
+                    return None
 
     # Pillar 1: Flash Alerts ⚡ (.../news)
     def get_news(self, sport: str, league: str, limit: int = 15) -> List[Dict[str, Any]]:
