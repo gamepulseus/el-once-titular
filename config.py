@@ -13,18 +13,18 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 SITE_BASE_URL = os.getenv("SITE_BASE_URL", "https://gamepulse.us")
 
-# Twitter / X API v2 Credentials
+# Twitter / X API v2 Credentials (EL ONCE TITULAR)
 _tw_key = os.getenv("TWITTER_API_KEY", "").strip()
-TWITTER_API_KEY = _tw_key if _tw_key else "ioZAqtWEhacjb0kuR7r5T9oqP"
+TWITTER_API_KEY = _tw_key if _tw_key else "KKYLMODp0IjA57cW7OZqhVzcv"
 
 _tw_sec = os.getenv("TWITTER_API_SECRET", "").strip()
-TWITTER_API_SECRET = _tw_sec if _tw_sec else "4GxQEPFgc2H2dOaE9hDac1QTAgFh8eLF0mWckwkgTMgphZvrYe"
+TWITTER_API_SECRET = _tw_sec if _tw_sec else "KcAZDbwYQM2SofEHMjPKPi91Nb1slAS1EEjCUGLzARoT3fZY7E"
 
 _tw_tok = os.getenv("TWITTER_ACCESS_TOKEN", "").strip()
-TWITTER_ACCESS_TOKEN = _tw_tok if _tw_tok else "2081943886545539072-L0ABYruAV4mEgEfomOzyL3yIUCgGjK"
+TWITTER_ACCESS_TOKEN = _tw_tok if _tw_tok else "2081943886545539072-LYGPGMOd1E5tDC5RoesuKRx7RJEZpT"
 
 _tw_asec = os.getenv("TWITTER_ACCESS_SECRET", "").strip()
-TWITTER_ACCESS_SECRET = _tw_asec if _tw_asec else "tpu6lB53BeQgRtneeiSYxMtcePB1iHbpjq5aHQRwVzj3y"
+TWITTER_ACCESS_SECRET = _tw_asec if _tw_asec else "q6a0AHagFTzJTVlZmwRuKBwGrH8Nppxp0WzTjzFyuOXjd"
 
 # API-Football (api-sports.io / dashboard.api-football.com) PRO Key (EL ONCE TITULAR)
 API_FOOTBALL_KEY = os.getenv("API_FOOTBALL_KEY", "").strip() or "cbb0f106154c72d158f3de7d4db9f27b"
