@@ -317,7 +317,7 @@ class GamePulseScheduler:
                             self.publisher.publish_bilingual(msg_es, msg_en, image_url)
 
                 # Pillar 2B: Game Started & Live In-Game Tracker (FAST LOOKUP ONLY FOR LIVE GAMES)
-                if not status_completed and status_state == "in":
+                if not status_completed and status_state != "post":
                     # 1. Game Started Alert
                     if not self.db.is_game_start_processed(event_id):
                         self.db.mark_game_start_processed(event_id, sport, l_code, event_name)
