@@ -70,13 +70,20 @@ class GamePulseScheduler:
                 summary_data = self.espn.get_game_summary(sport, l_code, event_id)
                 if summary_data:
                     plays = summary_data.get("plays", []) or summary_data.get("scoringPlays", [])
-                    current_period = summary_data.get("period", 9)
+                    
+                    def _safe_int(v, default=0):
+                        try:
+                            return int(v)
+                        except (ValueError, TypeError):
+                            return default
+
+                    curr_p = _safe_int(summary_data.get("period", 9), 9)
                     
                     # For live in-progress games, do NOT seed plays from the current inning/period so current plays are NEVER lost!
                     if status_state in ["in", "live"]:
                         plays_to_seed = [
                             p for p in plays 
-                            if p.get("period", 0) < current_period
+                            if _safe_int(p.get("period", 0), 0) < curr_p
                         ]
                     else:
                         plays_to_seed = plays
