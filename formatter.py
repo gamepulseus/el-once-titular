@@ -308,20 +308,24 @@ class PostFormatter:
 
         if is_injury:
             msg_es = (
-                f"🚑 <b>Reporte de Baja:</b> {headline_es}\n\n"
+                f"🚑 <b>REPORTE DE BAJA | {league_name_es}</b>\n\n"
+                f"{headline_es}\n\n"
                 f"📲 <i>Sigue https://t.me/ElOnceTitular</i>"
             )
             msg_en = (
-                f"🚑 <b>Status alert:</b> {headline_en}\n\n"
+                f"🚑 <b>STATUS ALERT | {league_name_en}</b>\n\n"
+                f"{headline_en}\n\n"
                 f"📲 <i>Follow @ElOnceTitular</i>"
             )
         elif is_trade:
             msg_es = (
-                f"🔄 <b>Fichaje Oficial:</b> {headline_es}\n\n"
+                f"🔄 <b>FICHAJE OFICIAL | {league_name_es}</b>\n\n"
+                f"{headline_es}\n\n"
                 f"📲 <i>Sigue https://t.me/ElOnceTitular</i>"
             )
             msg_en = (
-                f"🔄 <b>Transfer alert:</b> {headline_en}\n\n"
+                f"🔄 <b>OFFICIAL TRANSFER | {league_name_en}</b>\n\n"
+                f"{headline_en}\n\n"
                 f"📲 <i>Follow @ElOnceTitular</i>"
             )
         else:
