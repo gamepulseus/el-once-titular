@@ -336,7 +336,7 @@ class GamePulseScheduler:
                         scoring_plays = [
                             p for p in plays 
                             if p.get("scoring") or p.get("scoringPlay") or p.get("scoreValue", 0) > 0 
-                            or any(kw in str(p.get("text", "")).lower() for kw in ["scored", "homered", "grand slam", "touchdown", "td", "field goal", "goal", "three pointer", "dunk"])
+                            or any(kw in str(p.get("text", "")).lower() for kw in ["scored", "scores", "homered", "grand slam", "sac fly", "rbi", "touchdown", "td", "field goal", "goal", "3-pointer", "three pointer", "dunk", "singled", "doubled", "tripled", "error"])
                         ]
                         
                         for p in scoring_plays:

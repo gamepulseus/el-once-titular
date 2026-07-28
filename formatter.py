@@ -245,7 +245,6 @@ class PostFormatter:
             f"📌 <b>{headline_es}</b>\n\n"
             f"{desc_es}\n\n"
             f"{time_line_es}"
-            f"🔗 <a href='{site_link}'>Leer noticia completa en GamePulse</a>\n\n"
             f"📲 <i>Sigue a @GamePulseES para las mejores alertas en vivo.</i>"
         )
 
@@ -254,7 +253,6 @@ class PostFormatter:
             f"📌 <b>{headline_en}</b>\n\n"
             f"{desc_en}\n\n"
             f"{time_line_en}"
-            f"🔗 <a href='{site_link}'>Read full article on GamePulse</a>\n\n"
             f"📲 <i>Follow @GamePulseUS for instant live updates.</i>"
         )
 
