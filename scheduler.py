@@ -434,12 +434,20 @@ class GamePulseScheduler:
         while True:
             now = time.time()
 
-            # 100% EXCLUSIVE: Game Analytics & Player-by-Player Props Engine 📊
+            # 1. Pre-Game Analysis & Player-by-Player Props Engine (every 60s)
             if now - last_news_check >= config.NEWS_CHECK_INTERVAL:
                 try:
                     self.process_betting_picks()
                 except Exception as e:
                     logger.error(f"Error in process_betting_picks: {e}")
                 last_news_check = now
+
+            # 2. Minuto a Minuto / Ultra-Fast Live In-Game Tracker (every 10s across ALL sports)
+            if now - last_scoreboard_check >= config.SCOREBOARD_CHECK_INTERVAL:
+                try:
+                    self.process_scoreboard()
+                except Exception as e:
+                    logger.error(f"Error in process_scoreboard: {e}")
+                last_scoreboard_check = now
 
             time.sleep(5)
