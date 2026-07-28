@@ -146,12 +146,20 @@ class TelegramPublisher:
         res_es = False
         res_en = False
 
-        # Publish ONLY to English Channel (@GamePulseUS)
+        # Publish to English Channel (@GamePulseUS) & Auto-Tweet to Twitter (X)
         if target_en:
             if image_url:
                 res_en = self.publish_photo(target_en, image_url, msg_en)
             else:
                 res_en = self.publish_text(target_en, msg_en)
+
+            # Auto-Tweet to Twitter / X natively
+            try:
+                from twitter_publisher import TwitterPublisher
+                tw = TwitterPublisher()
+                tw.publish_tweet(msg_en)
+            except Exception as e:
+                logger.error(f"Error auto-posting to Twitter: {e}")
         else:
             logger.info("English Channel ID not configured.")
 
