@@ -373,7 +373,6 @@ class PostFormatter:
                 f"• 🚀 <b>{away.get('short_name')}:</b> {away_pitcher}\n\n"
                 f"{lineups_block_es}"
                 f"{odds_block_es}"
-                f"🔗 <a href='{match_site_url}'>Ver alineaciones y detalles en GamePulse</a>\n\n"
                 f"📲 <i>Sigue a @GamePulseES para las mejores alertas en vivo.</i>"
             )
 
@@ -387,7 +386,6 @@ class PostFormatter:
                 f"• 🚀 <b>{away.get('short_name')}:</b> {away_pitcher}\n\n"
                 f"{lineups_block_en}"
                 f"{odds_block_en}"
-                f"🔗 <a href='{match_site_url}'>View lineups and details on GamePulse</a>\n\n"
                 f"📲 <i>Follow @GamePulseUS for instant live updates.</i>"
             )
 
@@ -399,7 +397,6 @@ class PostFormatter:
                 f"⏰ <b>Hora (ET):</b> {date_et_es}\n\n"
                 f"{lineups_block_es}"
                 f"{odds_block_es}"
-                f"🔗 <a href='{match_site_url}'>Ver detalles del partido en GamePulse</a>\n\n"
                 f"📲 <i>Sigue a @GamePulseES para las mejores alertas en vivo.</i>"
             )
             msg_en = (
@@ -409,7 +406,6 @@ class PostFormatter:
                 f"⏰ <b>Time (ET):</b> {date_et_en}\n\n"
                 f"{lineups_block_en}"
                 f"{odds_block_en}"
-                f"🔗 <a href='{match_site_url}'>View match details on GamePulse</a>\n\n"
                 f"📲 <i>Follow @GamePulseUS for instant live updates.</i>"
             )
 
@@ -580,7 +576,6 @@ class PostFormatter:
             f"🔥 <b>{text_es}</b>\n\n"
             f"📍 <b>Estado del Partido:</b> <code>{detail}</code>\n"
             f"🆚 <b>{home.get('name')} vs {away.get('name')}</b>\n\n"
-            f"🔗 <a href='{match_site_url}'>Sigue el partido en vivo en GamePulse</a>\n\n"
             f"📲 <i>Sigue cada momento histórico al instante en @GamePulseES</i>"
         )
 
@@ -589,7 +584,6 @@ class PostFormatter:
             f"🔥 <b>{milestone_text}</b>\n\n"
             f"📍 <b>Game Status:</b> <code>{detail}</code>\n"
             f"🆚 <b>{home.get('name')} vs {away.get('name')}</b>\n\n"
-            f"🔗 <a href='{match_site_url}'>Follow live game on GamePulse</a>\n\n"
             f"📲 <i>Follow every historic moment live on @GamePulseUS</i>"
         )
 
@@ -844,7 +838,6 @@ class PostFormatter:
             f"⚡ <b>¡EL PARTIDO HA COMENZADO EN VIVO!</b>\n\n"
             f"🆚 <b>{home.get('name')}</b> vs <b>{away.get('name')}</b>\n"
             f"📍 <b>Estado:</b> <code>{detail}</code>\n\n"
-            f"🔗 <a href='{match_site_url}'>Sigue el partido en vivo en GamePulse</a>\n\n"
             f"📲 <i>Sigue la acción minuto a minuto en @GamePulseES</i>"
         )
 
@@ -853,7 +846,6 @@ class PostFormatter:
             f"⚡ <b>GAME IS NOW LIVE!</b>\n\n"
             f"🆚 <b>{home.get('name')}</b> vs <b>{away.get('name')}</b>\n"
             f"📍 <b>Status:</b> <code>{detail}</code>\n\n"
-            f"🔗 <a href='{match_site_url}'>Follow live game on GamePulse</a>\n\n"
             f"📲 <i>Follow live updates on @GamePulseUS</i>"
         )
 
@@ -993,8 +985,7 @@ class PostFormatter:
             f"🚀 <b>{away.get('name')}</b>: <b>{away.get('score', 0)}</b>\n"
             f"📍 <b>Estado:</b> <code>{detail_es}</code>\n\n"
             f"🌟 <b>JUGADORES DESTACADOS (AMBOS EQUIPOS):</b>\n"
-            f"{leaders_str_es}\n"
-            f"🔗 <a href='{match_site_url}'>Ver estadísticas en vivo en GamePulse</a>\n\n"
+            f"{leaders_str_es}"
             f"📲 <i>Sigue la cobertura cuarto a cuarto en @GamePulseES</i>"
         )
 
@@ -1005,8 +996,7 @@ class PostFormatter:
             f"🚀 <b>{away.get('name')}</b>: <b>{away.get('score', 0)}</b>\n"
             f"📍 <b>Status:</b> <code>{detail}</code>\n\n"
             f"🌟 <b>TOP PERFORMERS (BOTH TEAMS):</b>\n"
-            f"{leaders_str_en}\n"
-            f"🔗 <a href='{match_site_url}'>Follow live boxscore on GamePulse</a>\n\n"
+            f"{leaders_str_en}"
             f"📲 <i>Follow quarter-by-quarter coverage on @GamePulseUS</i>"
         )
 
@@ -1091,7 +1081,6 @@ class PostFormatter:
             f"{decisions_block_es}"
             f"🌟 <b>JUGADORES DESTACADOS (AMBOS EQUIPOS):</b>\n"
             f"{leaders_str_es}\n"
-            f"🔗 <a href='{match_site_url}'>Ver resumen y detalles completos en GamePulse</a>\n\n"
             f"📲 <i>Sigue el análisis deportivo en vivo en @GamePulseES</i>"
         )
 
@@ -1102,7 +1091,6 @@ class PostFormatter:
             f"{decisions_block_en}"
             f"🌟 <b>STAR PERFORMERS (BOTH TEAMS):</b>\n"
             f"{leaders_str_en}\n"
-            f"🔗 <a href='{match_site_url}'>Watch full recap and details on GamePulse</a>\n\n"
             f"📲 <i>Follow live sports analysis on @GamePulseUS</i>"
         )
 
@@ -1151,7 +1139,6 @@ class PostFormatter:
 
         event_id = event.get("id", "lineups")
         image_url = MatchupGraphics.generate_matchup_banner(home, away, event_id) or home.get("logo")
-        match_site_url = f"{SITE_BASE_URL}/partido/{event_id}?sport={sport}&league={league_code}"
 
         pitcher_block_es = ""
         pitcher_block_en = ""
@@ -1200,7 +1187,6 @@ class PostFormatter:
             f"{pitcher_block_es}"
             f"🚀 <b>Alineación {away.get('name')} (Visitante):</b>\n{away_players_es}\n\n"
             f"🏠 <b>Alineación {home.get('name')} (Local):</b>\n{home_players_es}\n\n"
-            f"🔗 <a href='{match_site_url}'>Ver detalles y estadísticas en GamePulse</a>\n\n"
             f"📲 <i>Sigue a @GamePulseES para las mejores alertas en vivo.</i>"
         )
 
@@ -1210,7 +1196,6 @@ class PostFormatter:
             f"{pitcher_block_en}"
             f"🚀 <b>{away.get('name')} Starting Lineup (Away):</b>\n{away_players_en}\n\n"
             f"🏠 <b>{home.get('name')} Starting Lineup (Home):</b>\n{home_players_en}\n\n"
-            f"🔗 <a href='{match_site_url}'>View details and stats on GamePulse</a>\n\n"
             f"📲 <i>Follow @GamePulseUS for instant live updates.</i>"
         )
 
