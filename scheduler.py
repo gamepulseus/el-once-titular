@@ -392,7 +392,7 @@ class GamePulseScheduler:
                     summary_data = self.espn.get_game_summary(sport, l_code, event_id)
                     if summary_data:
                         plays = summary_data.get("plays", []) or summary_data.get("scoringPlays", [])
-                        strict_keywords = ["scored", "scores", "homered", "home run", "grand slam", "touchdown", "field goal", "goal", "makes 3-pt", "three pointer", "dunked", "makes free throw", "sac fly"]
+                        strict_keywords = ["scored", "scores", "homered", "home run", "grand slam", "touchdown", "field goal", "goal", "makes 3-pt", "three pointer", "dunked", "makes free throw", "sac fly", "pitching change", "substitution", "replaces"]
                         scoring_plays = [
                             p for p in plays 
                             if p.get("scoring") or p.get("scoringPlay") or p.get("scoreValue", 0) > 0 
