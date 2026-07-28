@@ -3,10 +3,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Telegram Credentials
-TELEGRAM_BOT_TOKEN = "8850309639:AAHLec9jo29DuEw7o8YB7O7rdTqt_zHQgvU"
-TELEGRAM_CHANNEL_ES = "@GamePulseES"
-TELEGRAM_CHANNEL_EN = "@GamePulseUS"
+# Telegram Credentials (EL ONCE TITULAR)
+TELEGRAM_BOT_TOKEN = "8822719172:AAE_adfmCnxpKBkAtXifH37SE529gHiye70"
+TELEGRAM_CHANNEL_ES = "@ElOnceTitular"
+TELEGRAM_CHANNEL_EN = ""
 
 # AI & Base URLs
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
