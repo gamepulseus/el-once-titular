@@ -129,6 +129,14 @@ class DatabaseManager:
                 )
             """)
 
+            # Processed Polls
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS processed_polls (
+                    poll_key TEXT PRIMARY KEY,
+                    processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+
             conn.commit()
             logger.info("SQLite database initialized successfully.")
 
