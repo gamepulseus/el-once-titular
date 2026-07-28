@@ -864,22 +864,30 @@ class PostFormatter:
         event_id = event.get("id", "start")
         image_url = MatchupGraphics.generate_matchup_banner(home, away, event_id) or home.get("logo")
 
-        if "mlb" in league_code or "baseball" in league_code:
+        if "mlb" in league_code or "baseball" in sport.lower():
             start_term_es = "¡PLAY BALL!"
             start_term_en = "PLAY BALL!"
-        elif "nfl" in league_code or "football" in league_code:
+            start_sub_es = "⚡ ¡EL PARTIDO DE BÉISBOL HA COMENZADO EN VIVO!"
+        elif "nfl" in league_code or "football" in sport.lower():
             start_term_es = "¡KICKOFF!"
             start_term_en = "KICKOFF!"
-        elif "nba" in league_code or "basketball" in league_code:
+            start_sub_es = "⚡ ¡EL PARTIDO DE FÚTBOL AMERICANO HA COMENZADO EN VIVO!"
+        elif "nba" in league_code or "basketball" in sport.lower():
             start_term_es = "¡TIP-OFF!"
             start_term_en = "TIP-OFF!"
+            start_sub_es = "⚡ ¡EL PARTIDO DE BALONCESTO HA COMENZADO EN VIVO!"
+        elif "nhl" in league_code or "hockey" in sport.lower():
+            start_term_es = "¡PUCK DROP!"
+            start_term_en = "PUCK DROP!"
+            start_sub_es = "⚡ ¡EL PARTIDO DE HOCKEY HA COMENZADO EN VIVO!"
         else:
             start_term_es = "¡PARTIDO EN VIVO!"
             start_term_en = "GAME LIVE!"
+            start_sub_es = "⚡ ¡EL PARTIDO HA COMENZADO EN VIVO!"
 
         msg_es = (
             f"🚀 <b>{start_term_es}</b> | {league_name_es} {emoji}\n\n"
-            f"⚡ <b>¡EL PARTIDO HA COMENZADO EN VIVO!</b>\n\n"
+            f"{start_sub_es}\n\n"
             f"🆚 <b>{home.get('name')}</b> vs <b>{away.get('name')}</b>\n"
             f"📍 <b>Estado:</b> <code>{detail_es}</code>\n\n"
             f"📲 <i>Sigue la acción minuto a minuto en @GamePulseES</i>"
@@ -895,20 +903,19 @@ class PostFormatter:
 
         return msg_es, msg_en, image_url
 
-    # Minuto a Minuto Live Scoring Alert (ALL SPORTS)
+    # Minuto a Minuto Live Scoring Alert (SPORT-TAILORED TEMPLATES)
     @staticmethod
     def format_mlb_run_alert(event: Dict[str, Any], play_text: str, league_info: Dict[str, Any]) -> Tuple[str, str, Optional[str]]:
         home = event.get("home_team", {})
         away = event.get("away_team", {})
         detail = event.get("status_detail", "En Vivo")
         event_id = event.get("id", "run")
-        sport = event.get("sport", "baseball")
-        league = event.get("league", "mlb")
+        sport = str(event.get("sport", "baseball")).lower()
+        league = str(event.get("league", "mlb")).upper()
 
         play_text_es = translate_text(play_text, "Spanish")
         detail_es = translate_inning_status(detail)
 
-        # Determine which team scored based on MLB inning half (Top = Away, Bot = Home) or text
         play_lower = play_text.lower()
         detail_lower = str(detail).lower()
 
@@ -930,9 +937,36 @@ class PostFormatter:
         home_score_str = f'"{home.get("score", 0)}"' if not away_scored else f'{home.get("score", 0)}'
         away_score_str = f'"{away.get("score", 0)}"' if away_scored else f'{away.get("score", 0)}'
 
+        # Sport-Specific Headlines & Field Labels
+        if "mlb" in league.lower() or "baseball" in sport:
+            header_es = f"🚨 <b>¡CARRERA EN VIVO MINUTO A MINUTO!</b> | {league} ⚾"
+            header_en = f"🚨 <b>LIVE RUN SCORING ALERT!</b> | {league} ⚾"
+            play_lbl_es = "🔥 <b>Jugada de la Carrera:</b>"
+            play_lbl_en = "🔥 <b>Scoring Play:</b>"
+        elif "nba" in league.lower() or "basketball" in sport:
+            header_es = f"🚨 <b>¡CANASTA EN VIVO MINUTO A MINUTO!</b> | {league} 🏀"
+            header_en = f"🚨 <b>LIVE BASKET SCORING ALERT!</b> | {league} 🏀"
+            play_lbl_es = "🔥 <b>Canasta / Anotación:</b>"
+            play_lbl_en = "🔥 <b>Scoring Play:</b>"
+        elif "nfl" in league.lower() or "football" in sport:
+            header_es = f"🚨 <b>¡TOUCHDOWN / ANOTACIÓN EN VIVO!</b> | {league} 🏈"
+            header_en = f"🚨 <b>LIVE TOUCHDOWN / SCORE ALERT!</b> | {league} 🏈"
+            play_lbl_es = "🔥 <b>Jugada de Anotación:</b>"
+            play_lbl_en = "🔥 <b>Scoring Play:</b>"
+        elif "nhl" in league.lower() or "hockey" in sport:
+            header_es = f"🚨 <b>¡GOL EN VIVO MINUTO A MINUTO!</b> | {league} 🏒"
+            header_en = f"🚨 <b>LIVE GOAL SCORING ALERT!</b> | {league} 🏒"
+            play_lbl_es = "🔥 <b>Gol Anotado:</b>"
+            play_lbl_en = "🔥 <b>Goal Scored:</b>"
+        else:
+            header_es = f"🚨 <b>¡ANOTACIÓN EN VIVO MINUTO A MINUTO!</b> | {league} ⚡"
+            header_en = f"🚨 <b>LIVE SCORING PLAY MINUTE-BY-MINUTE!</b> | {league} ⚡"
+            play_lbl_es = "🔥 <b>Jugada:</b>"
+            play_lbl_en = "🔥 <b>Play:</b>"
+
         msg_es = (
-            f"🚨 <b>¡ANOTACIÓN EN VIVO MINUTO A MINUTO!</b> | {league.upper()} ⚡\n\n"
-            f"🔥 <b>Jugada:</b> {play_text_es}\n\n"
+            f"{header_es}\n\n"
+            f"{play_lbl_es} {play_text_es}\n\n"
             f"📊 <b>MARCADOR EN VIVO:</b>\n"
             f"🏠 <b>{home.get('name')}</b>: <b>{home_score_str}</b>\n"
             f"🚀 <b>{away.get('name')}</b>: <b>{away_score_str}</b>\n"
@@ -941,8 +975,8 @@ class PostFormatter:
         )
 
         msg_en = (
-            f"🚨 <b>LIVE SCORING PLAY MINUTE-BY-MINUTE!</b> | {league.upper()} ⚡\n\n"
-            f"🔥 <b>Play:</b> {play_text}\n\n"
+            f"{header_en}\n\n"
+            f"{play_lbl_en} {play_text}\n\n"
             f"📊 <b>LIVE SCORE:</b>\n"
             f"🏠 <b>{home.get('name')}</b>: <b>{home_score_str}</b>\n"
             f"🚀 <b>{away.get('name')}</b>: <b>{away_score_str}</b>\n"
