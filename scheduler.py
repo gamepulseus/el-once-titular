@@ -79,20 +79,21 @@ class GamePulseScheduler:
                     if not self.db.is_scoring_play_processed(event_key):
                         self.db.mark_scoring_play_processed(event_key, f_id, f"{ev_type}_{time_el}")
 
-                        if ev_type == "Goal" and player:
+                        player_str = player if player else "Jugador"
+                        if ev_type == "Goal":
                             msg_es = (
                                 f"⚽ <b>GOL | {league_hdr}</b>\n\n"
-                                f"<b>{player}</b> {time_el}' ({team_ev})\n"
+                                f"<b>{player_str}</b> {time_el}' ({team_ev})\n"
                                 f"<b>{home_name} {h_score} - {a_score} {away_name}</b>\n\n"
                                 f"📲 <i>Sigue https://t.me/ElOnceTitular</i>"
                             )
                             self.publisher.publish_text(config.TELEGRAM_CHANNEL_ES, msg_es)
                             self.twitter.publish_tweet(msg_es)
 
-                        elif ev_type == "Card" and "Red" in str(ev_detail) and player:
+                        elif ev_type == "Card" and "Red" in str(ev_detail):
                             msg_es = (
-                                f"🟥 <b>TARJETA ROJA | {league_hdr}</b>\n\n"
-                                f"<b>{player}</b> {time_el}' ({team_ev}) - Expulsado.\n"
+                                f"exp <b>TARJETA ROJA | {league_hdr}</b>\n\n"
+                                f"<b>{player_str}</b> {time_el}' ({team_ev}) - Expulsado.\n"
                                 f"<b>{home_name} {h_score} - {a_score} {away_name}</b>\n\n"
                                 f"📲 <i>Sigue https://t.me/ElOnceTitular</i>"
                             )
