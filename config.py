@@ -14,20 +14,13 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 SITE_BASE_URL = os.getenv("SITE_BASE_URL", "https://gamepulse.us")
 
 # Twitter / X API v2 Credentials (EL ONCE TITULAR)
-_tw_key = os.getenv("TWITTER_API_KEY", "").strip()
-TWITTER_API_KEY = _tw_key if _tw_key else "KKYLMODp0IjA57cW7OZqhVzcv"
-
-_tw_sec = os.getenv("TWITTER_API_SECRET", "").strip()
-TWITTER_API_SECRET = _tw_sec if _tw_sec else "KcAZDbwYQM2SofEHMjPKPi91Nb1slAS1EEjCUGLzARoT3fZY7E"
-
-_tw_tok = os.getenv("TWITTER_ACCESS_TOKEN", "").strip()
-TWITTER_ACCESS_TOKEN = _tw_tok if _tw_tok else "2081943886545539072-LYGPGMOd1E5tDC5RoesuKRx7RJEZpT"
-
-_tw_asec = os.getenv("TWITTER_ACCESS_SECRET", "").strip()
-TWITTER_ACCESS_SECRET = _tw_asec if _tw_asec else "q6a0AHagFTzJTVlZmwRuKBwGrH8Nppxp0WzTjzFyuOXjd"
+TWITTER_API_KEY = "LGa33cSROaQ3tqJd7uArM93YQ"
+TWITTER_API_SECRET = "1XkJhy7KkXh6nTq6QlDwYI3Zv7FZMlg40MNp2BuSx8EkLJslQK"
+TWITTER_ACCESS_TOKEN = "2081943886545539072-MmBsIsd1BiFX9VO1TAvLnC8BRIzwdO"
+TWITTER_ACCESS_SECRET = "59XvxZkzdoVDTRLux5qnw1DwHFVSG3uM3A8SnpkrLqQMO"
 
 # API-Football (api-sports.io / dashboard.api-football.com) PRO Key (EL ONCE TITULAR)
-API_FOOTBALL_KEY = os.getenv("API_FOOTBALL_KEY", "").strip() or "cbb0f106154c72d158f3de7d4db9f27b"
+API_FOOTBALL_KEY = "cbb0f106154c72d158f3de7d4db9f27b"
 
 # Active Leagues Matrix (STRICTLY REQUESTED SOCCER LEAGUES FOR 'EL ONCE TITULAR')
 ACTIVE_LEAGUES = [

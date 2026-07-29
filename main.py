@@ -9,8 +9,8 @@ if hasattr(sys.stdout, "reconfigure"):
 
 def main():
     print("==================================================")
-    print("      ⚡ GamePulse 24/7 Sports Auto-Publisher ⚡   ")
-    print("       Telegram @GamePulseUS & Twitter @GamePulseUS")
+    print("      ⚽ El Once Titular 24/7 Auto-Publisher ⚽   ")
+    print("       Telegram @ElOnceTitular & Twitter @ElOnceTitularEs")
     print("==================================================")
 
     # Start GamePulse Scheduler loop
