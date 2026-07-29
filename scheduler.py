@@ -90,6 +90,37 @@ class GamePulseScheduler:
             standing_key = f"{l_code}_{today_et_str}"
             self.db.mark_standing_processed(standing_key)
 
+        # 2. Silently seed API-Football Global Live Matches & Events existing AT STARTUP TIME
+        try:
+            live_fixtures = self.api_football.get_live_fixtures()
+            for fix in live_fixtures:
+                f_obj = fix.get("fixture", {})
+                f_id = str(f_obj.get("id"))
+                status_short = f_obj.get("status", {}).get("short")
+                teams = fix.get("teams", {})
+                home_name = teams.get("home", {}).get("name", "Home")
+                away_name = teams.get("away", {}).get("name", "Away")
+
+                # Silently seed kickoff alert for matches already in progress at startup
+                if status_short in ["1H", "2H", "HT", "ET", "P", "FT"]:
+                    start_key = f"start_{f_id}"
+                    self.db.mark_game_start_processed(start_key, "soccer", "global", f"{home_name} vs {away_name}")
+
+                # Silently seed halftime if already reached
+                if status_short in ["HT", "2H", "ET", "P", "FT"]:
+                    ht_key = f"ht_{f_id}"
+                    self.db.mark_scoring_play_processed(ht_key, f_id, "HT")
+
+                # Silently seed all events existing before bot startup
+                events = self.api_football.get_fixture_events(int(f_id))
+                for idx, ev in enumerate(events):
+                    ev_type = ev.get("type")
+                    time_el = ev.get("time", {}).get("elapsed", 0)
+                    event_key = f"ev_{f_id}_{idx}_{time_el}_{ev_type}"
+                    self.db.mark_scoring_play_processed(event_key, f_id, f"{ev_type}_{time_el}")
+        except Exception as e:
+            logger.error(f"Error seeding API-Football baseline: {e}")
+
         logger.info("=== Baseline Seeding Complete: Bot is ready to publish NEW live events ONLY ===")
 
     def process_news(self):
