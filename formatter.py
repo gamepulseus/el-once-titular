@@ -309,24 +309,20 @@ class PostFormatter:
         if is_injury:
             msg_es = (
                 f"🚑 <b>REPORTE DE BAJA | {league_name_es}</b>\n\n"
-                f"{headline_es}\n\n"
-                f"📲 <i>Sigue https://t.me/ElOnceTitular</i>"
+                f"{headline_es}"
             )
             msg_en = (
                 f"🚑 <b>STATUS ALERT | {league_name_en}</b>\n\n"
-                f"{headline_en}\n\n"
-                f"📲 <i>Follow @ElOnceTitular</i>"
+                f"{headline_en}"
             )
         elif is_trade:
             msg_es = (
                 f"🔄 <b>FICHAJE OFICIAL | {league_name_es}</b>\n\n"
-                f"{headline_es}\n\n"
-                f"📲 <i>Sigue https://t.me/ElOnceTitular</i>"
+                f"{headline_es}"
             )
             msg_en = (
                 f"🔄 <b>OFFICIAL TRANSFER | {league_name_en}</b>\n\n"
-                f"{headline_en}\n\n"
-                f"📲 <i>Follow @ElOnceTitular</i>"
+                f"{headline_en}"
             )
         else:
             # STRICT UNDERDOG SPORTS RULE: Block all general news articles, opinion pieces, and fluff!
@@ -1170,8 +1166,7 @@ class PostFormatter:
         event_id = scoreboard_ev.get("id", "summary")
 
         msg_es = (
-            f"🏆 <b>Final:</b> {home.get('name')} {home_score}, {away.get('name')} {away_score}.\n\n"
-            f"📲 <i>Sigue https://t.me/ElOnceTitular</i>"
+            f"🏆 <b>Final:</b> {home.get('name')} {home_score}, {away.get('name')} {away_score}."
         )
 
         msg_en = (

@@ -309,8 +309,7 @@ class GamePulseScheduler:
                             msg_es = (
                                 f"⚽ <b>GOL | {league_hdr}</b>\n\n"
                                 f"<b>{player_str}</b> {time_el}' ({team_ev})\n"
-                                f"<b>{home_name} {h_score} - {a_score} {away_name}</b>\n\n"
-                                f"📲 <i>Sigue https://t.me/ElOnceTitular</i>"
+                                f"<b>{home_name} {h_score} - {a_score} {away_name}</b>"
                             )
                             self.publisher.publish_text(config.TELEGRAM_CHANNEL_ES, msg_es)
                             self.twitter.publish_tweet(msg_es)
@@ -319,8 +318,7 @@ class GamePulseScheduler:
                             msg_es = (
                                 f"exp <b>TARJETA ROJA | {league_hdr}</b>\n\n"
                                 f"<b>{player_str}</b> {time_el}' ({team_ev}) - Expulsado.\n"
-                                f"<b>{home_name} {h_score} - {a_score} {away_name}</b>\n\n"
-                                f"📲 <i>Sigue https://t.me/ElOnceTitular</i>"
+                                f"<b>{home_name} {h_score} - {a_score} {away_name}</b>"
                             )
                             self.publisher.publish_text(config.TELEGRAM_CHANNEL_ES, msg_es)
                             self.twitter.publish_tweet(msg_es)
@@ -332,8 +330,7 @@ class GamePulseScheduler:
                         self.db.mark_game_start_processed(start_key, "soccer", "global", f"{home_name} vs {away_name}")
                         msg_es = (
                             f"🚀 <b>INICIO DE PARTIDO | {league_hdr}</b>\n\n"
-                            f"<b>{home_name} vs {away_name}</b> - ¡Comienza el encuentro!\n\n"
-                            f"📲 <i>Sigue https://t.me/ElOnceTitular</i>"
+                            f"<b>{home_name} vs {away_name}</b> - ¡Comienza el encuentro!"
                         )
                         self.publisher.publish_text(config.TELEGRAM_CHANNEL_ES, msg_es)
                         self.twitter.publish_tweet(msg_es)
@@ -345,8 +342,7 @@ class GamePulseScheduler:
                         self.db.mark_scoring_play_processed(ht_key, f_id, "HT")
                         msg_es = (
                             f"⏱️ <b>ENTRETIEMPO | {league_hdr}</b>\n\n"
-                            f"<b>{home_name} {h_score} - {a_score} {away_name}</b>\n\n"
-                            f"📲 <i>Sigue https://t.me/ElOnceTitular</i>"
+                            f"<b>{home_name} {h_score} - {a_score} {away_name}</b>"
                         )
                         self.publisher.publish_text(config.TELEGRAM_CHANNEL_ES, msg_es)
                         self.twitter.publish_tweet(msg_es)
@@ -358,8 +354,7 @@ class GamePulseScheduler:
                         self.db.mark_scoring_play_processed(h2_key, f_id, "2H")
                         msg_es = (
                             f"⏩ <b>INICIO 2º TIEMPO | {league_hdr}</b>\n\n"
-                            f"<b>{home_name} {h_score} - {a_score} {away_name}</b> - ¡Arranca la segunda mitad!\n\n"
-                            f"📲 <i>Sigue https://t.me/ElOnceTitular</i>"
+                            f"<b>{home_name} {h_score} - {a_score} {away_name}</b> - ¡Arranca la segunda mitad!"
                         )
                         self.publisher.publish_text(config.TELEGRAM_CHANNEL_ES, msg_es)
                         self.twitter.publish_tweet(msg_es)
@@ -371,8 +366,7 @@ class GamePulseScheduler:
                         self.db.mark_scoring_play_processed(et_key, f_id, "ET")
                         msg_es = (
                             f"⏳ <b>INICIO PRÓRROGA | {league_hdr}</b>\n\n"
-                            f"<b>{home_name} {h_score} - {a_score} {away_name}</b> - ¡Comienza la prórroga!\n\n"
-                            f"📲 <i>Sigue https://t.me/ElOnceTitular</i>"
+                            f"<b>{home_name} {h_score} - {a_score} {away_name}</b> - ¡Comienza la prórroga!"
                         )
                         self.publisher.publish_text(config.TELEGRAM_CHANNEL_ES, msg_es)
                         self.twitter.publish_tweet(msg_es)
@@ -384,8 +378,7 @@ class GamePulseScheduler:
                         self.db.mark_scoring_play_processed(p_key, f_id, "P")
                         msg_es = (
                             f"🥅 <b>TANDA DE PENALES | {league_hdr}</b>\n\n"
-                            f"<b>{home_name} {h_score} - {a_score} {away_name}</b> - ¡Definición por penales!\n\n"
-                            f"📲 <i>Sigue https://t.me/ElOnceTitular</i>"
+                            f"<b>{home_name} {h_score} - {a_score} {away_name}</b> - ¡Definición por penales!"
                         )
                         self.publisher.publish_text(config.TELEGRAM_CHANNEL_ES, msg_es)
                         self.twitter.publish_tweet(msg_es)
@@ -397,8 +390,7 @@ class GamePulseScheduler:
                         self.db.mark_summary_processed(ft_key, "soccer", "global", f"{home_name} vs {away_name}")
                         msg_es = (
                             f"🏆 <b>RESULTADO FINAL | {league_hdr}</b>\n\n"
-                            f"<b>{home_name} {h_score} - {a_score} {away_name}</b>\n\n"
-                            f"📲 <i>Sigue https://t.me/ElOnceTitular</i>"
+                            f"<b>{home_name} {h_score} - {a_score} {away_name}</b>"
                         )
                         self.publisher.publish_text(config.TELEGRAM_CHANNEL_ES, msg_es)
                         self.twitter.publish_tweet(msg_es)
